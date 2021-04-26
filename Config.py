@@ -39,7 +39,7 @@ Par={
                                  'DBPM6VerMotor':'07a:DBPM6:Z',
                                  'DBPM6HorMotor':'07a:DBPM6:X',
                                  'SSMotor':'07a:Slits3:XOpening',
-                                    
+                                 'DetYMotor':'07a:Det:Y',
                                  
                                     
                                     

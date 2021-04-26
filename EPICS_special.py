@@ -15,6 +15,7 @@ import logsetup
 # import epicsfile
 import Config
 import EpicsConfig
+import numpy as np
 
 class Beamsize():
     def __init__(self,managerpar=None) :
@@ -81,6 +82,7 @@ class Beamsize():
         self.DBPM6VerMotor = self.Par['EPICS_special']['BeamSize']['DBPM6VerMotor']
         self.DBPM6HorMotor = self.Par['EPICS_special']['BeamSize']['DBPM6HorMotor']
         self.SSMotor = self.Par['EPICS_special']['BeamSize']['SSMotor']
+        self.DetYMotor = self.Par['EPICS_special']['BeamSize']['DetYMotor']
         
         self.BeamSizeLists = []
         self.MD3YLists = []
@@ -101,6 +103,8 @@ class Beamsize():
         
         #other Info
         self.CurrentBeamsize = 0
+        self.CurrentDetY = 0
+        self.CurrentMD3Y = 0
         
         # self.epicsmotors = EpicsConfig.epicsmotors
         #update info
@@ -118,8 +122,8 @@ class Beamsize():
             self.MD3VerLists =caget(self.MD3VerName)
             self.logger.debug(f'Update MD3VerLists = {self.MD3VerLists}')
         if self.MD3HorUsing :
-            self.MD3HoLists =caget(self.MD3HorName)
-            self.logger.debug(f'Update MD3HoLists = {self.MD3HoLists}')
+            self.MD3HorLists =caget(self.MD3HorName)
+            self.logger.debug(f'Update MD3HorLists = {self.MD3HorLists}')
         if self.Slit4VerOPUsing :
             self.Slit4VerOPLists =caget(self.Slit4VerOPName)
             self.logger.debug(f'Update Slit4VerOPLists = {self.Slit4VerOPLists}')
@@ -138,8 +142,47 @@ class Beamsize():
         if self.DBPM6HorUsing :
             self.DBPM5VerLists =caget(self.DBPM6HorName)
             self.logger.debug(f'Update DBPM5VerLists = {self.DBPM5VerLists}')
-
+        # self.CurrentBeamsize = 0
+        self.CurrentDetY = caget(self.DetYMotor)
+        self.logger.debug(f'Update CurrentDetY = {self.CurrentDetY}')
+        self.CurrentMD3Y = caget(self.MD3YMotor)
+        self.logger.debug(f'Update MD3YMotor = {self.CurrentMD3Y}')
         
+    def target(self,beamsize=50):
+        if beamsize == self.CurrentBeamsize:
+            self.logger.debug(f'Asked for same beamsize ,not move(Current beamsize = {self.CurrentBeamsize})')
+        else:
+            self.updateINFO()
+            if beamsize in self.BeamSizeLists :
+                index = np.where( self.BeamSizeLists == beamsize )[0][0]
+                # print(type(index))
+                movinglist = {}
+                self.logger.debug(f'Beam size : {beamsize} is in beam list index = {index}')
+                
+                movinglist[self.MD3YMotor] = self.MD3YLists[index]
+                if self.SSUsing :
+                    movinglist[self.SSMotor] = self.SSLists[index]
+                if self.MD3VerUsing :
+                    movinglist[self.MD3VerMotor] = self.MD3VerLists[index]
+                if self.MD3HorUsing :
+                    
+                    movinglist[self.MD3HorMotor] = self.MD3HorLists[index]
+                if self.Slit4VerOPUsing :
+                    movinglist[self.Slit4VerOPMotor] = self.Slit4VerOPLists[index]
+                if self.Slit4HorOPUsing :
+                    movinglist[self.Slit4HorOPMotor] = self.Slit4HorOPLists[index]
+                if self.DBPM5VerUsing :
+                    movinglist[self.DBPM5VerMotor] = self.DBPM5VerLists[index]
+                if self.DBPM5HorUsing :
+                    movinglist[self.DBPM5HorMotor] = self.DBPM5HorLists[index]
+                if self.DBPM6VerUsing :
+                    movinglist[self.DBPM6VerMotor] = self.DBPM6VerLists[index]                  
+                if self.DBPM6HorUsing :
+                    movinglist[self.DBPM6HorMotor] = self.DBPM6HorLists[index]
+                self.logger.debug(f'movinglist = {movinglist}')
+                        
+            else:
+                self.logger.warning(f'Beam size : {beamsize} ,not in beam list :{self.BeamSizeLists}')
     def initconnection(self):
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.client.settimeout(self.tcptimeout)
@@ -583,3 +626,4 @@ if __name__ == "__main__":
     # m = Manager()
     # Par = m.dict()
     A = Beamsize()
+    A.target(30)
