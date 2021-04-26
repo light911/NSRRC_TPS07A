@@ -180,7 +180,21 @@ class Beamsize():
                 if self.DBPM6HorUsing :
                     movinglist[self.DBPM6HorMotor] = self.DBPM6HorLists[index]
                 self.logger.debug(f'movinglist = {movinglist}')
-                        
+                
+                #check MD3Y and DetY moving range
+                detMove = movinglist[self.MD3YMotor] - self.CurrentMD3Y 
+                self.logger.debug(f'detMove = {detMove}')        
+                #check if safe to move both?
+                if detMove < 0:
+                    #MD3Y move forward, movMD3Y Frist
+                    pass
+                elif detMove >0:
+                    #MD3Y move back, movDetY Frist
+                    pass
+                else:
+                    #no move
+                    pass
+                
             else:
                 self.logger.warning(f'Beam size : {beamsize} ,not in beam list :{self.BeamSizeLists}')
     def initconnection(self):
