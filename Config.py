@@ -9,8 +9,8 @@ Created on Mon Apr 12 09:49:13 2021
 Par={
     "Beamline":"TPS07A",
     "Debuglevel":"DEBUG",#ERROR,WARNING,INFO,DEBUG
-    "MinDistance":400,
-    "fakedistancename":"07a-ES:DetectorDistance",
+    "MinDistance":150,
+    "fakedistancename":"07a:Det:Dis",
     "calfactorname":'07a-ES:DetectorDistance:OFF',
     'dcss':{'host':"10.7.1.1",
             'port':14242,
@@ -27,7 +27,7 @@ Par={
                                  'DBPM6VerName':'07a-ES:Table:DBPM6Y',
                                  'DBPM6HorName':'07a-ES:Table:DBPM6X',
                                  'SSName':'07a-ES:Table:2ndslit',
-                                 
+                                 'ApertureName':'07a-ES:Table:MD3Aperture',
                                  
                                  'MD3YMotor':'07a:MD3:Y',
                                  'MD3VerMotor':'07a:MD3:Ver',
@@ -40,12 +40,14 @@ Par={
                                  'DBPM6HorMotor':'07a:DBPM6:X',
                                  'SSMotor':'07a:Slits3:XOpening',
                                  'DetYMotor':'07a:Det:Y',
+                                 'ApertureMotor':'07a:md3:CurrentApertureDiameterIndex',
                                  
                                     
                                     
                                  'using':{'MD3Ver':True,
                                           'MD3Hor':True,
                                           'SS':True,
+                                          'Aperture':False,
                                           'Slit4VerOP':False,
                                           'Slit4HorOP':False,
                                           'DBPM5Ver':False,

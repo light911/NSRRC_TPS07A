@@ -58,7 +58,7 @@ class Beamsize():
         self.DBPM6VerUsing = self.Par['EPICS_special']['BeamSize']['using']['DBPM6Ver']
         self.DBPM6HorUsing = self.Par['EPICS_special']['BeamSize']['using']['DBPM6Hor']
         self.SSUsing =  self.Par['EPICS_special']['BeamSize']['using']['SS']
-        
+        self.ApertureUsing = self.Par['EPICS_special']['BeamSize']['using']['Aperture']
         
         self.BeamSizeName = self.Par['EPICS_special']['BeamSize']['BeamSizeName']
         self.MD3YName = self.Par['EPICS_special']['BeamSize']['MD3YName']
@@ -71,6 +71,8 @@ class Beamsize():
         self.DBPM6VerName = self.Par['EPICS_special']['BeamSize']['DBPM6VerName']
         self.DBPM6HorName = self.Par['EPICS_special']['BeamSize']['DBPM6HorName']
         self.SSName = self.Par['EPICS_special']['BeamSize']['SSName']
+        self.fakeDistanceName = self.Par['fakedistancename']
+        self.ApertureName = self.Par['EPICS_special']['BeamSize']['ApertureName']
         
         self.MD3YMotor = self.Par['EPICS_special']['BeamSize']['MD3YMotor']
         self.MD3VerMotor = self.Par['EPICS_special']['BeamSize']['MD3VerMotor']
@@ -83,6 +85,9 @@ class Beamsize():
         self.DBPM6HorMotor = self.Par['EPICS_special']['BeamSize']['DBPM6HorMotor']
         self.SSMotor = self.Par['EPICS_special']['BeamSize']['SSMotor']
         self.DetYMotor = self.Par['EPICS_special']['BeamSize']['DetYMotor']
+        self.ApertureMotor = self.Par['EPICS_special']['BeamSize']['ApertureMotor']
+        
+        self.MinDistance = self.Par['MinDistance']
         
         self.BeamSizeLists = []
         self.MD3YLists = []
@@ -95,6 +100,7 @@ class Beamsize():
         self.DBPM6VerLists = []
         self.DBPM6HorLists = []
         self.SSLists = []
+        self.ApertureLists = []
         
         #setup Feedback par
         self.FeedbackDCM = ''
@@ -109,6 +115,7 @@ class Beamsize():
         # self.epicsmotors = EpicsConfig.epicsmotors
         #update info
         self.updateINFO()
+        self.Busy = False
        
     def updateINFO(self):
         self.BeamSizeLists = caget(self.BeamSizeName)
@@ -142,6 +149,10 @@ class Beamsize():
         if self.DBPM6HorUsing :
             self.DBPM5VerLists =caget(self.DBPM6HorName)
             self.logger.debug(f'Update DBPM5VerLists = {self.DBPM5VerLists}')
+        if self.ApertureUsing :
+            self.ApertureLists = caget(self.ApertureName)
+            self.logger.debug(f'Update ApertureLists = {self.ApertureLists}')
+            
         # self.CurrentBeamsize = 0
         self.CurrentDetY = caget(self.DetYMotor)
         self.logger.debug(f'Update CurrentDetY = {self.CurrentDetY}')
@@ -149,6 +160,7 @@ class Beamsize():
         self.logger.debug(f'Update MD3YMotor = {self.CurrentMD3Y}')
         
     def target(self,beamsize=50):
+        self.Busy = True
         if beamsize == self.CurrentBeamsize:
             self.logger.debug(f'Asked for same beamsize ,not move(Current beamsize = {self.CurrentBeamsize})')
         else:
@@ -167,6 +179,8 @@ class Beamsize():
                 if self.MD3HorUsing :
                     
                     movinglist[self.MD3HorMotor] = self.MD3HorLists[index]
+                if self.ApertureUsing :
+                    movinglist[self.ApertureMotor] = self.ApertureLists[index]
                 if self.Slit4VerOPUsing :
                     movinglist[self.Slit4VerOPMotor] = self.Slit4VerOPLists[index]
                 if self.Slit4HorOPUsing :
@@ -185,18 +199,65 @@ class Beamsize():
                 detMove = movinglist[self.MD3YMotor] - self.CurrentMD3Y 
                 self.logger.debug(f'detMove = {detMove}')        
                 #check if safe to move both?
-                if detMove < 0:
-                    #MD3Y move forward, movMD3Y Frist
+                #check DetY
+                #case1 lower than DetYLLM,case2 lower than MinDistance in cinfig, case3 lower than 40mm (impossbilie)
+                DetYLLM =  caget(self.DetYMotor + ".LLM")
+                targetDetY = (self.CurrentDetY + detMove)
+                collisionDetY = targetDetY < DetYLLM or targetDetY < 40 or targetDetY < self.MinDistance
+                #check MD3Y
+                MD3YHLM =  caget(self.MD3YMotor + ".HLM")
+                targetMD3Y = movinglist[self.MD3YMotor]
+                collisionMD3Y = targetMD3Y > MD3YHLM
+                self.logger.debug(f'CurrentDetY = {self.CurrentDetY}, DetYLLM = {DetYLLM},will move to {targetDetY} , will collisionDetY ={collisionDetY}') 
+                self.logger.debug(f'CurrentMD3Y = {self.CurrentMD3Y}, MD3YHLM = {MD3YHLM},will move to {targetMD3Y} , will collisionMD3Y ={collisionMD3Y}') 
+                MoveTogether = not collisionMD3Y and not collisionDetY
+                self.logger.info(f'MoveTogether = {MoveTogether},since collisionMD3Y= {collisionMD3Y}, collisionDetY={collisionDetY}') 
+                if -0.005 < detMove < 0.005:
+                    #no move
+                    self.logger.info(f'Target MD3Y is the too closed to Current MD3Y value,nothing move')
                     pass
-                elif detMove >0:
-                    #MD3Y move back, movDetY Frist
+                elif detMove < 0 and not MoveTogether:
+                    #MD3Y move forward, move MD3Y Frist
+                    self.logger.info(f'Moving MD3Y Frist! pervent collision') 
+                
+                    
                     pass
+                elif detMove >0 and not MoveTogether:
+                    #MD3Y move back, move DetY Frist
+                    self.logger.info(f'Moving DetY Frist! pervent collision') 
+                    pass
+                elif MoveTogether and detMove != 0:
+                    self.logger.info(f'Moving All MOTOR at the same time') 
+                    movejob = movinglist
+                    movinglist[self.DetYMotor] = self.CurrentDetY + detMove
+                    # print(self.CurrentDetY + detMove)
+                    t1 = time.time()
+                    for motor in movejob :
+                        self.logger.debug(f'Set {motor} move to {movinglist[motor]}') 
+                        caput(motor,movinglist[motor])
+                    time.sleep(0.1)
+                    while not self.check_allmotorstop(movinglist.keys()):
+                        time.sleep(0.1)
+                    runtime = time.time() - t1
+                    self.logger.info(f'Moving All MOTOR Done,take {runtime}sec') 
                 else:
                     #no move
+                    self.logger.info(f'Something wired, i should not goto here') 
                     pass
                 
             else:
                 self.logger.warning(f'Beam size : {beamsize} ,not in beam list :{self.BeamSizeLists}')
+            self.Busy = False
+    def check_allmotorstop(self,motorlist):
+        state = True
+        for motor in motorlist:
+            if caget(f"{motor}.DMOV") == 1:
+                pass
+            else:
+                state = False
+        
+        return state
+            
     def initconnection(self):
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.client.settimeout(self.tcptimeout)
@@ -640,4 +701,5 @@ if __name__ == "__main__":
     # m = Manager()
     # Par = m.dict()
     A = Beamsize()
-    A.target(30)
+    # A.target(30)
+    A.target(100)
