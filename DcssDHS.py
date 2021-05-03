@@ -214,6 +214,20 @@ class DCSDHS():
                             #where clientNumber is the number provided to the BLU-ICE by DCSS via the stog_login_complete message. DCSS will reject an operation message if the clientNumber does not match the client. The operationCounter is a number that the client should increment with each new operation that is started.
                             #arg1 [arg2 [arg3 [...]]] is the list of arguments that should be passed to the operation. It is recommended that the list of arguments continue to follow the general format of the DCS message structure (space separated tokens). However, this requirement can only be enforced by the writer of the operation handlers.
                             pass
+                            if command[1] == "detector_collect_image" :
+                                pass
+                            if command[1] == "detector_collect_shutterless" :
+                                pass
+                            if command[1] == "detector_transfer_image" :
+                                pass
+                            if command[1] == "detector_oscillation_ready" :
+                                pass
+                            if command[1] == "detector_stop" :
+                                pass
+                            if command[1] == "detector_reset_run" :
+                                pass
+                            if command[1] == "detector_oscillation_ready" :
+                                pass
                         elif command[0] == "stoh_read_ion_chambers":
                             #stoh_read_ion_chambers time repeat ch1 [ch2 [ch3 [...]]]
                             pass
@@ -265,6 +279,22 @@ class DCSDHS():
                         elif command[0] == "stoh_register_shutter":
                             #['stoh_register_shutter', 'shutter', 'closed', 'shutter\n']
                             epicsQ.put((command[0],command[1],command[2]))
+                        elif command[0] == "stoh_register_pseudo_motor" :
+                            #stoh_register_pseudo_motor energy standardVirtualMotor
+                            GUIname, = self.FindEpicsMotorInfo(command[1],'dcssname','GUIname')
+                            MoveDone = self.Par['EPICS'][GUIname]['DMOV']
+                            Pos = self.Par['EPICS'][GUIname]['RBV']
+                            TargetPos = self.Par['EPICS'][GUIname]['VAL']
+                            if command[1] == 'energy':
+                                Pos = Pos*1000
+                                TargetPos = TargetPos*1000
+                                # print(f'Pos={Pos},TargetPos={TargetPos}')
+                            if MoveDone:
+                                # sendQ.put(('endmove',command[1],Pos,'Normal'))
+                                sendQ.put(('updatevalue',command[1],Pos,'motor','Normal'))
+                            else:
+                                sendQ.put(('updatevalue',command[1],Pos,'motor','Normal'))
+                                sendQ.put(('startmove',command[1],TargetPos,'motor','Normal'))
                         else:
                             print(f'Unknown command:{command[0]}')
                         index = msg.find('\x00')

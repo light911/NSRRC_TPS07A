@@ -12,6 +12,7 @@ Par={
     "MinDistance":150,
     "fakedistancename":"07a:Det:Dis",
     "calfactorname":'07a-ES:DetectorDistance:OFF',
+    "minEVchangeGAP":10,
     'dcss':{'host':"10.7.1.1",
             'port':14242,
             'dhsname':"EPICS",

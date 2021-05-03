@@ -41,7 +41,7 @@ epicsmotors={
                 'PVID':'',
                 'GUIname':'DetDistance',
                 "old_value":"0",
-                'callbackitems':['DMOV','VAL','RBV'],
+                'callbackitems':['DMOV','VAL','RBV','LLM'],
                 "deadband":0.001,
                 'dcssname':"detector_z",
                 'dcsstype':"motor"
@@ -76,6 +76,16 @@ epicsmotors={
                 'dcssname':"detector_horz",
                 'dcsstype':"motor",
                  },
+            'Energy':{
+                'PVname':'07a:DCM:Energy',
+                'PVID':'',
+                'GUIname':'Energy',
+                "old_value":"0",
+                'callbackitems':['DMOV','VAL','RBV'],
+                "deadband":0.001,
+                'dcssname':"energy",
+                'dcsstype':"motor",
+                 },
 
             }
 
@@ -101,6 +111,7 @@ epicslist={
                             'dcssname':"shutter",
                             'dcsstype':"shutter",
                             },
+              
              }
 
 

@@ -3,6 +3,7 @@
 Created on Wed Dec 25 09:56:32 2019
 
 @author: admin
+TODO:update DisY uperlimits
 """
 
 from epics import PV,Motor,ca,CAProcess
@@ -133,6 +134,16 @@ class epicsdev(QThread):
                         
                         pass 
                     pass
+            elif guiname == "Energy":
+                if value == 1:
+                    #move done
+                    self.logger.debug("Energy end of moing,Disable gap to energy")
+                    p = CAProcess(target=self.CAPUT, args=('07a:IU22:cvtE2Gap_able','Disable',))
+                    p.start()
+                    p.join()
+                    pos = self.epicsmotors[guiname]['PVID'].get('RBV') * 1000
+                    self.sendQ.put(('endmove',dcssname,pos,'normal'), block=False)
+                
             else:
                 if value == 1:
                     #move done
@@ -148,6 +159,10 @@ class epicsdev(QThread):
                 self.DetYstartmoving = False
                 #DetY start moving should update MD3Y HLM
                 self.updateMD3Ylimits(usingVAL=True)
+        elif field == "LLM" :
+            if guiname == "DetDistance":
+                self.updateDetYlimits()
+                self.updateMD3Ylimits()        
         else:
             self.Par['EPICS'][guiname][field] = value
             self.logger.debug(f'PV value changed: {pvname}={value} ')
@@ -367,7 +382,24 @@ class epicsdev(QThread):
                     # self.findepicsinfo(command[1],"PVname").value = float(command[2])
                     PVID, = self.FindEpicsMotorInfo(command[1],'dcssname','PVID')
                     TargetPos = float(command[2])
+                    if command[1] == 'energy':
+                        TargetPos = TargetPos / 1000
+                        
                     if PVID.within_limits(TargetPos):
+                        if command[1] == 'energy':
+                            #Enable energy to gap(07a:IU22:cvtE2Gap_able)
+                            
+                            if abs(TargetPos - PVID.VAL) > self.Par['minEVchangeGAP']:
+                                self.logger.debug(f"det Energy {abs(TargetPos - PVID.VAL)} is higher than {self.Par['minEVchangeGAP']}, change gap setting")
+                                
+                                p = CAProcess(target=self.CAPUT, args=('07a:IU22:cvtE2Gap_able','Enable',))
+                                p.start()
+                                p.join()
+                            else:
+                                self.logger.debug(f"det Energy {abs(TargetPos - PVID.VAL)} is small than {self.Par['minEVchangeGAP']}, NO chane gap setting")
+                                p = CAProcess(target=self.CAPUT, args=('07a:IU22:cvtE2Gap_able','Disable',))
+                                p.start()
+                                p.join()
                         state = PVID.move(TargetPos)
                         self.logger.debug(f"Motor ={command[1]} moving state = {state}")
                         self.sendQ.put(("startmove",command[1],command[2],"Normal"))
@@ -472,10 +504,10 @@ class epicsdev(QThread):
         else:
             # MD3YPVID.HLM = 200
             # MD3YPVID.put('HLM', 200, wait=True, timeout=1)
-            p = CAProcess(target=self.CAPUT, args=('07a:MD3:Y.HLM',200,))
+            p = CAProcess(target=self.CAPUT, args=('07a:MD3:Y.HLM',200.1,))
             p.start()
             p.join()
-            self.logger.warning(f'New High limits cal for MD3Y is :{NewMD3YHLM} Higher than 200,updated to 200(old limits is {oldHLM})')
+            self.logger.warning(f'New High limits cal for MD3Y is :{NewMD3YHLM} Higher than 200,updated to 200.1(old limits is {oldHLM})')
             if usingVAL :
                 self.logger.warning(f'New High limits cal baseon DetYPVID.VAL={DetYPOS}, DisPVID.OFF={DisPVID.OFF}, DisPVID.LLM={DisPVID.LLM}')
             else:
