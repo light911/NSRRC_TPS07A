@@ -49,12 +49,22 @@ class DCSDHS():
         self.tcptimeout = self.Par['dcss']['tcptimeout']
         
         self.epicsmotors = EpicsConfig.epicsmotors
-        
-       
-        
-    def initconnection(self):
+        #setup for Queue
+        self.Q={'Queue':{}}
+        self.Q['Queue']['reciveQ'] = Queue() 
+        self.Q['Queue']['sendQ'] = Queue() 
+        self.Q['Queue']['epicsQ'] = Queue()
+        self.Q['Queue']['ControlQ'] = Queue()
+        #setup for tcp
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.client.settimeout(self.tcptimeout)
+        
+        self.epcisPV_ = Process(target=self.epicsPV, args=(self.Par,self.Q,self.client,))
+        self.epcisPV_.start()
+        time.sleep(1)
+        
+    def initconnection(self):
+        
         self.logger.info("try to connect")
         trytime=0
         while True:
@@ -98,30 +108,30 @@ class DCSDHS():
         # self.Par['Queue']['sendQ'] = Queue() 
         # self.Par['Queue']['epicsQ'] = Queue()
         # self.Par['Queue']['ControlQ'] = Queue()
-        Q={'Queue':{}}
-        Q['Queue']['reciveQ'] = Queue() 
-        Q['Queue']['sendQ'] = Queue() 
-        Q['Queue']['epicsQ'] = Queue()
-        Q['Queue']['ControlQ'] = Queue()
+        # Q={'Queue':{}}
+        # Q['Queue']['reciveQ'] = Queue() 
+        # Q['Queue']['sendQ'] = Queue() 
+        # Q['Queue']['epicsQ'] = Queue()
+        # Q['Queue']['ControlQ'] = Queue()
         # self.Par.update(temp)
         self.logger.debug(f'TYPE:{type(self.Par)}')
         
-        reciver_ = Process(target=self.reciver, args=(self.Par,Q,self.client,))
-        sender_ = Process(target=self.sender, args=(self.Par,Q,self.client,))
-        epcisPV_ = Process(target=self.epicsPV, args=(self.Par,Q,self.client,))
-        control_ = Process(target=self.controlCenter, args=(self.Par,Q,self.client,))
+        reciver_ = Process(target=self.reciver, args=(self.Par,self.Q,self.client,))
+        sender_ = Process(target=self.sender, args=(self.Par,self.Q,self.client,))
+        # epcisPV_ = Process(target=self.epicsPV, args=(self.Par,Q,self.client,))
+        # control_ = Process(target=self.controlCenter, args=(self.Par,self.Q,self.client,))
         
         
-        epcisPV_.start()
-        time.sleep(1)
-        control_.start()
+        # epcisPV_.start()
+        # time.sleep(1)
+        # control_.start()
         reciver_.start()
         sender_.start()
         
         reciver_.join()
         sender_.join()
-        epcisPV_.join()
-        control_.join()
+        # epcisPV_.join()
+        # control_.join()
         self.initconnection()
         
     def controlCenter(self,Par,Q,tcpclient):

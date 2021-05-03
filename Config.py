@@ -42,11 +42,11 @@ Par={
                                  'DetYMotor':'07a:Det:Y',
                                  'ApertureMotor':'07a:md3:CurrentApertureDiameterIndex',
                                  
-                                    
+                                 'ApertureStatelist':['07a:md3:ApertureHorizontalState','07a:md3:ApertureVerticalState'],   
                                     
                                  'using':{'MD3Ver':True,
                                           'MD3Hor':True,
-                                          'SS':True,
+                                          'SS':False,
                                           'Aperture':False,
                                           'Slit4VerOP':False,
                                           'Slit4HorOP':False,
