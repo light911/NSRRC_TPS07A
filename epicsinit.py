@@ -6,7 +6,7 @@ Created on Wed Dec 25 09:56:32 2019
 TODO:update DisY uperlimits
 """
 
-from epics import PV,Motor,ca,CAProcess
+from epics import PV,Motor,ca,CAProcess,caget
 import numpy as np
 import sys,time,os,signal
 import logsetup
@@ -93,6 +93,9 @@ class epicsdev(QThread):
                     command[2]=value
                     command[3]=dcsstype
                     command[4]="normal"
+                    if command[1] == "energy":
+                        command[2] = value *1000
+                    
                 else:
                     #no dccstype or unknow type
                     command=["","","","","",""]
@@ -138,7 +141,8 @@ class epicsdev(QThread):
                 if value == 1:
                     #move done
                     self.logger.debug("Energy end of moing,Disable gap to energy")
-                    p = CAProcess(target=self.CAPUT, args=('07a:IU22:cvtE2Gap_able','Disable',))
+                    #Disable = 1
+                    p = CAProcess(target=self.CAPUT, args=(self.Par['Energy']['evtogap'],1,))
                     p.start()
                     p.join()
                     pos = self.epicsmotors[guiname]['PVID'].get('RBV') * 1000
@@ -388,16 +392,20 @@ class epicsdev(QThread):
                     if PVID.within_limits(TargetPos):
                         if command[1] == 'energy':
                             #Enable energy to gap(07a:IU22:cvtE2Gap_able)
-                            
-                            if abs(TargetPos - PVID.VAL) > self.Par['minEVchangeGAP']:
-                                self.logger.debug(f"det Energy {abs(TargetPos - PVID.VAL)} is higher than {self.Par['minEVchangeGAP']}, change gap setting")
-                                
-                                p = CAProcess(target=self.CAPUT, args=('07a:IU22:cvtE2Gap_able','Enable',))
+                            newenergy = TargetPos
+                            C_energy = PVID.RBV
+                            N_gap = float(caget(self.Par['Energy']['cvtE2Gapname']))
+                            C_gap = float(caget(self.Par['Energy']['gapname']))
+                            if abs(C_gap - N_gap) > self.Par['minchangeGAP'] or abs(C_energy - newenergy) > self.Par['minEVchangeGAP']:
+                                self.logger.debug(f"det detGap {abs(C_gap - N_gap)} is higher than {self.Par['minchangeGAP']},or {abs(C_energy - newenergy)} > {self.Par['minEVchangeGAP']} change gap setting")
+                                #Enalble = 0
+                                p = CAProcess(target=self.CAPUT, args=(self.Par['Energy']['evtogap'],0,))
                                 p.start()
                                 p.join()
                             else:
-                                self.logger.debug(f"det Energy {abs(TargetPos - PVID.VAL)} is small than {self.Par['minEVchangeGAP']}, NO chane gap setting")
-                                p = CAProcess(target=self.CAPUT, args=('07a:IU22:cvtE2Gap_able','Disable',))
+                                self.logger.debug(f"det detGap {abs(C_gap - N_gap)} is small than {self.Par['minchangeGAP']},and  {abs(C_energy - newenergy)} > {self.Par['minEVchangeGAP']},NO chane gap setting")
+                                #Disable = 1
+                                p = CAProcess(target=self.CAPUT, args=(self.Par['Energy']['evtogap'],1,))
                                 p.start()
                                 p.join()
                         state = PVID.move(TargetPos)
@@ -475,6 +483,8 @@ class epicsdev(QThread):
         chid = ca.create_channel(PV, connect=False, callback=None, auto_cb=True)
         print(f'caput chid={chid}')
         state = ca.put(chid,value, wait=True,timeout=1, callback=None, callback_data=None)
+        if state != 1:
+            self.logger.critical(f"Caput {PV} value {value} Fail!")
         print(f'ca put state={state}')
         
     #Detector distance interolck

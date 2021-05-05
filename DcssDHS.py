@@ -15,6 +15,7 @@ import logsetup
 # import epicsfile
 import Config
 import EpicsConfig
+import Detector
 
 class DCSDHS():
     def __init__(self,managerpar=None) :
@@ -55,13 +56,14 @@ class DCSDHS():
         self.Q['Queue']['sendQ'] = Queue() 
         self.Q['Queue']['epicsQ'] = Queue()
         self.Q['Queue']['ControlQ'] = Queue()
+        self.Q['Queue']['DetectorQ'] = Queue()
         #setup for tcp
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.client.settimeout(self.tcptimeout)
         
         self.epcisPV_ = Process(target=self.epicsPV, args=(self.Par,self.Q,self.client,))
         self.epcisPV_.start()
-        time.sleep(1)
+        time.sleep(2)
         
     def initconnection(self):
         
@@ -118,6 +120,7 @@ class DCSDHS():
         
         reciver_ = Process(target=self.reciver, args=(self.Par,self.Q,self.client,))
         sender_ = Process(target=self.sender, args=(self.Par,self.Q,self.client,))
+        Detector_ = Process(target=self.detector, args=(self.Par,self.Q,self.client,))
         # epcisPV_ = Process(target=self.epicsPV, args=(self.Par,Q,self.client,))
         # control_ = Process(target=self.controlCenter, args=(self.Par,self.Q,self.client,))
         
@@ -127,18 +130,22 @@ class DCSDHS():
         # control_.start()
         reciver_.start()
         sender_.start()
+        Detector_.start()
         
         reciver_.join()
         sender_.join()
+        Detector_.join()
         # epcisPV_.join()
         # control_.join()
         self.initconnection()
         
-    def controlCenter(self,Par,Q,tcpclient):
+    def detector(self,Par,Q,tcpclient):
         reciveQ = Q['Queue']['reciveQ']
         sendQ = Q['Queue']['sendQ']
         epicsQ = Q['Queue']['epicsQ']
-        ContrlQ = Q['Queue']['ControlQ']
+        DetctorQ = Q['Queue']['ControlQ']
+        DET = Detector.Eiger2X16M(Par,Q)
+        DET.CommandMon()
         
     def reciver(self,Par,Q,tcpclient) :
         #recive message from dcss
@@ -146,6 +153,7 @@ class DCSDHS():
         sendQ = Q['Queue']['sendQ']
         epicsQ = Q['Queue']['epicsQ']
         ContrlQ = Q['Queue']['ControlQ']
+        DetctorQ = Q['Queue']['ControlQ']
         msg = ""
         while True:
             #check command
@@ -169,13 +177,15 @@ class DCSDHS():
                 # Something else happened, handle error, exit, etc.
                 self.logger.critical ("Error for socket error")
                 sendQ.put("exit")
-                epicsQ.put("exit")
+                # epicsQ.put("exit")
+                DetctorQ.put("exit")
                 break
             else:
                 if len(data) == 0:
                     self.logger.critical ("orderly shutdown on DCSS server end")
                     sendQ.put("exit")
-                    epicsQ.put("exit")
+                    # epicsQ.put("exit")
+                    DetctorQ.put("exit")
                     break
                 else:
                     # got a message do something :)
@@ -194,6 +204,7 @@ class DCSDHS():
                         self.logger.debug(f"Got message from dcss : {command}")
                         if command[0] == "stoh_abort_all":
                             epicsQ.put(("stoh_abort_all",''))
+                            DetctorQ.put(("stoh_abort_all",''))
                             pass
                         elif command[0] == "stoh_start_motor_move":
                             #"stoh_start_motor_move motorName destination
@@ -206,6 +217,8 @@ class DCSDHS():
                         elif command[0] == "stoh_start_oscillation":
                             #stoh_start_oscillation motorName shutter deltaMotor deltaTime
                             pass
+                        elif command[0] == "stoh_register_operation":
+                            pass
                         elif command[0] == "stoh_start_operation":
                             #stoh_start_operation operationName operationHandle [arg1 [arg2 [arg3 [...]]]]
                             #operationName is the name of the operation to be started.
@@ -216,18 +229,20 @@ class DCSDHS():
                             pass
                             if command[1] == "detector_collect_image" :
                                 pass
-                            if command[1] == "detector_collect_shutterless" :
+                            elif command[1] == "detector_collect_shutterless" :
                                 pass
-                            if command[1] == "detector_transfer_image" :
+                            elif command[1] == "detector_transfer_image" :
                                 pass
-                            if command[1] == "detector_oscillation_ready" :
+                            elif command[1] == "detector_oscillation_ready" :
                                 pass
-                            if command[1] == "detector_stop" :
+                            elif command[1] == "detector_stop" :
                                 pass
-                            if command[1] == "detector_reset_run" :
+                            elif command[1] == "detector_reset_run" :
                                 pass
-                            if command[1] == "detector_oscillation_ready" :
+                            elif command[1] == "detector_oscillation_ready" :
                                 pass
+                            else:
+                                 self.logger.warning(f"Unkone operation from dcss : {command}")
                         elif command[0] == "stoh_read_ion_chambers":
                             #stoh_read_ion_chambers time repeat ch1 [ch2 [ch3 [...]]]
                             pass
@@ -239,10 +254,15 @@ class DCSDHS():
                             #if not move report move htos_motor_move_completed and POS(VAL or RBV?
                             #if moving report htos_motor_move_started with VAL
                             #note if send move_completed seem will have abort on dcss so goback to update
-                            GUIname, = self.FindEpicsMotorInfo(command[1],'dcssname','GUIname')
-                            MoveDone = self.Par['EPICS'][GUIname]['DMOV']
-                            Pos = self.Par['EPICS'][GUIname]['RBV']
-                            TargetPos = self.Par['EPICS'][GUIname]['VAL']
+                            try:
+                                GUIname, = self.FindEpicsMotorInfo(command[1],'dcssname','GUIname')
+                                MoveDone = self.Par['EPICS'][GUIname]['DMOV']
+                                Pos = self.Par['EPICS'][GUIname]['RBV']
+                                TargetPos = self.Par['EPICS'][GUIname]['VAL']
+                            except :
+                                self.logger.warning(f"command : {command} has problem")
+                                # self.logger.debug(f"command : {command} has problem")
+                            
 
                             if MoveDone:
                                 # sendQ.put(('endmove',command[1],Pos,'Normal'))
@@ -296,7 +316,8 @@ class DCSDHS():
                                 sendQ.put(('updatevalue',command[1],Pos,'motor','Normal'))
                                 sendQ.put(('startmove',command[1],TargetPos,'motor','Normal'))
                         else:
-                            print(f'Unknown command:{command[0]}')
+                            self.logger.warning(f"Unknown command:{command[0]}")
+                            # print(f'Unknown command:{command[0]}')
                         index = msg.find('\x00')
                         
     def processrecvice(self,string):
@@ -312,7 +333,7 @@ class DCSDHS():
             ans = string[zeroindex+2:zeroindex+length+1]
             # print (f'0 index@{index} length:{length}')
             # print (f'after process str:{ans} length:{len(ans)}')
-            print (ans.encode())
+            # print (ans.encode())
         else:
             ans=""
             print(ans)
@@ -366,6 +387,7 @@ class DCSDHS():
                 elif command[0] == "startmove" :
                     #htos_motor_move_started motorName position
                     echo = "htos_motor_move_started " + str(command[1]) + " " +str(command[2])
+                    self.logger.info(f"{command[1]} startmove to {command[2]} ")
                     
                 elif command[0] == "endmove" :
                     #htos_motor_move_completed motorName position completionStatus
@@ -377,6 +399,7 @@ class DCSDHS():
                     #both_hw_limits indicates that the motor cable may be disconnected.
                     #unknown indicates that the motor completed abnormally, but the DHS software or the hardware controller does not know why.
                     echo = "htos_motor_move_completed " + str(command[1]) + " " +str(command[2]) + " " +str(command[3])
+                    self.logger.info(f"{command[1]} move completed at {command[2]} with {command[3]} ")
                 elif command[0] == "warning" :
                     #htos_note Warning XXXX
                     echo = "htos_note Warning " + str(command[1])
@@ -470,7 +493,11 @@ class DCSDHS():
 
 
     def quit(self,signum,frame):
-        
+        self.Q['Queue']['reciveQ'].put('exit')
+        self.Q['Queue']['sendQ'].put('exit')
+        self.Q['Queue']['epicsQ'].put('exit')
+        self.Q['Queue']['ControlQ'].put('exit')
+        self.Q['Queue']['DetectorQ'].put('exit')
         self.logger.debug(f"PID : {os.getpid()} DHS closed, Par= {self.Par} TYPE:{type(self.Par)}")
         # self.logger.info(f'PID : {os.getpid()} DHS closed') 
         sys.exit()

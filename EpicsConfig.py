@@ -86,7 +86,36 @@ epicsmotors={
                 'dcssname':"energy",
                 'dcsstype':"motor",
                  },
-
+            'SampleZ':{
+                'PVname':'07a:md3:AlignmentY',
+                'PVID':'',
+                'GUIname':'SampleZ',
+                "old_value":"0",
+                'callbackitems':['DMOV','VAL','RBV'],
+                "deadband":0.001,
+                'dcssname':"sample_z",
+                'dcsstype':"motor",
+                 },
+            'SampleX':{
+                'PVname':'07a:md3:CentringX',
+                'PVID':'',
+                'GUIname':'SampleX',
+                "old_value":"0",
+                'callbackitems':['DMOV','VAL','RBV'],
+                "deadband":0.001,
+                'dcssname':"sample_x",
+                'dcsstype':"motor",
+                 },
+            'SampleY':{
+                'PVname':'07a:md3:CentringY',
+                'PVID':'',
+                'GUIname':'SampleY',
+                "old_value":"0",
+                'callbackitems':['DMOV','VAL','RBV'],
+                "deadband":0.001,
+                'dcssname':"sample_y",
+                'dcsstype':"motor",
+                 },
             }
 
 
