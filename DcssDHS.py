@@ -63,7 +63,11 @@ class DCSDHS():
         
         self.epcisPV_ = Process(target=self.epicsPV, args=(self.Par,self.Q,self.client,))
         self.epcisPV_.start()
-        time.sleep(2)
+        time.sleep(5)
+        self.logger.debug("Par After epicsPV Start=======")
+        self.logger.debug(self.Par)
+        self.logger.debug(f'TYPE:{type(self.Par)}')
+        self.logger.debug("Par End========")
         
     def initconnection(self):
         
@@ -71,12 +75,17 @@ class DCSDHS():
         trytime=0
         while True:
             try:
+                #setup for tcp
+                self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                self.client.settimeout(self.tcptimeout)
                 self.client.connect((self.host, self.port))
                 self.logger.info("try to Connect to %s:%d" % (self.host, self.port))
                 
-            except:
+            except Exception as e:
+                self.client.close()
+                self.logger.debug(f'fail connect to {self.host} {self.port} Error ={e}')
                 if trytime == 0:
-                    self.logger.debug(f'fail connect to {self.host} {self.port}')
+                    # self.logger.debug(f'fail connect to {self.host} {self.port}')
                     self.logger.critical("connection to DCSS fail, I wait 1 sec then try again until sucess...")
                     trytime =1
                 else:
@@ -153,7 +162,7 @@ class DCSDHS():
         sendQ = Q['Queue']['sendQ']
         epicsQ = Q['Queue']['epicsQ']
         ContrlQ = Q['Queue']['ControlQ']
-        DetctorQ = Q['Queue']['ControlQ']
+        DetctorQ = Q['Queue']['DetectorQ']
         msg = ""
         while True:
             #check command
@@ -218,6 +227,7 @@ class DCSDHS():
                             #stoh_start_oscillation motorName shutter deltaMotor deltaTime
                             pass
                         elif command[0] == "stoh_register_operation":
+                            
                             pass
                         elif command[0] == "stoh_start_operation":
                             #stoh_start_operation operationName operationHandle [arg1 [arg2 [arg3 [...]]]]
@@ -230,7 +240,9 @@ class DCSDHS():
                             if command[1] == "detector_collect_image" :
                                 pass
                             elif command[1] == "detector_collect_shutterless" :
-                                pass
+                                command.pop(0)
+                                # print(command)
+                                DetctorQ.put(tuple(command))
                             elif command[1] == "detector_transfer_image" :
                                 pass
                             elif command[1] == "detector_oscillation_ready" :
@@ -241,8 +253,14 @@ class DCSDHS():
                                 pass
                             elif command[1] == "detector_oscillation_ready" :
                                 pass
+                            elif command[1] == "getMD2Motor" :
+                                #bypass it
+                                #['stoh_start_operation', 'getMD2Motor', '1.1', 'CurrentApertureDiameterIndex']
+                                #['stoh_start_operation', 'getMD2Motor', '1.2', 'change_mode']
+                                sendQ.put(('updatevalue',command[1],command[3],'operation_completed',command[2]))
+                                 # self.logger.warning(f"operation from dcss : {command}")
                             else:
-                                 self.logger.warning(f"Unkone operation from dcss : {command}")
+                                 self.logger.warning(f"Unkonw operation from dcss : {command}")
                         elif command[0] == "stoh_read_ion_chambers":
                             #stoh_read_ion_chambers time repeat ch1 [ch2 [ch3 [...]]]
                             pass
@@ -259,17 +277,18 @@ class DCSDHS():
                                 MoveDone = self.Par['EPICS'][GUIname]['DMOV']
                                 Pos = self.Par['EPICS'][GUIname]['RBV']
                                 TargetPos = self.Par['EPICS'][GUIname]['VAL']
+                                if MoveDone:
+                                    # sendQ.put(('endmove',command[1],Pos,'Normal'))
+                                    sendQ.put(('updatevalue',command[1],Pos,'motor','Normal'))
+                                else:
+                                    sendQ.put(('updatevalue',command[1],Pos,'motor','Normal'))
+                                    sendQ.put(('startmove',command[1],TargetPos,'motor','Normal'))
                             except :
                                 self.logger.warning(f"command : {command} has problem")
-                                # self.logger.debug(f"command : {command} has problem")
+                                self.logger.debug(f"GUIname = {GUIname},Par: {self.Par} ")
                             
 
-                            if MoveDone:
-                                # sendQ.put(('endmove',command[1],Pos,'Normal'))
-                                sendQ.put(('updatevalue',command[1],Pos,'motor','Normal'))
-                            else:
-                                sendQ.put(('updatevalue',command[1],Pos,'motor','Normal'))
-                                sendQ.put(('startmove',command[1],TargetPos,'motor','Normal'))
+
                                 
                             # epicsQ.put((command[0],))
                             pass
@@ -348,6 +367,7 @@ class DCSDHS():
             command = sendQ.get()
             if isinstance(command,str):
                 if command == "exit" :
+                    self.logger.warning("Send Q get Exit")
                     break
                 else:
                     tcpclient.sendall(command.encode())

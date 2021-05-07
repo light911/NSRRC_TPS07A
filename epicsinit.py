@@ -55,7 +55,10 @@ class epicsdev(QThread):
         # print(self.Par)
 
     def setMotor(self):
+        # self.logger.info("EPICS set motor")
+        
         for motor in self.epicsmotors:
+            self.logger.info(f'EPICS set {motor}')
             self.epicsmotors[motor]['PVID'] = Motor(self.epicsmotors[motor]['PVname'])
             self.epicsmotors[motor]['GUIname'] = motor
             
@@ -187,6 +190,7 @@ class epicsdev(QThread):
             temp[motor]=detailinfo
         self.Par['EPICS'] = temp
         self.logger.debug(f"PID : {os.getpid()} EPICS initINFO, Par= {self.Par} TYPE:{type(self.Par)}")
+        # self.logger.warning(f"PID : {os.getpid()} EPICS initINFO, Par= {self.Par} TYPE:{type(self.Par)}")
         pass
         
     def findfield(self,PVname=""):
@@ -212,6 +216,7 @@ class epicsdev(QThread):
         
     def setcallback(self):
         for item in self.epicslist:
+            self.logger.info(f'EPICS set {item}')
             self.epicslist[item]["connected"] = False
             self.epicslist[item]["valueupdated"] = False
         for item in self.epicslist:
@@ -247,9 +252,29 @@ class epicsdev(QThread):
         self.Par['EPICS'][guiname] = value
         self.epicslist[pvname]["valueupdated"] = True
         
+        if dcsstype == "par":
+            
+                #par just update value and endmove
+                self.sendQ.put(('endmove',dcssname,value,'normal'))
+        elif dcsstype == "change_mode" :
+                      # [ 0] Centring
+                      # [ 1] BeamLocation
+                      # [ 2] DataCollection
+                      # [ 3] Transfer
+                      # [ 4] Unknown
+
+            if value == 4:
+                self.sendQ.put(('updatevalue',dcssname,value+1,"motor"),"normal")
+            else:
+                self.sendQ.put(('endmove',dcssname,value+1,'normal'))
+        elif dcsstype == "quickmotor" :   
+            self.sendQ.put(('endmove',dcssname,value,'normal'))
+        #for other            
         if self.init_update:
             self.epicslist[pvname]["old_value"] = value
             self.logger.debug('PV value changed: %s=%s ' % ( guiname, value))
+            
+                    
             if self.check_all_valueupdated() and self.check_all_connected():
                 self.logger.debug("All value updaed")
                 self.notify_observers('UpdateDistance')
@@ -268,23 +293,13 @@ class epicsdev(QThread):
                 # self.logger.debug(f"GUI:{guiname}, det:{abs(self.epicslist[pvname]['old_value'] - value )}")
                 pass
             else :#everthing is fine 
-                self.logger.debug('PV value changed: %s=%s ' % ( guiname, value))
-                
+                # self.logger.debug('PV value changed: %s=%s ' % ( guiname, value))
+                self.logger.debug(f'PV value changed: {guiname}={value} ')
                 if guiname == "shutter":
-                    self.sendQ.put(('updatevalue',dcssname,value,dcsstype))
+                    self.sendQ.put(('updatevalue',dcssname,value,dcsstype,"normal"))
                 self.epicslist[pvname]["old_value"] = value
                 
-                if guiname == "MD3Y_DMOV" and value == 1:#if MD3Y moving done
-                    self.notify_observers('ChangeMD3Y',value)
-                    
-                if guiname == "DetY":
-                    self.notify_observers('ChangeDetY',value)
-        
-                if guiname == "Beamsize":
-                    self.notify_observers('ChangeBeamsize',value)
-                    
-                if guiname == "MD3BS":
-                    self.notify_observers('ChangeMD3BS',value)
+                
                     
                     
     #notify observer not used, keep it for ref
@@ -364,6 +379,7 @@ class epicsdev(QThread):
         return ans
     
     def epcisMon(self) :
+        self.logger.warning('Epics MON Start')
         while True:
             command = self.epicsQ.get()
             if isinstance(command,str):
@@ -384,43 +400,65 @@ class epicsdev(QThread):
                     #pvanme=self.findepicsinfo(command[1],"PVname")
                     
                     # self.findepicsinfo(command[1],"PVname").value = float(command[2])
-                    PVID, = self.FindEpicsMotorInfo(command[1],'dcssname','PVID')
-                    TargetPos = float(command[2])
-                    if command[1] == 'energy':
-                        TargetPos = TargetPos / 1000
-                        
-                    if PVID.within_limits(TargetPos):
+                    try :
+                        PVID,dcsstype,PVname = self.FindEpicsMotorInfo(command[1],'dcssname','PVID','dcsstype','PVname')
+                    except :
+                        self.logger.debug("dcssname can not find in EPICS Motor")
+                        try:
+                            PVID,dcsstype,PVname = self.FindEpicsListInfo(command[1],'dcssname','PVID','dcsstype','PVname')
+                        except:
+                            self.logger.debug("dcssname can not find in EPICS List")
+                            
+                            
+                    if dcsstype == 'motor':        
+                        TargetPos = float(command[2])
                         if command[1] == 'energy':
-                            #Enable energy to gap(07a:IU22:cvtE2Gap_able)
-                            newenergy = TargetPos
-                            C_energy = PVID.RBV
-                            N_gap = float(caget(self.Par['Energy']['cvtE2Gapname']))
-                            C_gap = float(caget(self.Par['Energy']['gapname']))
-                            if abs(C_gap - N_gap) > self.Par['minchangeGAP'] or abs(C_energy - newenergy) > self.Par['minEVchangeGAP']:
-                                self.logger.debug(f"det detGap {abs(C_gap - N_gap)} is higher than {self.Par['minchangeGAP']},or {abs(C_energy - newenergy)} > {self.Par['minEVchangeGAP']} change gap setting")
-                                #Enalble = 0
-                                p = CAProcess(target=self.CAPUT, args=(self.Par['Energy']['evtogap'],0,))
-                                p.start()
-                                p.join()
-                            else:
-                                self.logger.debug(f"det detGap {abs(C_gap - N_gap)} is small than {self.Par['minchangeGAP']},and  {abs(C_energy - newenergy)} > {self.Par['minEVchangeGAP']},NO chane gap setting")
-                                #Disable = 1
-                                p = CAProcess(target=self.CAPUT, args=(self.Par['Energy']['evtogap'],1,))
-                                p.start()
-                                p.join()
-                        state = PVID.move(TargetPos)
-                        self.logger.debug(f"Motor ={command[1]} moving state = {state}")
-                        self.sendQ.put(("startmove",command[1],command[2],"Normal"))
-                    else:
-                        LLM = PVID.LLM
-                        HLM = PVID.HLM
-                        pos = PVID.RBV
-                        dcssname = command[1]
-                        warningTXT = f'Motor {command[1]} TargetPOS:{command[2]} is out of limits {LLM} to {HLM}'
-                        self.sendQ.put(("warning",warningTXT))
-                        self.sendQ.put(('endmove',dcssname,pos,'normal'), block=False)
-                                        
-                    pass
+                            TargetPos = TargetPos / 1000
+                            
+                        if PVID.within_limits(TargetPos):
+                            if command[1] == 'energy':
+                                #Enable energy to gap(07a:IU22:cvtE2Gap_able)
+                                newenergy = TargetPos
+                                C_energy = PVID.RBV
+                                N_gap = float(caget(self.Par['Energy']['cvtE2Gapname']))
+                                C_gap = float(caget(self.Par['Energy']['gapname']))
+                                if abs(C_gap - N_gap) > self.Par['minchangeGAP'] or abs(C_energy - newenergy) > self.Par['minEVchangeGAP']:
+                                    self.logger.debug(f"det detGap {abs(C_gap - N_gap)} is higher than {self.Par['minchangeGAP']},or {abs(C_energy - newenergy)} > {self.Par['minEVchangeGAP']} change gap setting")
+                                    #Enalble = 0
+                                    p = CAProcess(target=self.CAPUT, args=(self.Par['Energy']['evtogap'],0,))
+                                    p.start()
+                                    p.join()
+                                else:
+                                    self.logger.debug(f"det detGap {abs(C_gap - N_gap)} is small than {self.Par['minchangeGAP']},and  {abs(C_energy - newenergy)} > {self.Par['minEVchangeGAP']},NO chane gap setting")
+                                    #Disable = 1
+                                    p = CAProcess(target=self.CAPUT, args=(self.Par['Energy']['evtogap'],1,))
+                                    p.start()
+                                    p.join()
+                            
+                            self.sendQ.put(("startmove",command[1],command[2],"Normal"))
+                            state = PVID.move(TargetPos)
+                            self.logger.debug(f"Motor ={command[1]} moving state = {state}")
+                        else:
+                            LLM = PVID.LLM
+                            HLM = PVID.HLM
+                            pos = PVID.RBV
+                            dcssname = command[1]
+                            warningTXT = f'Motor {command[1]} TargetPOS:{command[2]} is out of limits {LLM} to {HLM}'
+                            self.sendQ.put(("warning",warningTXT))
+                            self.sendQ.put(('endmove',dcssname,pos,'normal'), block=False)
+                                            
+                        pass
+                    elif dcsstype == "change_mode":
+                            self.sendQ.put(("startmove",command[1],command[2],"Normal"))
+                            p = CAProcess(target=self.CAPUT, args=(PVname,float(command[2])-1,))
+                            p.start()
+                            p.join()
+                    elif dcsstype == "quickmotor":
+                            self.sendQ.put(("startmove",command[1],command[2],"Normal"))
+                            p = CAProcess(target=self.CAPUT, args=(PVname,float(command[2]),))
+                            p.start()
+                            p.join()
+                   
                 elif command[0] == "stoh_register_shutter" or command[0] == 'stoh_set_shutter_state':
                     #['stoh_register_shutter', 'shutter', 'closed'
                     dcssname = command[1]
@@ -438,6 +476,22 @@ class epicsdev(QThread):
                         if dcssname != "" :
                             self.epicsmotors[m]['PVID'].stop()
                             self.logger.warning(f"{dcssname} STOP!")
+                            pos = self.epicsmotors[m]['PVID'].RBV
+                            if dcssname == "energy" :
+                                pos = pos*1000
+                            self.sendQ.put(('endmove',dcssname,pos,'normal'), block=False)
+                            
+                    for dev in self.epicslist:
+                        dcssname =self.epicslist[dev]['dcssname']
+                        if dcssname != "" :
+                            if dcsstype == 'shutter':
+                                pass
+                            elif dcsstype == 'change_mode':
+                                pos = caget(dev)
+                                self.sendQ.put(('endmove',dcssname,pos+1,'normal'), block=False)
+                            else:
+                                pos = caget(dev)
+                                self.sendQ.put(('endmove',dcssname,pos,'normal'), block=False)
                         
                 else:
                     pass

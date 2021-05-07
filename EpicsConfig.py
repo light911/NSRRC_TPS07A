@@ -33,7 +33,7 @@ epicsmotors={
                 "old_value":"0",
                 'callbackitems':['DMOV','VAL','RBV'],
                 "deadband":0.001,
-                'dcssname':"",
+                'dcssname':"beamstop_z",
                 'dcsstype':"motor",
                  },
             'DetDistance':{
@@ -54,6 +54,26 @@ epicsmotors={
                 'callbackitems':['DMOV','VAL','RBV'],
                 "deadband":0.001,
                 'dcssname':"gonio_phi",
+                'dcsstype':"motor",
+                 },
+            'Phi':{
+                'PVname':'07a:md3:Phi',
+                'PVID':'',
+                'GUIname':'Phi',
+                "old_value":"0",
+                'callbackitems':['DMOV','VAL','RBV'],
+                "deadband":0.001,
+                'dcssname':"gonio_omega",
+                'dcsstype':"motor",
+                 },
+            'Kappa':{
+                'PVname':'07a:md3:Kappa',
+                'PVID':'',
+                'GUIname':'Kappa',
+                "old_value":"0",
+                'callbackitems':['DMOV','VAL','RBV'],
+                "deadband":0.001,
+                'dcssname':"gonio_kappa",
                 'dcsstype':"motor",
                  },
             'DetVer':{
@@ -96,6 +116,26 @@ epicsmotors={
                 'dcssname':"sample_z",
                 'dcsstype':"motor",
                  },
+            'AlignZ':{
+                'PVname':'07a:md3:AlignmentZ',
+                'PVID':'',
+                'GUIname':'AlignZ',
+                "old_value":"0",
+                'callbackitems':['DMOV','VAL','RBV'],
+                "deadband":0.001,
+                'dcssname':"align_z",
+                'dcsstype':"motor",
+                 },
+            'AlignX':{
+                'PVname':'07a:md3:AlignmentX',
+                'PVID':'',
+                'GUIname':'AlignX',
+                "old_value":"0",
+                'callbackitems':['DMOV','VAL','RBV'],
+                "deadband":0.001,
+                'dcssname':"align_x",
+                'dcsstype':"motor",
+                 },
             'SampleX':{
                 'PVname':'07a:md3:CentringX',
                 'PVID':'',
@@ -128,7 +168,7 @@ epicslist={
                             "camon":True,
                             "deadband":0,
                             'dcssname':"",
-                            'dcsstype':"motor",
+                            'dcsstype':"",
                             },
               "07a:md3:FastShutterIsOpen":{
                             "PVname":"07a:md3:FastShutterIsOpen",  
@@ -139,6 +179,56 @@ epicslist={
                             "deadband":0,
                             'dcssname':"shutter",
                             'dcsstype':"shutter",
+                            },
+              "07a:md3:BeamPositionVertical":{
+                            "PVname":"07a:md3:BeamPositionVertical",  
+                            "PVID":"",#for uid object
+                            "GUIname":"beam_pos_y",
+                            "old_value":"0",
+                            "camon":True,
+                            "deadband":0,
+                            'dcssname':"beam_pos_y",
+                            'dcsstype':"par",
+                            },
+              "07a:md3:BeamPositionHorizontal":{
+                            "PVname":"07a:md3:BeamPositionHorizontal",  
+                            "PVID":"",#for uid object
+                            "GUIname":"beam_pos_x",
+                            "old_value":"0",
+                            "camon":True,
+                            "deadband":0,
+                            'dcssname':"beam_pos_x",
+                            'dcsstype':"par",
+                            },
+              "07a:md3:KappaIsEnabled":{
+                            "PVname":"07a:md3:KappaIsEnabled",  
+                            "PVID":"",#for uid object
+                            "GUIname":"KappaEnabled",
+                            "old_value":"0",
+                            "camon":True,
+                            "deadband":0,
+                            'dcssname':"KappaEnabled",
+                            'dcsstype':"par",
+                            },
+              "07a:md3:CurrentPhase":{
+                            "PVname":"07a:md3:CurrentPhase",  
+                            "PVID":"",#for uid object
+                            "GUIname":"change_mode",
+                            "old_value":"0",
+                            "camon":True,
+                            "deadband":0,
+                            'dcssname':"change_mode",
+                            'dcsstype':"change_mode",
+                            },
+              "07a:md3:CoaxialCameraZoomValue":{
+                            "PVname":"07a:md3:CoaxialCameraZoomValue",  
+                            "PVID":"",#for uid object
+                            "GUIname":"camera_zoom",
+                            "old_value":"0",
+                            "camon":True,
+                            "deadband":0,
+                            'dcssname':"camera_zoom",
+                            'dcsstype':"quickmotor",
                             },
               
              }
