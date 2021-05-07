@@ -11,6 +11,7 @@ from Eiger.DEiger2Client import DEigerClient
 
 class Detector():
     def __init__(self,Par,Q) :
+                
         self.detectorip = ""
         self.detectorport = 80
         self.beam_center_x = 0
@@ -29,6 +30,9 @@ class Detector():
         self.sendQ = Queue()
         self.CommandQ = Queue()
         
+        self.logger = logsetup.getloger2('Detector',level = self.Par['Debuglevel'])
+        self.logger.info("init Detector logging")
+        
         self.detectorip = self.Par['Detector']['ip']
         self.detectorport = self.Par['Detector']['port']
         
@@ -38,6 +42,26 @@ class Detector():
         self.reciveQ = Q['Queue']['reciveQ']
         self.sendQ = Q['Queue']['sendQ']
         self.CommandQ = Q['Queue']['DetectorQ']
+        self.state = False
+        
+        self.operationHandle = ""
+        self.runIndex = int()
+        self.filename = ""
+        self.directory = ""
+        self.userName = ""
+        self.axisName = ""
+        self.exposureTime = float()
+        self.oscillationStart = float()
+        self.oscillationRange =  float()
+        self.distance = float()
+        self.wavelength = float()
+        self.detectoroffX = float()
+        self.detectoroffY = float()
+        self.sessionId = ""
+        self.fileindex = int()
+        self.TotalFrames = int() 
+        self.beamsize = "" 
+        self.atten = ""
         # self.logger.warning(f'Detector {self.CommandQ}')
     def CommandMon(self) :
         self.logger.warning('Detector MON start!')
@@ -64,47 +88,20 @@ class Detector():
     
     def HandleCommand(self,command):
         self.logger.debug(f'HandleCommand:{command}')
-        try:
-            getattr(self,command[0])(command)#ex.detector_collect_image
-        except :
-                self.logger.warning(f'unknow command for detector DHS: {command[0]}')
-                self.logger.info(f'Full unknow command : {command}')
+        getattr(self,command[0])(command)#ex.detector_collect_image
+        # try:
+            # getattr(self,command[0])(command)#ex.detector_collect_image
+        # except Exception as e:
+        #     self.logger.warning(f'Error:{e}')
+        #     self.logger.warning(f'unknow command for detector DHS: {command[0]}')
+        #     self.logger.info(f'Full unknow command : {command}')
 
 
     #update each operation for diffenert detector    
     def detector_collect_image(self,command):
         # self.logger.info(f'Default action for {command[0]}:{command[1:]}')
         self.logger.info(f'command: {command[1:]}')
-    def detector_collect_shutterless(self,command):
-        #['stoh_start_operation', 'detector_collect_shutterless', '1.2', '0', 'test_0', '/data/blctl/test', 'blctl', 'gonio_phi', '0.1', '0.000000', '1.0', '1', '750.000080', '0.976226127404', '0.000071', '50.000000', '0', '0', 'PRIVATEA03F6ADA6F19A8DA1DEE6BFC325F4DCE', '3', '1', '50.000000', '0.0']
-        # command: ('1.2', '0', 'test_0', '/data/blctl/test', 'blctl', 'gonio_phi', '0.1', '0.000009', '1.0', '1', '750.000240', '0.976226127404', '0.000187', '50.000000', '0', '0', 'PRIVATEA03F6ADA6F19A8DA1DEE6BFC325F4DCE', '9', '1', '50.000000', '0.0
-
-        operationHandle = command[1]
-        runIndex = int(command[1])
-        filename = command[2]
-        directory = command[3]
-        userName = command[4]
-        axisName = command[5]
-        exposureTime = float(command[6])
-        oscillationStart = float(command[7])
-        oscillationRange =  float(command[8])
-        distance = float(command[8])
-        wavelength = float(command[9])
-        detectoroffX = float(command[10])
-        detectoroffY = float(command[11])
-        sessionId = command[12]
-        fileindex = int(command[12])
-        adv = command[13] #1
-        beamstopZ = command[14] # 50
-        adf= command[15] #0
-         
-        # detectorMode = command[11]
-        # reuseDark = command[12]
-        sessionId = command[12]
-        numberFrames = 0
-        #  sscanf(commandBuffer.textInBuffe
-        # self.logger.info(f'Default action for {command[0]}:{command[1:]}')
-        self.logger.info(f'command: {command[1:]}')
+   
     def detector_transfer_image(self,command):
         # self.logger.info(f'Default action for {command[0]}:{command[1:]}')
         self.logger.info(f'command: {command[1:]}')
@@ -137,6 +134,64 @@ class Eiger2X16M(Detector):
         self.trigger_mode ="ints"
         self.det = DEigerClient(self.detectorip,self.detectorport,verbose=False)
     #add detector opration here
+    
+    def detector_collect_shutterless(self,command):
+    #    ('detector_collect_shutterless', '1.24', '1', 'test_1', '/data/blctl/test', 'blctl', 'gonio_phi', '0.1', '0.000009', '1.0', '10', '750.000060', '0.976226127404', '0.000231', '50.000000', '0', '0', 'PRIVATEA03F6ADA6F19A8DA1DEE6BFC325F4DCE', '1', '10', '50.000000', '0.0')
+    #['stoh_start_operation', 'detector_collect_shutterless', '1.2', '0', 'test_0', '/data/blctl/test', 'blctl', 'gonio_phi', '0.1', '0.000000', '1.0', '1', '750.000080', '0.976226127404', '0.000071', '50.000000', '0', '0', 'PRIVATEA03F6ADA6F19A8DA1DEE6BFC325F4DCE', '3', '1', '50.000000', '0.0']
+    # command: ('1.2', '0', 'test_0', '/data/blctl/test', 'blctl', 'gonio_phi', '0.1', '0.000009', '1.0', '1', '750.000240', '0.976226127404', '0.000187', '50.000000', '0', '0', 'PRIVATEA03F6ADA6F19A8DA1DEE6BFC325F4DCE', '9', '1', '50.000000', '0.0
+    # set operationHandle [start_waitable_operation detector_collect_shutterless \
+    #                  $darkCacheNumber \
+    #                  $filename \
+    #                  $directory \
+    #                  $userName \
+    #                  $motor \
+    #                  $time \
+    #                  $startAngle \
+    #                  $delta \
+    #                  $totalFrames \
+    #                  [set $gMotorDistance] \
+    #                  $wavelength \
+    #                  [set $gMotorHorz] \
+    #                  [set $gMotorVert] \
+    #                  0 \
+    #                  0 \
+    #                  $sessionId \
+    #                  [lindex $args 0] \
+    #                  $totalFrames \
+    #                 $beam_size $attn]
+
+        self.operationHandle = command[1]
+        self.runIndex = int(command[2])
+        self.filename = command[3]
+        self.directory = command[4]
+        self.userName = command[5]
+        self.axisName = command[6]
+        self.exposureTime = float(command[7])
+        self.oscillationStart = float(command[8])
+        
+        self.detosc =  float(command[9])
+        self.TotalFrames = int(command[10]) #1
+        self.distance = float(command[11])
+        self.wavelength = float(command[12])
+        self.detectoroffX = float(command[13])
+        self.detectoroffY = float(command[14])
+        
+        self.sessionId = command[17]
+        self.fileindex = int(command[18])
+        self.unknow = int(command[19]) #1
+        self.beamsize = command[20] # 50
+        self.atten = command[21] #0
+        
+        #  sscanf(commandBuffer.textInBuffe
+        # self.logger.info(f'Default action for {command[0]}:{command[1:]}')
+        self.logger.info(f'command: {command[1:]}')
+        self.basesetup()
+        command = ('operdone',) + command
+        self.sendQ.put(command)
+        
+        
+        
+        
     def detector_collect_image(self,command):
         operationHandle = command[1]
         runIndex = command[1]
@@ -179,27 +234,45 @@ class Eiger2X16M(Detector):
         self.logger.info(f'command: {command[1:]}')
         pass
     
+    def basesetup(self):
         
- # sscanf(commandBuffer.textInBuffer,
- #                       "%*s %20s %d %s %s %s %s %lf %lf %lf %lf %lf %lf %lf %d %d %s %lf %lf",
- #                       frame.operationHandle,
- #                       &frame.runIndex,
- #                       frame.filename,
- #                       frame.directory,
- #                       frame.userName,
- #                       frame.axisName,
- #                       &frame.exposureTime,
- #                       &frame.oscillationStart,
- #                       &frame.oscillationRange,
- #                       &frame.distance,
- #                       &frame.wavelength,
- #                       &frame.detectorX,
- #                       &frame.detectorY,
- #                       &frame.detectorMode,
- #                       &reuseDark,
- #                       frame.sessionId,
- #                       &frame.beamSize,
- #                       &frame.attn );
+        self.det.setDetectorConfig('roi_mode','disabled')
+        self.det.setDetectorConfig('threshold/2/mode','enabled')
+        self.det.setDetectorConfig('threshold/difference/mode','enabled')
+        
+        
+        self.logger.debug(f'TotalFrames =  {self.TotalFrames},exposureTime = {self.exposureTime} ')
+        self.logger.debug(f'oscillationStart =  {self.oscillationStart},framewidth = {self.detosc}')
+        self.logger.debug(f'directory =  {self.directory},filename = {self.filename},fileindex={self.fileindex}')
+        self.logger.debug(f'distance =  {self.distance},wavelength = {self.wavelength},detectoroffX={self.detectoroffX},detectoroffY={self.detectoroffY},beamsize={self.beamsize},atten={self.atten}')
+        self.logger.debug(f'Unknow =  {self.unknow}')
+        
+        # detOmega = self.oscillationRange / self.TotalFrames
+        
+        
+        self.det.setDetectorConfig('beam_center_x',2062.5)
+        self.det.setDetectorConfig('beam_center_y',2312)
+        self.det.setDetectorConfig('detector_distance',self.distance)
+        self.det.setDetectorConfig('omega_start',self.oscillationStart)
+        self.det.setDetectorConfig('omega_increment',self.detosc)
+        self.det.setDetectorConfig('chi_start',0)
+        self.det.setDetectorConfig('chi_increment',0)
+        self.det.setDetectorConfig('phi_start',0)
+        self.det.setDetectorConfig('phi_increment',0)
+        self.det.setDetectorConfig('nimages',self.TotalFrames)
+        self.det.setDetectorConfig('trigger_mode','ints')##temp
+        
+        #check frame rate?
+        framerate = self.TotalFrames / self.exposureTime
+        
+        Filename = self.filename + "_" + str(self.fileindex).zfill(4)
+        
+        
+        self.logger.debug(f'Filename =  {Filename}')
+        
+        self.det.setMonitorConfig('mode',"enabled")
+        self.det.setFileWriterConfig('mode','enabled')
+        self.det.setFileWriterConfig('name_pattern',Filename)
 if __name__ == "__main__":
     import Config
     Par = Config.Par

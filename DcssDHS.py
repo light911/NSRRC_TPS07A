@@ -257,7 +257,7 @@ class DCSDHS():
                                 #bypass it
                                 #['stoh_start_operation', 'getMD2Motor', '1.1', 'CurrentApertureDiameterIndex']
                                 #['stoh_start_operation', 'getMD2Motor', '1.2', 'change_mode']
-                                sendQ.put(('updatevalue',command[1],command[3],'operation_completed',command[2]))
+                                sendQ.put(('updatevalue',command[1],'normal '+ command[3],command[2]))
                                  # self.logger.warning(f"operation from dcss : {command}")
                             else:
                                  self.logger.warning(f"Unkonw operation from dcss : {command}")
@@ -423,7 +423,18 @@ class DCSDHS():
                 elif command[0] == "warning" :
                     #htos_note Warning XXXX
                     echo = "htos_note Warning " + str(command[1])
-
+                elif command[0] == "operdone" :
+                    #htos_operation_completed operationName operationHandle status arguments
+                    # command2=command[1]
+                    # print(command2)
+                    args=""
+                    argslist = list(command)
+                    argslist = argslist[3:]
+                    for a in argslist:
+                        # print(a)
+                        args = args + " " + a
+                    
+                    echo = "htos_operation_completed " + str(command[1]) + " " + str(command[2])+ " " + "normal" + args
                 else:
                     self.logger.info(f'Unknow commad:{command[0]}')
                 #send to dcss    
