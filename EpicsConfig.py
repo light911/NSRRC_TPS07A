@@ -102,7 +102,7 @@ epicsmotors={
                 'GUIname':'Energy',
                 "old_value":"0",
                 'callbackitems':['DMOV','VAL','RBV'],
-                "deadband":0.001,
+                "deadband":0.0005,
                 'dcssname':"energy",
                 'dcsstype':"motor",
                  },
@@ -143,7 +143,7 @@ epicsmotors={
                 "old_value":"0",
                 'callbackitems':['DMOV','VAL','RBV'],
                 "deadband":0.001,
-                'dcssname':"sample_x",
+                'dcssname':"sample_y",
                 'dcsstype':"motor",
                  },
             'SampleY':{
@@ -153,7 +153,17 @@ epicsmotors={
                 "old_value":"0",
                 'callbackitems':['DMOV','VAL','RBV'],
                 "deadband":0.001,
-                'dcssname':"sample_y",
+                'dcssname':"sample_x",
+                'dcsstype':"motor",
+                 },
+            'cam_horz':{
+                'PVname':'07a:md3:CentringTableVertical',
+                'PVID':'',
+                'GUIname':'cam_horz',
+                "old_value":"0",
+                'callbackitems':['DMOV','VAL','RBV'],
+                "deadband":0.001,
+                'dcssname':"cam_horz",
                 'dcsstype':"motor",
                  },
             }
@@ -200,6 +210,26 @@ epicslist={
                             'dcssname':"beam_pos_x",
                             'dcsstype':"par",
                             },
+              "07a:md3:CoaxCamScaleX":{
+                            "PVname":"07a:md3:CoaxCamScaleX",  
+                            "PVID":"",#for uid object
+                            "GUIname":"zoom_scale_x",
+                            "old_value":"0",
+                            "camon":True,
+                            "deadband":0,
+                            'dcssname':"zoom_scale_x",
+                            'dcsstype':"par",
+                            },
+              "07a:md3:CoaxCamScaleY":{
+                            "PVname":"07a:md3:CoaxCamScaleY",  
+                            "PVID":"",#for uid object
+                            "GUIname":"zoom_scale_y",
+                            "old_value":"0",
+                            "camon":True,
+                            "deadband":0,
+                            'dcssname':"zoom_scale_y",
+                            'dcsstype':"par",
+                            },
               "07a:md3:KappaIsEnabled":{
                             "PVname":"07a:md3:KappaIsEnabled",  
                             "PVID":"",#for uid object
@@ -229,8 +259,18 @@ epicslist={
                             "deadband":0,
                             'dcssname':"camera_zoom",
                             'dcsstype':"quickmotor",
-                            },
-              
+                            }, 
+              "07a:md3:LastTaskInfo":{
+                            "PVname":"07a:md3:LastTaskInfo",  
+                            "PVID":"",#for uid object
+                            "GUIname":"LastTaskInfo",
+                            "old_value":"0",
+                            "camon":True,
+                            "deadband":0,
+                            'dcssname':"",
+                            'dcsstype':"log",
+                            }, 
+             
              }
 
 

@@ -18,7 +18,7 @@ def getloger(logname='Main',LOG_FILENAME='log.txt',level = 'INFO'):
     # logging.basicConfig(stream=sys.stdout, level=logging.INFO,format = fotmatterstr)
     # logging.basicConfig(level=logging.DEBUG,format = fotmatterstr)
     
-    filehandler = logging.handlers.RotatingFileHandler(LOG_FILENAME, maxBytes=2000000, backupCount=10)
+    filehandler = logging.handlers.RotatingFileHandler(LOG_FILENAME, maxBytes=20000000, backupCount=10)
     filehandler.setFormatter(formatter)
     
     

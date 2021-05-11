@@ -150,7 +150,22 @@ class epicsdev(QThread):
                     p.join()
                     pos = self.epicsmotors[guiname]['PVID'].get('RBV') * 1000
                     self.sendQ.put(('endmove',dcssname,pos,'normal'), block=False)
-                
+            
+            elif guiname == "cam_horz" or guiname == "SampleZ":
+                if value == 1:
+                    #move done
+                    #saveCentringPositions
+                    # phase = caget('07a:md3:CurrentPhase',as_string=True)
+                    # print(self.Par["EPICS"])
+                    phase =self.epicslist['07a:md3:CurrentPhase']["old_value"]
+                    if  phase== 0 or phase== 2:#center or collect
+                        PV = self.Par['collect']['saveCentringPositionsPV']
+                        self.logger.debug("Save current pos for Center pos")
+                        p = CAProcess(target=self.CAPUT, args=(PV,'__EMPTY__',))
+                        p.start()
+                        p.join()
+                    pos = self.epicsmotors[guiname]['PVID'].get('RBV')
+                    self.sendQ.put(('endmove',dcssname,pos,'normal'), block=False)
             else:
                 if value == 1:
                     #move done
@@ -253,22 +268,26 @@ class epicsdev(QThread):
         self.epicslist[pvname]["valueupdated"] = True
         
         if dcsstype == "par":
+            if guiname == 'zoom_scale_x' or guiname == 'zoom_scale_y' :
+                value = value *1000
             
-                #par just update value and endmove
-                self.sendQ.put(('endmove',dcssname,value,'normal'))
+            #par just update value and endmove
+            self.sendQ.put(('endmove',dcssname,value,'normal'))
         elif dcsstype == "change_mode" :
                       # [ 0] Centring
                       # [ 1] BeamLocation
                       # [ 2] DataCollection
                       # [ 3] Transfer
                       # [ 4] Unknown
-
+            # value = int(value)
             if value == 4:
-                self.sendQ.put(('updatevalue',dcssname,value+1,"motor"),"normal")
+                self.sendQ.put(('updatevalue',dcssname,value,"motor","normal"))
             else:
-                self.sendQ.put(('endmove',dcssname,value+1,'normal'))
+                self.sendQ.put(('endmove',dcssname,value,'normal'))
         elif dcsstype == "quickmotor" :   
             self.sendQ.put(('endmove',dcssname,value,'normal'))
+        elif dcsstype == 'log':
+            self.logger.info(f'TASK: {value}')
         #for other            
         if self.init_update:
             self.epicslist[pvname]["old_value"] = value
@@ -286,8 +305,11 @@ class epicsdev(QThread):
                     info[ self.epicslist[item]['GUIname'] ] = self.epicslist[item]['valueupdated']
                 self.logger.debug('Current value updated state:%s',info)
         else:#after init what we do
-        
-            if abs(self.epicslist[pvname]["old_value"] - value ) < self.epicslist[pvname]["deadband"] :
+            try:
+                state = abs(self.epicslist[pvname]["old_value"] - value ) < self.epicslist[pvname]["deadband"]
+            except :
+                state = True
+            if state :
                 
                 # self.logger.debug('Not update due to deadband')
                 # self.logger.debug(f"GUI:{guiname}, det:{abs(self.epicslist[pvname]['old_value'] - value )}")
@@ -401,20 +423,21 @@ class epicsdev(QThread):
                     
                     # self.findepicsinfo(command[1],"PVname").value = float(command[2])
                     try :
-                        PVID,dcsstype,PVname = self.FindEpicsMotorInfo(command[1],'dcssname','PVID','dcsstype','PVname')
+                        PVID,dcsstype,PVname,deadband = self.FindEpicsMotorInfo(command[1],'dcssname','PVID','dcsstype','PVname','deadband')
                     except :
                         self.logger.debug("dcssname can not find in EPICS Motor")
                         try:
-                            PVID,dcsstype,PVname = self.FindEpicsListInfo(command[1],'dcssname','PVID','dcsstype','PVname')
+                            PVID,dcsstype,PVname,deadband = self.FindEpicsListInfo(command[1],'dcssname','PVID','dcsstype','PVname','deadband')
                         except:
                             self.logger.debug("dcssname can not find in EPICS List")
                             
                             
-                    if dcsstype == 'motor':        
+                    if dcsstype == 'motor':  #only in epicsmotors is dcsstype = motor      
                         TargetPos = float(command[2])
                         if command[1] == 'energy':
                             TargetPos = TargetPos / 1000
-                            
+                        
+                        
                         if PVID.within_limits(TargetPos):
                             if command[1] == 'energy':
                                 #Enable energy to gap(07a:IU22:cvtE2Gap_able)
@@ -435,9 +458,17 @@ class epicsdev(QThread):
                                     p.start()
                                     p.join()
                             
-                            self.sendQ.put(("startmove",command[1],command[2],"Normal"))
-                            state = PVID.move(TargetPos)
-                            self.logger.debug(f"Motor ={command[1]} moving state = {state}")
+                            if abs(TargetPos - PVID.RBV) < deadband:
+                                pos = PVID.RBV
+                                dcssname = command[1]
+                                if dcssname == 'energy':
+                                    pos = pos *1000
+                                self.sendQ.put(('endmove',dcssname,pos,'normal'), block=False)
+                                self.logger.debug(f"{dcssname} move to {TargetPos}, but moving step smaller than deadband ={deadband},Just reply moving complete")
+                            else:
+                                self.sendQ.put(("startmove",command[1],command[2],"Normal"))
+                                state = PVID.move(TargetPos)
+                                self.logger.debug(f"Motor ={command[1]} moving state = {state}")
                         else:
                             LLM = PVID.LLM
                             HLM = PVID.HLM
@@ -450,7 +481,7 @@ class epicsdev(QThread):
                         pass
                     elif dcsstype == "change_mode":
                             self.sendQ.put(("startmove",command[1],command[2],"Normal"))
-                            p = CAProcess(target=self.CAPUT, args=(PVname,float(command[2])-1,))
+                            p = CAProcess(target=self.CAPUT, args=(PVname,float(command[2]),))
                             p.start()
                             p.join()
                     elif dcsstype == "quickmotor":
@@ -480,17 +511,29 @@ class epicsdev(QThread):
                             if dcssname == "energy" :
                                 pos = pos*1000
                             self.sendQ.put(('endmove',dcssname,pos,'normal'), block=False)
-                            
+                    
+                    p = CAProcess(target=self.CAPUT, args=('07a:md3:abort','__EMPTY__',))
+                    p.start()
+                    p.join()        
+                    
+                    
                     for dev in self.epicslist:
-                        dcssname =self.epicslist[dev]['dcssname']
+                        dcssname = self.epicslist[dev]['dcssname']
+                        dcsstype = self.epicslist[dev]['dcsstype']
                         if dcssname != "" :
                             if dcsstype == 'shutter':
                                 pass
                             elif dcsstype == 'change_mode':
                                 pos = caget(dev)
-                                self.sendQ.put(('endmove',dcssname,pos+1,'normal'), block=False)
+                                self.sendQ.put(('endmove',dcssname,pos,'normal'), block=False)
+                            elif dcsstype == 'log':
+                                pass
+                            
                             else:
                                 pos = caget(dev)
+                                if dcssname == 'zoom_scale_x' or dcssname == 'zoom_scale_y':
+                                    pos =pos *1000
+                                
                                 self.sendQ.put(('endmove',dcssname,pos,'normal'), block=False)
                         
                 else:

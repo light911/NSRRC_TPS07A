@@ -48,6 +48,7 @@ class FileWriter():
             header = json.loads(frames[0].bytes)
         except Exception as e:
             print(e)
+
         if header["htype"].startswith("dheader-"):
             self.__decodeHeader__(frames)
         elif header["htype"].startswith("dimage-"):

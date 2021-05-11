@@ -52,7 +52,9 @@ class Stream2Cbf(FileWriter):
         if appendix:
             data["appendix"] = appendix.bytes
         self.metadata = data
-        with open(path,"wb") as f:
+        print(data)
+        print(type(data))
+        with open(path,"w") as f:
             json.dump(data,f)
             f.close
         print("[OK] wrote %s" %path)
@@ -82,11 +84,13 @@ class Stream2Cbf(FileWriter):
         save image data as cbf
         """
         path = os.path.join(self.path, self.basename + "_%05d_%05d%s" %(series, frame+1, self.ftype))
-        if albula:
-            albula.DImageWriter.write(albula.DImage().fromData(data), path)
-        else:
-            cbf.write(path, data, header = self.__getHeader__())
-        print("[OK] wrote %s" %path)
+        # if albula:
+        #     albula.DImageWriter.write(albula.DImage().fromData(data), path)
+        # else:
+        #     cbf.write(path, data, header = self.__getHeader__())
+        # print("[OK] wrote %s" %path)
+        print(f'Header={self.__getHeader__()}')
+        cbf.write(path, data, header = self.__getHeader__())
         return path
 
     def __getHeader__(self):

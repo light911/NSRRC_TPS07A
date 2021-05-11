@@ -182,6 +182,9 @@ if __name__ == "__main__":
         while True:
             frames = stream.receive() # get ZMQ frames
             if frames: # decode frames using the filewriter
+                print(frames[0])
+                print(type(frames))
+                print(len(frames))
                 fw.decodeFrames(frames)
 
     except KeyboardInterrupt:

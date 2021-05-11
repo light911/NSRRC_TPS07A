@@ -6,7 +6,7 @@ Created on Tue Jan 14 16:46:13 2020
 @author: admin
 """
 
-# from epics import PV
+from epics import caput,CAProcess,caget
 import socket,time,signal,sys,os
 # import multiprocessing as mp
 from multiprocessing import Process, Queue, Manager
@@ -63,7 +63,7 @@ class DCSDHS():
         
         self.epcisPV_ = Process(target=self.epicsPV, args=(self.Par,self.Q,self.client,))
         self.epcisPV_.start()
-        time.sleep(5)
+        time.sleep(2)
         self.logger.debug("Par After epicsPV Start=======")
         self.logger.debug(self.Par)
         self.logger.debug(f'TYPE:{type(self.Par)}')
@@ -153,8 +153,71 @@ class DCSDHS():
         sendQ = Q['Queue']['sendQ']
         epicsQ = Q['Queue']['epicsQ']
         DetctorQ = Q['Queue']['ControlQ']
+        self.logger.warning(f'TYPE:{type(Par)}')
         DET = Detector.Eiger2X16M(Par,Q)
         DET.CommandMon()
+        
+    def start_oscillation(self,Par,Q,command):
+        reciveQ = Q['Queue']['reciveQ']
+        sendQ = Q['Queue']['sendQ']
+        epicsQ = Q['Queue']['epicsQ']
+        ContrlQ = Q['Queue']['ControlQ']
+        DetctorQ = Q['Queue']['DetectorQ']
+        self.logger.warning(f'TYPE:{type(Par)}')
+        #stoh_start_oscillation gonio_phi shutter 3.0 1.0 45.000018
+        #stoh_start_oscillation motorName shutter deltaMotor deltaTime startAngle
+        #
+        #List of scan parameter values, comma separated: Int,double,double,double,intframe_number (int):
+        #frame ID just for logging purpose. It is different from ScanNumberOfFrames which is used in the detector multi-triggering inside scan_range.
+        #start_angle (double): angle (deg) at which the shutter opens and omega speed is stable 
+        #scan_range (double): omega relative move angle (deg) before closing the shutter
+        #exposure_time (double): exposure time (sec) to control shutter command
+        #number_of_passes (int): number of moves forward and reverse between start angle and end angle.
+        scan_range = float(command[3])
+        exposure_time = float(command[4])
+        start_angle = float(command[5])
+        fileindex = int(Par['Detector']['Fileindex'])
+        number_of_passes = int(1)
+        nimages = int(Par['Detector']['nimages'])
+        Timeout = 30 + exposure_time
+        
+        LastTaskInfoPV = Par['collect']['LastTaskInfoPV']
+        PV = Par['collect']['start_oscillationPV']
+        NumberOfFramesPV = Par['collect']['NumberOfFramesPV']
+        
+        value = [fileindex,start_angle,scan_range,exposure_time,number_of_passes]
+        self.logger.warning(f"MD3 Expouse Scan Start,with start_angle:{start_angle},scan_range:{scan_range},exposure_time:{exposure_time}, number_of_passes:{number_of_passes}  ")
+        timeStart=time.time()
+        # caput(NumberOfFramesPV,nimages) #has some problem on managers.DictProxy
+        state = caput(PV,value)
+        if state != 1:
+            self.logger.critical(f"Caput {PV} value {value} Fail!")
+        # ca.initialize_libca()
+        
+        # chid = ca.create_channel(PV, connect=False, callback=None, auto_cb=True)
+        
+        # state = ca.put(chid,value, wait=True,timeout=1, callback=None, callback_data=None)
+        # if state != 1:
+        #     self.logger.critical(f"Caput {PV} value {value} Fail!")
+        # print(caget(LastTaskInfoPV))
+        time.sleep(0.5)
+        Task = caget(LastTaskInfoPV)
+        # print(Task)
+        t0 = time.time()
+        while str(Task[6]) == "null":
+            time.sleep(0.1)
+            Task = caget(LastTaskInfoPV)
+            # print(Task[6])
+            t1 = time.time()
+            if (t1-t0) > Timeout:
+                 self.logger.critical(f"Wait for MD3 scan job Timeout{Timeout},Current state = {Task})")
+                 break
+             
+        # ans = 
+        # sendQ.put(('operdone',))
+        runtime = time.time() - timeStart
+        self.logger.warning(f"MD3 Expouse Scan Done,take {runtime},with PV put state={state},Result ID = {Task[6]}")
+        # self.logger.warning(f"fileindex:{fileindex},nimages:{nimages},Par:{Par}")
         
     def reciver(self,Par,Q,tcpclient) :
         #recive message from dcss
@@ -217,14 +280,21 @@ class DCSDHS():
                             pass
                         elif command[0] == "stoh_start_motor_move":
                             #"stoh_start_motor_move motorName destination
+                            
+                            
                             epicsQ.put(("stoh_start_motor_move",command[1],command[2]))
+                            
                             pass
                         elif command[0] == "stoh_set_shutter_state":
                             #stoh_set_shutter_state shutterName state (state is open or closed.)
                             epicsQ.put((command[0],command[1],command[2]))
                             pass
                         elif command[0] == "stoh_start_oscillation":
-                            #stoh_start_oscillation motorName shutter deltaMotor deltaTime
+                            #stoh_start_oscillation gonio_phi shutter 3.0 1.0 45.000018
+                            #stoh_start_oscillation motorName shutter deltaMotor deltaTime startAngle
+                            
+                            p = Process(target=self.start_oscillation, args=(self.Par,self.Q,command))
+                            p.start()
                             pass
                         elif command[0] == "stoh_register_operation":
                             
@@ -248,7 +318,12 @@ class DCSDHS():
                             elif command[1] == "detector_oscillation_ready" :
                                 pass
                             elif command[1] == "detector_stop" :
-                                pass
+                                # ['stoh_start_operation', 'detector_stop', '1.17', '']
+                                command = command[1:-1]
+                                
+                                newcommand = ('operdone',) + tuple(command)
+                                # print(newcommand)
+                                sendQ.put(newcommand)
                             elif command[1] == "detector_reset_run" :
                                 pass
                             elif command[1] == "detector_oscillation_ready" :
@@ -257,8 +332,9 @@ class DCSDHS():
                                 #bypass it
                                 #['stoh_start_operation', 'getMD2Motor', '1.1', 'CurrentApertureDiameterIndex']
                                 #['stoh_start_operation', 'getMD2Motor', '1.2', 'change_mode']
-                                sendQ.put(('updatevalue',command[1],'normal '+ command[3],command[2]))
+                                sendQ.put(('operdone',command[1],command[2],command[3]))
                                  # self.logger.warning(f"operation from dcss : {command}")
+                            
                             else:
                                  self.logger.warning(f"Unkonw operation from dcss : {command}")
                         elif command[0] == "stoh_read_ion_chambers":
@@ -355,7 +431,7 @@ class DCSDHS():
             # print (ans.encode())
         else:
             ans=""
-            print(ans)
+            # print(ans)
         return ans
                         
     def sender(self,Par,Q,tcpclient) :
@@ -423,18 +499,48 @@ class DCSDHS():
                 elif command[0] == "warning" :
                     #htos_note Warning XXXX
                     echo = "htos_note Warning " + str(command[1])
+                elif command[0] == "htos_note" :
+                    echo = "htos_note " + str(command[1])
                 elif command[0] == "operdone" :
+                    #command[1] = operationName
+                    #command[2] = operationHandle
                     #htos_operation_completed operationName operationHandle status arguments
                     # command2=command[1]
                     # print(command2)
                     args=""
-                    argslist = list(command)
-                    argslist = argslist[3:]
-                    for a in argslist:
-                        # print(a)
-                        args = args + " " + a
                     
+                    argslist = list(command)
+                    if len(argslist) > 3:
+                        argslist = argslist[3:]
+                        for a in argslist:
+                            # print(a)
+                            args = args + " " + a
+                    else:
+                        print('no args add')
+                        # args = ""
+                   
                     echo = "htos_operation_completed " + str(command[1]) + " " + str(command[2])+ " " + "normal" + args
+                    # print('==',echo,'==')
+                elif command[0] == "operupdate" :
+                    #command[1] = operationName
+                    #command[2] = operationHandle
+                    #htos_operation_update operationName operationHandle arguments
+                    # command2=command[1]
+                    # print(command2)
+                    args=""
+                    
+                    argslist = list(command)
+                    if len(argslist) > 3:
+                        argslist = argslist[3:]
+                        for a in argslist:
+                            # print(a)
+                            args = args + " " + a
+                    else:
+                        print('no args add')
+                        # args = ""
+                   
+                    echo = "htos_operation_update " + str(command[1]) + " " + str(command[2]) + args
+                    # print('==',echo,'==')
                 else:
                     self.logger.info(f'Unknow commad:{command[0]}')
                 #send to dcss    

@@ -6,8 +6,9 @@ Created on Mon May  3 14:26:34 2021
 @author: blctl
 """
 from multiprocessing import Process, Queue, Manager
-import logsetup
+import logsetup,time
 from Eiger.DEiger2Client import DEigerClient
+from epics import caput,CAProcess,caget
 
 class Detector():
     def __init__(self,Par,Q) :
@@ -36,7 +37,7 @@ class Detector():
         self.detectorip = self.Par['Detector']['ip']
         self.detectorport = self.Par['Detector']['port']
         
-        self.logger = logsetup.getloger2('DetectorDHS',level = self.Par['Debuglevel'])
+        # self.logger = logsetup.getloger2('DetectorDHS',level = self.Par['Debuglevel'])
         
         self.epicsQ = Q['Queue']['epicsQ']
         self.reciveQ = Q['Queue']['reciveQ']
@@ -133,12 +134,15 @@ class Eiger2X16M(Detector):
         self.roi_mode = False
         self.trigger_mode ="ints"
         self.det = DEigerClient(self.detectorip,self.detectorport,verbose=False)
+        self.det.setStreamConfig('header_detail','basic')
+        self.det.setStreamConfig('mode','enabled')
     #add detector opration here
     
     def detector_collect_shutterless(self,command):
     #    ('detector_collect_shutterless', '1.24', '1', 'test_1', '/data/blctl/test', 'blctl', 'gonio_phi', '0.1', '0.000009', '1.0', '10', '750.000060', '0.976226127404', '0.000231', '50.000000', '0', '0', 'PRIVATEA03F6ADA6F19A8DA1DEE6BFC325F4DCE', '1', '10', '50.000000', '0.0')
     #['stoh_start_operation', 'detector_collect_shutterless', '1.2', '0', 'test_0', '/data/blctl/test', 'blctl', 'gonio_phi', '0.1', '0.000000', '1.0', '1', '750.000080', '0.976226127404', '0.000071', '50.000000', '0', '0', 'PRIVATEA03F6ADA6F19A8DA1DEE6BFC325F4DCE', '3', '1', '50.000000', '0.0']
     # command: ('1.2', '0', 'test_0', '/data/blctl/test', 'blctl', 'gonio_phi', '0.1', '0.000009', '1.0', '1', '750.000240', '0.976226127404', '0.000187', '50.000000', '0', '0', 'PRIVATEA03F6ADA6F19A8DA1DEE6BFC325F4DCE', '9', '1', '50.000000', '0.0
+    #['stoh_start_operation', 'detector_collect_shutterless', '1.16', '1', 'test_1', '/data/blctl/test', 'blctl', 'gonio_phi', '0.10', '45.000018', '0.30', '10', '799.999800', '0.976226127404', '0.000187', '50.000000', '0', '0', 'PRIVATEA03F6ADA6F19A8DA1DEE6BFC325F4DCE', '1', '10', '50.000000', '0.0']
     # set operationHandle [start_waitable_operation detector_collect_shutterless \
     #                  $darkCacheNumber \
     #                  $filename \
@@ -185,9 +189,19 @@ class Eiger2X16M(Detector):
         #  sscanf(commandBuffer.textInBuffe
         # self.logger.info(f'Default action for {command[0]}:{command[1:]}')
         self.logger.info(f'command: {command[1:]}')
-        self.basesetup()
-        command = ('operdone',) + command
-        self.sendQ.put(command)
+        
+        # htos_note changing_detector_mode
+        toDcsscommand = ('htos_note','changing_detector_mode')
+        self.sendQ.put(toDcsscommand)
+        _oscillationTime,_filename = self.basesetup()
+        _filename = _filename + '.cbf'
+        
+        
+        toDcsscommand = ('operupdate',command[0],self.operationHandle,'start_oscillation','shutter',str(_oscillationTime),_filename)
+        self.sendQ.put(toDcsscommand)
+        
+        # command = ('operdone',) + command
+        # self.sendQ.put(command)
         
         
         
@@ -235,7 +249,7 @@ class Eiger2X16M(Detector):
         pass
     
     def basesetup(self):
-        
+        t0 = time.time()
         self.det.setDetectorConfig('roi_mode','disabled')
         self.det.setDetectorConfig('threshold/2/mode','enabled')
         self.det.setDetectorConfig('threshold/difference/mode','enabled')
@@ -260,12 +274,25 @@ class Eiger2X16M(Detector):
         self.det.setDetectorConfig('phi_start',0)
         self.det.setDetectorConfig('phi_increment',0)
         self.det.setDetectorConfig('nimages',self.TotalFrames)
-        self.det.setDetectorConfig('trigger_mode','ints')##temp
+        self.det.setDetectorConfig('trigger_mode','exts')##temp
+    
+        
         
         #check frame rate?
         framerate = self.TotalFrames / self.exposureTime
         
         Filename = self.filename + "_" + str(self.fileindex).zfill(4)
+        TotalTime = self.TotalFrames * self.exposureTime
+        
+        # print('Detector Energy',self.Par['EPICS']['Energy']['VAL']*1000)
+        Energy = float(caget(self.Par['collect']['EnergyPV']))*1000
+        print(f'Detector Energy:{Energy}')
+        self.det.setDetectorConfig('photon_energy',Energy)
+    # print("Setting frame time",cam.setDetectorConfig('frame_time',exptime),exptime)
+    
+        self.det.setDetectorConfig('count_time',self.exposureTime-0.0000001) 
+        self.det.setDetectorConfig('frame_time',self.exposureTime)
+        
         
         
         self.logger.debug(f'Filename =  {Filename}')
@@ -273,6 +300,48 @@ class Eiger2X16M(Detector):
         self.det.setMonitorConfig('mode',"enabled")
         self.det.setFileWriterConfig('mode','enabled')
         self.det.setFileWriterConfig('name_pattern',Filename)
+        self.Par['Detector']['Filename'] = Filename
+        self.Par['Detector']['Fileindex'] = self.fileindex
+        self.Par['Detector']['nimages'] = self.TotalFrames
+        self.logger.warning(f'TYPE:{type(self.Par)}')
+        
+        NumberOfFramesPV = self.Par['collect']['NumberOfFramesPV']
+        caput(NumberOfFramesPV,self.TotalFrames)
+        
+        self.det.sendDetectorCommand('arm')
+        # self.det.sendDetectorCommand('trigger')
+        
+        
+        self.logDetInfo()
+        t1 = time.time()
+        
+        self.logger.debug(f'setup time = {t1-t0},Detector energy={Energy}')
+        return TotalTime,Filename
+    
+    def logDetInfo(self):
+        
+    
+        commands = ["count_time","frame_time",'detector_distance','nimages',
+                'number_of_excluded_pixels','photon_energy','roi_mode',
+                'threshold_energy','threshold/1/energy',
+                'threshold/1/mode','threshold/2/energy','threshold/2/mode',
+                'threshold/difference/mode','trigger_mode','wavelength',
+                'beam_center_x','beam_center_y','auto_summation',
+                'bit_depth_image','bit_depth_readout','compression',
+                'omega_start','omega_increment','virtual_pixel_correction_applied']
+        for command in commands:
+            # unit = ""
+            # url = "http://{}:{}/detector/api/1.8.0/config/{}".format(ip, port,command)
+            # ans = requests.get(url)
+            # darray = ans.json()["value"]
+            ans = self.det.detectorConfig(command)
+            value = ans['value']
+            try:
+                unit = ans['unit']
+            except :
+                unit =""
+            self.logger.debug(f'{command} = {value} {unit}') 
+        
 if __name__ == "__main__":
     import Config
     Par = Config.Par
