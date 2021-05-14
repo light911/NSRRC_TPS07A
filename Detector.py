@@ -9,6 +9,8 @@ from multiprocessing import Process, Queue, Manager
 import logsetup,time
 from Eiger.DEiger2Client import DEigerClient
 from epics import caput,CAProcess,caget
+import json
+from pwd import getpwnam
 
 class Detector():
     def __init__(self,Par,Q) :
@@ -134,7 +136,7 @@ class Eiger2X16M(Detector):
         self.roi_mode = False
         self.trigger_mode ="ints"
         self.det = DEigerClient(self.detectorip,self.detectorport,verbose=False)
-        self.det.setStreamConfig('header_detail','basic')
+        self.det.setStreamConfig('header_detail','all')
         self.det.setStreamConfig('mode','enabled')
     #add detector opration here
     
@@ -203,56 +205,18 @@ class Eiger2X16M(Detector):
         # command = ('operdone',) + command
         # self.sendQ.put(command)
         
-        
-        
-        
-    def detector_collect_image(self,command):
-        operationHandle = command[1]
-        runIndex = command[1]
-        filename = command[2]
-        directory = command[3]
-        userName = command[4]
-        axisName = command[5]
-        exposureTime = float(command[6])
-        oscillationStart = float(command[7])
-        oscillationRange =  float(command[8])
-        distance = float(command[8])
-        wavelength = float(command[9])
-        detectorX = float(command[10])
-        detectorY = float(command[11])
-        detectorMode = command[11]
-        reuseDark = command[12]
-        sessionId = command[13]
-        numberFrames = 0
-        #  sscanf(commandBuffer.textInBuffer,
-        # "%*s %20s %d %s %s %s %s %lf %lf %lf %lf %lf %lf %lf %d %d %s",
-        # frame.operationHandle,
-        # &frame.runIndex,
-        # frame.filename,
-        # frame.directory,
-        # frame.userName,
-        # frame.axisName,
-        # &frame.exposureTime,
-        # &frame.oscillationStart,
-        # &frame.oscillationRange,
-        # &frame.distance,
-        # &frame.wavelength,
-        # &frame.detectorX,
-        # &frame.detectorY,
-        # &frame.detectorMode,
-        # &reuseDark,
-        # frame.sessionId );
-        # frame.numberFrames = 0;
-
-        op_name = command[0]
-        self.logger.info(f'command: {command[1:]}')
-        pass
+    def stoh_abort_all(self,command):    
+        state = self.det.detectorStatus('state')
+        if state == 'idle':
+            pass
+        elif state == 'acquire':
+            self.det.sendDetectorCommand('disarm')
+        else:
+            self.det.sendDetectorCommand('abort')
     
     def basesetup(self):
         t0 = time.time()
-        self.det.setDetectorConfig('roi_mode','disabled')
-        self.det.setDetectorConfig('threshold/2/mode','enabled')
-        self.det.setDetectorConfig('threshold/difference/mode','enabled')
+        
         
         
         self.logger.debug(f'TotalFrames =  {self.TotalFrames},exposureTime = {self.exposureTime} ')
@@ -275,14 +239,32 @@ class Eiger2X16M(Detector):
         self.det.setDetectorConfig('phi_increment',0)
         self.det.setDetectorConfig('nimages',self.TotalFrames)
         self.det.setDetectorConfig('trigger_mode','exts')##temp
-    
-        
         
         #check frame rate?
         framerate = self.TotalFrames / self.exposureTime
         
         Filename = self.filename + "_" + str(self.fileindex).zfill(4)
         TotalTime = self.TotalFrames * self.exposureTime
+        
+        self.det.setDetectorConfig('roi_mode','disabled')
+        self.det.setDetectorConfig('threshold/2/mode','enabled')
+        self.det.setDetectorConfig('threshold/difference/mode','enabled')
+        
+        
+        header_appendix ={}
+        header_appendix['user'] = self.userName
+        header_appendix['directory'] = self.directory
+        header_appendix['runIndex'] = self.runIndex
+        header_appendix['beamsize'] = self.beamsize
+        header_appendix['atten'] = self.atten
+        header_appendix['fileindex'] = self.fileindex
+        header_appendix['filename'] = Filename
+        header_appendix['uid'] = getpwnam(self.userName)[2]
+        header_appendix['gid'] = getpwnam(self.userName)[3]
+        text = json.dumps(header_appendix)
+        self.det.setStreamConfig('header_appendix',text)
+        
+        
         
         # print('Detector Energy',self.Par['EPICS']['Energy']['VAL']*1000)
         Energy = float(caget(self.Par['collect']['EnergyPV']))*1000

@@ -42,15 +42,19 @@ class Stream2Cbf(FileWriter):
         """
         save detector config as plain text
         """
-        if len(frames) == 9:
-            appendix = frames[8]
+        print(f'LEN={len(frames)}')
+        if len(frames) == 9:#oringal 9-2
+            appendix = frames[8]#8-2
+            print('has appendix')
         else:
             appendix = None
+            print('no appendix')
         self.series = json.loads(frames[0].bytes)["series"]
         path = os.path.join(self.path, self.basename + "_%05d_config.json" %(self.series))
         data = json.loads(frames[1].bytes)
         if appendix:
-            data["appendix"] = appendix.bytes
+            data["appendix"] = json.loads(appendix.bytes)
+            print(f'appenidx={data["appendix"]}')
         self.metadata = data
         print(data)
         print(type(data))
@@ -114,7 +118,7 @@ class Stream2Cbf(FileWriter):
             if len(frames) == 9 and self.__verbose__:
                 print("[*] Appendix:", frames[8].bytes)
 
-            self.saveConfig(frames[0:2])
+            self.saveConfig(frames)
             if self.__verbose__:
                 print("[OK] detector config:")
                 for key, value in json.loads(frames[1].bytes).items():
