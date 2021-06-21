@@ -426,9 +426,11 @@ class epicsdev(QThread):
                         PVID,dcsstype,PVname,deadband = self.FindEpicsMotorInfo(command[1],'dcssname','PVID','dcsstype','PVname','deadband')
                     except :
                         self.logger.debug("dcssname can not find in EPICS Motor")
+                        dcsstype = ""
                         try:
                             PVID,dcsstype,PVname,deadband = self.FindEpicsListInfo(command[1],'dcssname','PVID','dcsstype','PVname','deadband')
                         except:
+                            dcsstype = ""
                             self.logger.debug("dcssname can not find in EPICS List")
                             
                             
@@ -489,6 +491,14 @@ class epicsdev(QThread):
                             p = CAProcess(target=self.CAPUT, args=(PVname,float(command[2]),))
                             p.start()
                             p.join()
+                    else:
+                        pos = command[2]
+                        dcssname = command[1]
+                        warningTXT = f'Unable find {dcssname} in config file'
+                        self.sendQ.put(("warning",warningTXT))
+                        self.sendQ.put(('endmove',dcssname,pos,'normal'), block=False)
+                        pass
+                    
                    
                 elif command[0] == "stoh_register_shutter" or command[0] == 'stoh_set_shutter_state':
                     #['stoh_register_shutter', 'shutter', 'closed'

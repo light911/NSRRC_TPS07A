@@ -264,7 +264,10 @@ class Eiger2X16M(Detector):
         text = json.dumps(header_appendix)
         self.det.setStreamConfig('header_appendix',text)
         
-        
+        if self.runIndex == 0:
+            self.det.setFileWriterConfig('nimages_per_file',0)
+        else :
+            self.det.setFileWriterConfig('nimages_per_file',int(self.Par['Detector']['nimages_per_file']))
         
         # print('Detector Energy',self.Par['EPICS']['Energy']['VAL']*1000)
         Energy = float(caget(self.Par['collect']['EnergyPV']))*1000
