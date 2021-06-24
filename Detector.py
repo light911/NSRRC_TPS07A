@@ -138,6 +138,12 @@ class Eiger2X16M(Detector):
         self.det = DEigerClient(self.detectorip,self.detectorport,verbose=False)
         self.det.setStreamConfig('header_detail','all')
         self.det.setStreamConfig('mode','enabled')
+        
+        self.x_pixels_in_detector= int(self.det.detectorConfig('x_pixels_in_detector')['value'])
+        self.y_pixels_in_detector= int(self.det.detectorConfig('y_pixels_in_detector')['value'])
+        self.x_pixel_size= float(self.det.detectorConfig('x_pixel_size')['value'])
+        self.y_pixel_size= float(self.det.detectorConfig('y_pixel_size')['value'])
+        
     #add detector opration here
     
     def detector_collect_shutterless(self,command):
@@ -196,7 +202,7 @@ class Eiger2X16M(Detector):
         toDcsscommand = ('htos_note','changing_detector_mode')
         self.sendQ.put(toDcsscommand)
         _oscillationTime,_filename = self.basesetup()
-        _filename = _filename + '.cbf'
+        _filename = _filename + '.h5'
         
         
         toDcsscommand = ('operupdate',command[0],self.operationHandle,'start_oscillation','shutter',str(_oscillationTime),_filename)
@@ -226,10 +232,15 @@ class Eiger2X16M(Detector):
         self.logger.debug(f'Unknow =  {self.unknow}')
         
         # detOmega = self.oscillationRange / self.TotalFrames
+        dethor = float(caget(self.Par['collect']['dethorPV']))
+        detver = float(caget(self.Par['collect']['detverPV']))
+        beamx = int(self.x_pixels_in_detector/2 - dethor/self.x_pixel_size/1e3)
+        beamy = int(self.y_pixels_in_detector/2 + detver/self.y_pixel_size/1e3)
+        # self.logger.debug(f'beam x center =  {self.x_pixels_in_detector/2},dethor at {}dethor')
         
         
-        self.det.setDetectorConfig('beam_center_x',2062.5)
-        self.det.setDetectorConfig('beam_center_y',2312)
+        self.det.setDetectorConfig('beam_center_x',beamx)
+        self.det.setDetectorConfig('beam_center_y',beamy)
         self.det.setDetectorConfig('detector_distance',self.distance)
         self.det.setDetectorConfig('omega_start',self.oscillationStart)
         self.det.setDetectorConfig('omega_increment',self.detosc)
@@ -246,10 +257,28 @@ class Eiger2X16M(Detector):
         Filename = self.filename + "_" + str(self.fileindex).zfill(4)
         TotalTime = self.TotalFrames * self.exposureTime
         
-        self.det.setDetectorConfig('roi_mode','disabled')
-        self.det.setDetectorConfig('threshold/2/mode','enabled')
-        self.det.setDetectorConfig('threshold/difference/mode','enabled')
+        #detector mode
         
+        if self.det.detectorConfig('roi_mode')['value'] == "4M":
+            self.logger.debug(f'set detector roi_mode from 4M to disabled')
+            self.det.setDetectorConfig('roi_mode','disabled')
+        
+        if framerate > 70:
+            self.logger.debug(f'framerate =  {framerate},disable two threshold')
+            if self.det.detectorConfig('threshold/difference/mode')['value'] == "enabled":
+                self.logger.debug(f'update detector threshold/difference/ to disabled')
+                self.det.setDetectorConfig('threshold/difference/mode','disabled')
+            if self.det.detectorConfig('threshold/2/mode')['value'] == "enabled":
+                self.logger.debug(f'update detector threshold/2/mode to disabled')
+                self.det.setDetectorConfig('threshold/2/mode','disabled')
+        else:
+            self.logger.debug(f'framerate =  {framerate},enable two threshold')
+            if self.det.detectorConfig('threshold/2/mode')['value'] == "disabled":
+                self.det.setDetectorConfig('threshold/2/mode','enabled')
+            if self.det.detectorConfig('threshold/difference/mode')['value'] == "disabled":    
+                self.det.setDetectorConfig('threshold/difference/mode','enabled')
+        # self.det.setDetectorConfig('threshold/2/mode','enabled')
+        # self.det.setDetectorConfig('threshold/difference/mode','enabled')
         
         header_appendix ={}
         header_appendix['user'] = self.userName
@@ -271,8 +300,13 @@ class Eiger2X16M(Detector):
         
         # print('Detector Energy',self.Par['EPICS']['Energy']['VAL']*1000)
         Energy = float(caget(self.Par['collect']['EnergyPV']))*1000
-        print(f'Detector Energy:{Energy}')
-        self.det.setDetectorConfig('photon_energy',Energy)
+        ans = self.det.detectorConfig('photon_energy')
+        detEn= float(ans['value'])
+        print(f'Current Energy:{Energy}, Current Detector setting energy={detEn}')
+        if (abs(Energy-detEn)>10):#change if more than 10v
+            self.det.setDetectorConfig('photon_energy',Energy)
+            self.logger.info(f'Detector origin energy={detEn},now set to {Energy}')
+        
     # print("Setting frame time",cam.setDetectorConfig('frame_time',exptime),exptime)
     
         self.det.setDetectorConfig('count_time',self.exposureTime-0.0000001) 

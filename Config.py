@@ -36,7 +36,9 @@ Par={
                'saveCentringPositionsPV':'07a:md3:saveCentringPositions',
                'LastTaskInfoPV':'07a:md3:LastTaskInfo',
                'NumberOfFramesPV':'07a:md3:ScanNumberOfFrames',
-               'EnergyPV':'07a:DCM:Energy'
+               'EnergyPV':'07a:DCM:Energy',
+               'dethorPV':'07a:Det:Hor',
+               'detverPV':'07a:Det:Ver'
                },
     'EPICS_special':{'BeamSize':{'BeamSizeName':'07a-ES:Table:Beamsize',
                                  'MD3YName':'07a-ES:Table:MD3Y',

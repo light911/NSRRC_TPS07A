@@ -27,7 +27,7 @@ epicsmotors={
                 'dcsstype':"",
                  },
             'MD3BS':{
-                'PVname':'07a:md3:BeamstopX',
+                'PVname':'07a:md3:BeamstopDistance',
                 'PVID':'',
                 'GUIname':'MD3BS',
                 "old_value":"0",
