@@ -6,14 +6,16 @@ Created on Wed Dec 25 09:56:32 2019
 TODO:update DisY uperlimits
 """
 
-from epics import PV,Motor,ca,CAProcess,caget
+from epics import PV,Motor,ca,CAProcess,caget,caput
 import numpy as np
 import sys,time,os,signal
 import logsetup
 #from . import epicsfile
   
-from multiprocessing import  Queue
+from multiprocessing import  Queue,Process
+import queue
 from PyQt5.QtCore import QObject,QThread,pyqtSignal,pyqtSlot,QMutex,QMutexLocker
+import subprocess
 #from PyQt5.QtCore import pyqtSignal
 
 
@@ -52,6 +54,16 @@ class epicsdev(QThread):
         #used to a Flag for update limits @motor start moving
         self.MD3Ystartmoving = False
         self.DetYstartmoving = False
+        self.startRasterScanEx = {}
+        self.startRasterScanEx['moving'] = False
+        self.startRasterScanEx['id'] = ""
+        self.startRasterScan = {}
+        self.startRasterScan['moving'] = False
+        self.startRasterScan['id'] = ""
+        self.md3TaskBusy=False
+        self.tempcommand=[]
+        self.saveCentringPositionFlag_sample_z = False
+        self.saveCentringPositionFlag_cam_horz = False
         # print(self.Par)
 
     def setMotor(self):
@@ -145,9 +157,10 @@ class epicsdev(QThread):
                     #move done
                     self.logger.debug("Energy end of moing,Disable gap to energy")
                     #Disable = 1
-                    p = CAProcess(target=self.CAPUT, args=(self.Par['Energy']['evtogap'],1,))
-                    p.start()
-                    p.join()
+                    self.caput(self.Par['Energy']['evtogap'],1)
+                    # p = CAProcess(target=self.oldCAPUT, args=(self.Par['Energy']['evtogap'],1,))
+                    # p.start()
+                    # p.join()
                     pos = self.epicsmotors[guiname]['PVID'].get('RBV') * 1000
                     self.sendQ.put(('endmove',dcssname,pos,'normal'), block=False)
             
@@ -160,10 +173,22 @@ class epicsdev(QThread):
                     phase =self.epicslist['07a:md3:CurrentPhase']["old_value"]
                     if  phase== 0 or phase== 2:#center or collect
                         PV = self.Par['collect']['saveCentringPositionsPV']
-                        self.logger.debug("Save current pos for Center pos")
-                        p = CAProcess(target=self.CAPUT, args=(PV,'__EMPTY__',))
-                        p.start()
-                        p.join()
+                        if self.saveCentringPositionFlag_sample_z:
+                            self.saveCentringPositionFlag_sample_z = False
+                            self.logger.debug("Save current pos for Center pos (sampleZ stop)")
+                            self.caput(PV,'__EMPTY__')
+                            # p = CAProcess(target=self.oldCAPUT, args=(PV,'__EMPTY__',))
+                            # p.start()
+                            # p.join()
+                        elif self.saveCentringPositionFlag_cam_horz:
+                            self.saveCentringPositionFlag_cam_horz = False
+                            self.logger.debug("Save current pos for Center pos (cam_horz Stop)")
+                            self.caput(PV,'__EMPTY__')
+                            # p = CAProcess(target=self.oldCAPUT, args=(PV,'__EMPTY__',))
+                            # p.start()
+                            # p.join()
+                        else:
+                            pass
                     pos = self.epicsmotors[guiname]['PVID'].get('RBV')
                     self.sendQ.put(('endmove',dcssname,pos,'normal'), block=False)
             else:
@@ -287,7 +312,43 @@ class epicsdev(QThread):
         elif dcsstype == "quickmotor" :   
             self.sendQ.put(('endmove',dcssname,value,'normal'))
         elif dcsstype == 'log':
+            
+            if value[6] == "1":
+                self.md3TaskBusy = False
+                # when job done recover command
+                
+                if len(self.tempcommand) >0:
+                    time.sleep(0.1)
+                    for command in self.tempcommand:
+                         self.logger.warning(f"Recover {command}(pervious sicne MD3 busy)")
+                         self.epicsQ.put(command)
+                    self.tempcommand=[]
+                    
+            else:
+                self.md3TaskBusy =True
+                
             self.logger.info(f'TASK: {value}')
+            self.logger.debug(f'job={value[0]},state={value[6]},self.startRasterScanEx={self.startRasterScanEx["moving"]}')
+            if self.startRasterScanEx['moving'] :
+                # start
+                # ['Raster Scan', '8', '2021-07-23 14:12:28.47', 'null', 'null', 'null', 'null']
+                # end
+                # ['Raster Scan', '8', '2021-07-23 14:12:28.47', '2021-07-23 14:12:41.972', 'org.embl.dev.pmac.PmacDiagnosticInfo@77', 'null', '1'] 
+                
+                if value[0] == 'Raster Scan' and value[6] == "1":
+                    self.startRasterScanEx['moving'] = False
+                    opid = self.startRasterScanEx['id']
+                    self.sendQ.put(('operdone','startRasterScanEx',opid,'normal'))
+            if self.startRasterScan['moving'] :
+                # start
+                # ['Raster Scan', '8', '2021-07-23 14:12:28.47', 'null', 'null', 'null', 'null']
+                # end
+                # ['Raster Scan', '8', '2021-07-23 14:12:28.47', '2021-07-23 14:12:41.972', 'org.embl.dev.pmac.PmacDiagnosticInfo@77', 'null', '1'] 
+                
+                if value[0] == 'Raster Scan' and value[6] == "1":
+                    self.startRasterScan['moving'] = False
+                    opid = self.startRasterScan['id']
+                    self.sendQ.put(('operdone','startRasterScan',opid,'normal'))
         #for other            
         if self.init_update:
             self.epicslist[pvname]["old_value"] = value
@@ -362,6 +423,7 @@ class epicsdev(QThread):
                 self.epicslist[item]["PVname"].disconnect()
     
     def clear_epics_Motor_callback(self):
+        self.logger.info('Clear Epics Motor callback')
         for motor in self.epicsmotors:
             for mon in self.epicsmotors[motor]['callbackitems']:
                 self.epicsmotors[motor]['PVID'].clear_callback(attr=mon)
@@ -401,9 +463,19 @@ class epicsdev(QThread):
         return ans
     
     def epcisMon(self) :
-        self.logger.warning('Epics MON Start')
+        self.logger.warning(f'Epics MON Start at {os.getpid()}')
         while True:
-            command = self.epicsQ.get()
+            try:
+                command = self.epicsQ.get(block=False)
+            except  queue.Empty:
+                time.sleep(0.05)
+                command = None
+                pass
+            except Exception as e: 
+                self.logger.critical(f'Has error on get Epics Queue , Error ={e}')
+                command = None
+           
+                
             if isinstance(command,str):
                 if command == "exit" :
                     self.clear_epics_callback()
@@ -412,6 +484,8 @@ class epicsdev(QThread):
                 else:
                     pass
                     #may be from reviceQ (DCSS),update or move some thing for it
+            elif isinstance(command,type(None)):
+                pass
                     
             #from reviceQ (DCSS),update or move some thing for it
             elif isinstance(command,tuple):
@@ -433,7 +507,8 @@ class epicsdev(QThread):
                             dcsstype = ""
                             self.logger.debug("dcssname can not find in EPICS List")
                             
-                            
+                    self.logger.debug(f"command stoh_start_motor_move PVID={PVID},dcsstype={dcsstype},PVname={PVname},deadband={deadband}")                    
+                    
                     if dcsstype == 'motor':  #only in epicsmotors is dcsstype = motor      
                         TargetPos = float(command[2])
                         if command[1] == 'energy':
@@ -450,27 +525,68 @@ class epicsdev(QThread):
                                 if abs(C_gap - N_gap) > self.Par['minchangeGAP'] or abs(C_energy - newenergy) > self.Par['minEVchangeGAP']:
                                     self.logger.debug(f"det detGap {abs(C_gap - N_gap)} is higher than {self.Par['minchangeGAP']},or {abs(C_energy - newenergy)} > {self.Par['minEVchangeGAP']} change gap setting")
                                     #Enalble = 0
-                                    p = CAProcess(target=self.CAPUT, args=(self.Par['Energy']['evtogap'],0,))
-                                    p.start()
-                                    p.join()
+                                    
+                                    self.caput(self.Par['Energy']['evtogap'],0)
+                                    # p = CAProcess(target=self.oldCAPUT, args=(self.Par['Energy']['evtogap'],0,))
+                                    # p.start()
+                                    # p.join()
                                 else:
                                     self.logger.debug(f"det detGap {abs(C_gap - N_gap)} is small than {self.Par['minchangeGAP']},and  {abs(C_energy - newenergy)} > {self.Par['minEVchangeGAP']},NO chane gap setting")
                                     #Disable = 1
-                                    p = CAProcess(target=self.CAPUT, args=(self.Par['Energy']['evtogap'],1,))
-                                    p.start()
-                                    p.join()
+                                    self.caput(self.Par['Energy']['evtogap'],1)
+                                    # p = CAProcess(target=self.oldCAPUT, args=(self.Par['Energy']['evtogap'],1,))
+                                    # p.start()
+                                    # p.join()
                             
                             if abs(TargetPos - PVID.RBV) < deadband:
                                 pos = PVID.RBV
                                 dcssname = command[1]
                                 if dcssname == 'energy':
                                     pos = pos *1000
-                                self.sendQ.put(('endmove',dcssname,pos,'normal'), block=False)
                                 self.logger.debug(f"{dcssname} move to {TargetPos}, but moving step smaller than deadband ={deadband},Just reply moving complete")
+                                self.sendQ.put(('endmove',dcssname,pos,'normal'), block=False)
+                                
                             else:
-                                self.sendQ.put(("startmove",command[1],command[2],"Normal"))
-                                state = PVID.move(TargetPos)
-                                self.logger.debug(f"Motor ={command[1]} moving state = {state}")
+                                #move motor part
+                                if command[1] == 'gonio_phi' and self.md3TaskBusy :
+                                    self.tempcommand.append(command)
+                                    self.logger.warning(f"{command} has paused sicne MD3 busy")
+                                elif command[1] == 'sample_z' and self.md3TaskBusy :
+                                    self.tempcommand.append(command)
+                                    self.logger.warning(f"{command} has paused sicne MD3 busy")
+                                elif command[1] == 'sample_x' and self.md3TaskBusy :
+                                    self.tempcommand.append(command)
+                                    self.logger.warning(f"{command} has paused sicne MD3 busy")
+                                elif command[1] == 'sample_y' and self.md3TaskBusy :
+                                    self.tempcommand.append(command)
+                                    self.logger.warning(f"{command} has paused sicne MD3 busy")
+                                elif command[1] == 'cam_horz' and self.md3TaskBusy :
+                                    self.tempcommand.append(command)
+                                    self.logger.warning(f"{command} has paused sicne MD3 busy")
+                                elif command[1] == 'align_z' and self.md3TaskBusy :
+                                    self.tempcommand.append(command)
+                                    self.logger.warning(f"{command} has paused sicne MD3 busy")
+                                elif command[1] == 'align_x' and self.md3TaskBusy :
+                                    self.tempcommand.append(command)
+                                    self.logger.warning(f"{command} has paused sicne MD3 busy")
+                                elif command[1] == 'cam_horz' and self.md3TaskBusy :
+                                    self.tempcommand.append(command)
+                                    self.logger.warning(f"{command} has paused sicne MD3 busy")
+                                elif command[1] == 'gonio_kappa' and self.md3TaskBusy :
+                                    self.tempcommand.append(command)
+                                    self.logger.warning(f"{command} has paused sicne MD3 busy")
+                                elif command[1] == 'gonio_omega' and self.md3TaskBusy :
+                                    self.tempcommand.append(command)
+                                    self.logger.warning(f"{command} has paused sicne MD3 busy")
+                                else:
+                                    # send command to move
+                                    if command[1] == 'sample_z':
+                                        self.saveCentringPositionFlag_sample_z = True
+                                    elif command[1] == 'cam_horz':
+                                        self.saveCentringPositionFlag_cam_horz = True
+                                    self.sendQ.put(("startmove",command[1],command[2],"Normal"))
+                                    state = PVID.move(TargetPos)
+                                    self.logger.debug(f"Motor ={command[1]} moving state = {state}")
                         else:
                             LLM = PVID.LLM
                             HLM = PVID.HLM
@@ -483,14 +599,22 @@ class epicsdev(QThread):
                         pass
                     elif dcsstype == "change_mode":
                             self.sendQ.put(("startmove",command[1],command[2],"Normal"))
-                            p = CAProcess(target=self.CAPUT, args=(PVname,float(command[2]),))
-                            p.start()
-                            p.join()
+                            value = int(float(command[2]))
+                            self.caput(PVname,value)
+                            # p = CAProcess(target=self.CAPUT, args=(PVname,float(command[2]),))
+                            # p.start()
+                            # p.join()
                     elif dcsstype == "quickmotor":
                             self.sendQ.put(("startmove",command[1],command[2],"Normal"))
-                            p = CAProcess(target=self.CAPUT, args=(PVname,float(command[2]),))
-                            p.start()
-                            p.join()
+                            if command[1] == 'camera_zoom':
+                                value = int(float(command[2]))
+                            else:
+                                value = command[2]
+                            self.caput(PVname,value)
+                            # p = CAProcess(target=self.oldCAPUT, args=(PVname,float(command[2]),))
+                            # p.start()
+                            # p.join()
+                            self.sendQ.put(('endmove',command[1],command[2],'normal'))#bug??
                     else:
                         pos = command[2]
                         dcssname = command[1]
@@ -510,6 +634,104 @@ class epicsdev(QThread):
                     else:
                         state = 0
                     PVID.put(state)
+                    
+                elif command[0] == "startRasterScanEx":
+                    self.startRasterScanEx['moving'] = True
+                    self.startRasterScanEx['id'] = command[1]
+                    PVname, = self.FindEpicsListInfo(command[0],'GUIname','PVname')
+                    # temp =list(command)
+                    # temp.pop(0)#del startRasterScanEx
+                    # temp.pop(0)#del client id
+                    value =[]
+                    
+                    value.append(float(command[2]))
+                    value.append(float(command[3]))
+                    value.append(float(command[4]))
+                    value.append(float(command[5]))
+                    value.append(float(command[6]))
+                    value.append(float(command[7]))
+                    value.append(float(command[8]))
+                    value.append(float(command[9]))
+                    value.append(int(command[10]))
+                    value.append(int(command[11]))
+                    value.append(float(command[12]))
+                    value.append(int(command[13]))
+                    value.append(int(command[14]))
+                    value.append(int(command[15]))
+                    # temp = np.array(numtemp)
+                    # startRasterScanEx
+                    # double omega_range,
+                    # double line_range, ver?
+                    # double total_uturn_range, hor?
+                    # double start_omega,
+                    # double start_y,
+                    # double start_z,
+                    # double start_cx,
+                    # double start_cy,
+                    # int number_of_lines,
+                    # int frames_per_lines,
+                    # double exposure_time,
+                    # boolean invert_direction,
+                    # boolean use_centring_table,
+                    # boolean shutterless
+
+                    # print(type(PVname),PVname)
+                    # print(type(value),len(value),value)
+                    # self.CAPUT(PVname,temp)
+                
+                    p = CAProcess(target=self.oldCAPUT , args=(PVname,value,))
+                    p.start()
+                    p.join()        
+                    
+                elif command[0] == "startRasterScan":
+                    # ['startRasterScan', '7.6', '0.05', '-0.2', '2', '5', '0', '269.999792', '0.5', '0', '']
+                    self.startRasterScan['moving'] = True
+                    self.startRasterScan['id'] = command[1]
+                    PVname, = self.FindEpicsListInfo(command[0],'GUIname','PVname')
+                    # temp =list(command)
+                    # temp.pop(0)#del startRasterScan
+                    # temp.pop(0)#del client id
+                    value =[]
+                    
+                    value.append(float(command[2]))
+                    value.append(float(command[3]))
+                    value.append(int(command[4]))
+                    value.append(int(command[5]))
+                    value.append(int(command[6]))
+                    
+                    ScanStartAngle = float(command[7]) #not using now
+                    ScanExposureTime = float(command[8])
+                    ScanRange = float(command[9])
+                    # startRasterScan
+                    # vertical_range (double): vertical range of the grid      should be X
+                    # horizontal_range (double): horizontal range of the grid  should be Y
+                    # number_of_lines (int) : number of horizontal lines of scan
+                    # number_of_frames (int): number of frame trigger issued for the detector
+                    # invert_direction (Boolean): flag to enable passes in the reverse direction
+                    
+                    # ScanStartAngle,
+                    # ScanExposureTime, (a line)
+                    # ScanRange
+
+                    # print(type(PVname),PVname)
+                    # print(type(value),len(value),value)
+                    # self.CAPUT(PVname,temp)
+                    p1 = CAProcess(target=self.oldCAPUT , args=('07a:md3:ScanExposureTime',ScanExposureTime,))
+                    p1.start()
+                    # p1.join() 
+                    time.sleep(0.1)
+                    p2 = CAProcess(target=self.oldCAPUT , args=('07a:md3:ScanRange',ScanRange,))
+                    p2.start()
+                    # p2.join() 
+                    time.sleep(0.1)
+                    p3 = CAProcess(target=self.oldCAPUT , args=('07a:md3:ScanStartAngle',ScanStartAngle,))
+                    p3.start()
+                    # p3.join() 
+                    time.sleep(0.5)
+                    p = CAProcess(target=self.oldCAPUT , args=(PVname,value,))
+                    p.start()
+                    p.join()   
+
                 elif command[0] == "stoh_abort_all" :
                     
                     for m in self.epicsmotors:
@@ -522,9 +744,10 @@ class epicsdev(QThread):
                                 pos = pos*1000
                             self.sendQ.put(('endmove',dcssname,pos,'normal'), block=False)
                     
-                    p = CAProcess(target=self.CAPUT, args=('07a:md3:abort','__EMPTY__',))
-                    p.start()
-                    p.join()        
+                    self.caput('07a:md3:abort','__EMPTY__')
+                    # p = CAProcess(target=self.oldCAPUT, args=('07a:md3:abort','__EMPTY__',))
+                    # p.start()
+                    # p.join()        
                     
                     
                     for dev in self.epicslist:
@@ -545,8 +768,9 @@ class epicsdev(QThread):
                                     pos =pos *1000
                                 
                                 self.sendQ.put(('endmove',dcssname,pos,'normal'), block=False)
-                        
+                    self.md3TaskBusy=False    
                 else:
+                    self.logger.warning(f'EPICSQ Get unkown command:{command}')
                     pass
             else:
                 pass
@@ -586,14 +810,37 @@ class epicsdev(QThread):
         return ans
     def CAPUT(self,PV,value):
         ca.initialize_libca()
-        print(f'caput PV={PV},value={value}')
+        self.logger.warning(f'caput PV={PV},value={value}')
         chid = ca.create_channel(PV, connect=False, callback=None, auto_cb=True)
         print(f'caput chid={chid}')
         state = ca.put(chid,value, wait=True,timeout=1, callback=None, callback_data=None)
         if state != 1:
             self.logger.critical(f"Caput {PV} value {value} Fail!")
         print(f'ca put state={state}')
+        time.sleep(0.1)
+    def oldCAPUT(self,PV,value):   
         
+        self.logger.warning(f'caput PV={PV},value={value}')
+        state = caput(PV,value)
+        if state != 1:
+            self.logger.critical(f"Caput {PV} value {value} Fail!")
+        print(f'ca put state={state}')
+        time.sleep(0.1)
+        
+    def caput(self,PV,value):
+        self.logger.warning(f'caput PV={PV},value={value}')
+        command = ['caput',str(PV),str(value)]
+        ans = subprocess.run(command,capture_output=True)
+        result = ans.stdout.decode('utf-8')
+        error = ans.stderr.decode('utf-8')       
+        self.logger.debug(f'{ans}')
+        if error == '':
+            print(f'caput PV={PV},value={value} OK!')
+            return True
+        else:
+            self.logger.critical(f"Caput {PV} value {value} Fail={error}")
+            return False
+        # print(ans)
     #Detector distance interolck
     def updateMD3Ylimits(self,usingVAL=False) :
         #usingVAL = True for just start moving
@@ -610,9 +857,10 @@ class epicsdev(QThread):
             # MD3YPVID.HLM = NewMD3YHLM
             # state = MD3YPVID.put('HLM', NewMD3YHLM, wait=True, timeout=1)
             # print(f'state={state}')
-            p = CAProcess(target=self.CAPUT, args=('07a:MD3:Y.HLM',NewMD3YHLM,))
-            p.start()
-            p.join()
+            self.caput('07a:MD3:Y.HLM',NewMD3YHLM)
+            # p = CAProcess(target=self.oldCAPUT, args=('07a:MD3:Y.HLM',NewMD3YHLM,))
+            # p.start()
+            # p.join()
             self.logger.warning(f'New High limits cal for MD3Y is :{NewMD3YHLM} and updated(old limits is {oldHLM})')
             if usingVAL :
                 self.logger.warning(f'New High limits cal baseon DetYPVID.VAL={DetYPOS}, DisPVID.OFF={DisPVID.OFF}, DisPVID.LLM={DisPVID.LLM}')
@@ -621,9 +869,10 @@ class epicsdev(QThread):
         else:
             # MD3YPVID.HLM = 200
             # MD3YPVID.put('HLM', 200, wait=True, timeout=1)
-            p = CAProcess(target=self.CAPUT, args=('07a:MD3:Y.HLM',200.1,))
-            p.start()
-            p.join()
+            self.caput('07a:MD3:Y.HLM',200.1)
+            # p = CAProcess(target=self.oldCAPUT, args=('07a:MD3:Y.HLM',200.1,))
+            # p.start()
+            # p.join()
             self.logger.warning(f'New High limits cal for MD3Y is :{NewMD3YHLM} Higher than 200,updated to 200.1(old limits is {oldHLM})')
             if usingVAL :
                 self.logger.warning(f'New High limits cal baseon DetYPVID.VAL={DetYPOS}, DisPVID.OFF={DisPVID.OFF}, DisPVID.LLM={DisPVID.LLM}')
@@ -651,9 +900,10 @@ class epicsdev(QThread):
             # DetYPVID.LLM = NewDetYLLM
             # state = DetYPVID.put('LLM', NewDetYLLM, wait=True, timeout=1)
             # print(f'state={state}')
-            p = CAProcess(target=self.CAPUT, args=('07a:Det:Y.LLM',NewDetYLLM,))
-            p.start()
-            p.join()
+            self.caput('07a:Det:Y.LLM',NewDetYLLM)
+            # p = CAProcess(target=self.oldCAPUT, args=('07a:Det:Y.LLM',NewDetYLLM,))
+            # p.start()
+            # p.join()
             self.logger.warning(f'New Low limits cal for DetY is :{NewDetYLLM} and updated(old limits is {oldLLM})')
             if usingVAL:
                 self.logger.warning(f'New Low limits cal baseon MD3YPVID.VAL={MD3YPOS}, DisPVID.OFF={DisPVID.OFF}, DisPVID.LLM={DisPVID.LLM}')
@@ -662,9 +912,10 @@ class epicsdev(QThread):
         else:
             # DetYPVID.LLM = 40
             # DetYPVID.put('LLM', 40, wait=True, timeout=1)
-            p = CAProcess(target=self.CAPUT, args=('07a:Det:Y.LLM',40,))
-            p.start()
-            p.join()
+            self.caput('07a:Det:Y.LLM',NewDetYLLM)
+            # p = CAProcess(target=self.oldCAPUT, args=('07a:Det:Y.LLM',40,))
+            # p.start()
+            # p.join()
             self.logger.warning(f'New Low limits cal for DetY is :{NewDetYLLM} lower than 40,updated to 40(old limits is {oldLLM})')
             if usingVAL:
                 self.logger.warning(f'New Low limits cal baseon MD3YPVID.VAL={MD3YPOS}, DisPVID.OFF={DisPVID.OFF}, DisPVID.LLM={DisPVID.LLM}')

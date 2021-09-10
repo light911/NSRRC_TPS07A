@@ -117,6 +117,8 @@ class Detector():
     def detector_reset_run(self,command):
         # self.logger.info(f'Default action for {command[0]}:{command[1:]}')
         self.logger.info(f'command: {command[1:]}')
+    def detector_ratser_setup(self,command):
+        self.logger.info(f'command: {command[1:]}')
     def stoh_abort_all(self,command):
          self.logger.info(f'command: {command[1:]}')
     def test(self,command):
@@ -145,7 +147,23 @@ class Eiger2X16M(Detector):
         self.y_pixel_size= float(self.det.detectorConfig('y_pixel_size')['value'])
         
     #add detector opration here
-    
+    def detector_stop(self,command):
+        #check detector data is clear
+        self.logger.info(f'command: {command[1:]}')
+        
+        currentfile = self.det.fileWriterFiles()
+        self.logger.info(f'Check for detector download data: file count :{currentfile}')
+        # while type(currentfile) != type(None):
+        while len(currentfile) != 0:
+            self.logger.info(f'wait for detector download data: file count :{currentfile}')
+            time.sleep(0.1)
+            currentfile = self.det.fileWriterFiles()
+        self.logger.info(f'All data in detector is downloaded: file count :{currentfile}')
+        
+        toDcsscommand = ('operdone',) + tuple(command)
+        self.sendQ.put(toDcsscommand,timeout=1)
+        
+        
     def detector_collect_shutterless(self,command):
     #    ('detector_collect_shutterless', '1.24', '1', 'test_1', '/data/blctl/test', 'blctl', 'gonio_phi', '0.1', '0.000009', '1.0', '10', '750.000060', '0.976226127404', '0.000231', '50.000000', '0', '0', 'PRIVATEA03F6ADA6F19A8DA1DEE6BFC325F4DCE', '1', '10', '50.000000', '0.0')
     #['stoh_start_operation', 'detector_collect_shutterless', '1.2', '0', 'test_0', '/data/blctl/test', 'blctl', 'gonio_phi', '0.1', '0.000000', '1.0', '1', '750.000080', '0.976226127404', '0.000071', '50.000000', '0', '0', 'PRIVATEA03F6ADA6F19A8DA1DEE6BFC325F4DCE', '3', '1', '50.000000', '0.0']
@@ -207,9 +225,78 @@ class Eiger2X16M(Detector):
         
         toDcsscommand = ('operupdate',command[0],self.operationHandle,'start_oscillation','shutter',str(_oscillationTime),_filename)
         self.sendQ.put(toDcsscommand)
-        
         # command = ('operdone',) + command
         # self.sendQ.put(command)
+        
+    def detector_ratser_setup(self,command):
+    #    ('detector_ratser_setup', '1.24', '1', 'test_1', '/data/blctl/test', 'blctl', 'gonio_phi', '0.1', '0.000009', '1.0', '10', '750.000060', '0.976226127404', '0.000231', '50.000000', '0', '0', 'PRIVATEA03F6ADA6F19A8DA1DEE6BFC325F4DCE', '1', '10', '50.000000', '0.0')
+    #['stoh_start_operation', 'detector_collect_shutterless', '1.2', '0', 'test_0', '/data/blctl/test', 'blctl', 'gonio_phi', '0.1', '0.000000', '1.0', '1', '750.000080', '0.976226127404', '0.000071', '50.000000', '0', '0', 'PRIVATEA03F6ADA6F19A8DA1DEE6BFC325F4DCE', '3', '1', '50.000000', '0.0']
+    # command: ('1.2', '0', 'test_0', '/data/blctl/test', 'blctl', 'gonio_phi', '0.1', '0.000009', '1.0', '1', '750.000240', '0.976226127404', '0.000187', '50.000000', '0', '0', 'PRIVATEA03F6ADA6F19A8DA1DEE6BFC325F4DCE', '9', '1', '50.000000', '0.0
+    #['stoh_start_operation', 'detector_collect_shutterless', '1.16', '1', 'test_1', '/data/blctl/test', 'blctl', 'gonio_phi', '0.10', '45.000018', '0.30', '10', '799.999800', '0.976226127404', '0.000187', '50.000000', '0', '0', 'PRIVATEA03F6ADA6F19A8DA1DEE6BFC325F4DCE', '1', '10', '50.000000', '0.0']
+    # set operationHandle [start_waitable_operation detector_collect_shutterless \
+    #                  $darkCacheNumber \
+    #                  $filename \
+    #                  $directory \
+    #                  $userName \
+    #                  $motor \
+    #                  $time \
+    #                  $startAngle \
+    #                  $delta \
+    #                  $totalFrames \
+    #                  [set $gMotorDistance] \
+    #                  $wavelength \
+    #                  [set $gMotorHorz] \
+    #                  [set $gMotorVert] \
+    #                  0 \
+    #                  0 \
+    #                  $sessionId \
+    #                  [lindex $args 0] \
+    #                  $totalFrames \
+    #                 $beam_size $attn]
+
+        self.operationHandle = command[1]
+        self.runIndex = command[2]
+        self.filename = command[3]
+        self.directory = command[4]
+        self.userName = command[5]
+        self.axisName = command[6]
+        self.exposureTime = float(command[7])
+        self.oscillationStart = float(command[8])
+        
+        self.detosc =  float(command[9])
+        self.TotalFrames = int(command[10]) #1
+        self.distance = float(command[11])
+        self.wavelength = float(command[12])
+        self.detectoroffX = float(command[13])
+        self.detectoroffY = float(command[14])
+        
+        self.sessionId = command[15]
+        self.fileindex = int(command[16])
+        self.unknow = int(command[17]) #1
+        self.beamsize = command[18] # 50
+        self.atten = command[19] #0
+        if command[20] == "1":
+            self.roi = True
+        else:
+            self.roi = False
+        self.rasterinfo={}
+        self.rasterinfo['x']= int(command[21])
+        self.rasterinfo['y']= int(command[22])
+        #  sscanf(commandBuffer.textInBuffe
+        # self.logger.info(f'Default action for {command[0]}:{command[1:]}')
+        self.logger.info(f'command: {command[1:]}')
+        
+        # htos_note changing_detector_mode
+        toDcsscommand = ('htos_note','changing_detector_mode')
+        self.sendQ.put(toDcsscommand)
+        _oscillationTime,_filename = self.basesetup(raster=True,roi=self.roi)
+        _filename = _filename + '.h5'
+
+        toDcsscommand = f"htos_operation_completed {command[0]} {self.operationHandle} normal"
+        self.logger.info(f'send command to dcss: {toDcsscommand}')
+        self.sendQ.put(toDcsscommand)
+                
+
         
     def stoh_abort_all(self,command):    
         state = self.det.detectorStatus('state')
@@ -217,10 +304,12 @@ class Eiger2X16M(Detector):
             pass
         elif state == 'acquire':
             self.det.sendDetectorCommand('disarm')
+        elif state == 'ready':
+            self.det.sendDetectorCommand('disarm')
         else:
             self.det.sendDetectorCommand('abort')
     
-    def basesetup(self):
+    def basesetup(self,raster=False,roi=False):
         t0 = time.time()
         
         
@@ -231,6 +320,69 @@ class Eiger2X16M(Detector):
         self.logger.debug(f'distance =  {self.distance},wavelength = {self.wavelength},detectoroffX={self.detectoroffX},detectoroffY={self.detectoroffY},beamsize={self.beamsize},atten={self.atten}')
         self.logger.debug(f'Unknow =  {self.unknow}')
         
+        # self.det.setDetectorConfig('count_time',1-0.0000001) 
+        # self.det.setDetectorConfig('frame_time',1)
+        
+        
+        
+        if raster:
+            
+            framerate = 1 / self.exposureTime 
+        else:
+            #check frame rate?
+            # framerate = self.TotalFrames / self.exposureTime
+            framerate = 1 / self.exposureTime
+            
+        Filename = self.filename + "_" + str(self.fileindex).zfill(4)
+        TotalTime = self.TotalFrames * self.exposureTime
+        # framerate = 75 #debug 
+        #detector mode
+        # roi = True
+        if roi:
+            if self.det.detectorConfig('roi_mode')['value'] == "disabled":
+                self.logger.debug(f'set detector roi_mode from disabled to 4M')
+                self.det.setDetectorConfig('roi_mode','4M')
+            
+            if framerate > 280:
+                self.logger.debug(f'framerate =  {framerate},disable two threshold')
+                if self.det.detectorConfig('threshold/difference/mode')['value'] == "enabled":
+                    self.logger.debug(f'update detector threshold/difference/ to disabled')
+                    self.det.setDetectorConfig('threshold/difference/mode','disabled')
+                if self.det.detectorConfig('threshold/2/mode')['value'] == "enabled":
+                    self.logger.debug(f'update detector threshold/2/mode to disabled')
+                    self.det.setDetectorConfig('threshold/2/mode','disabled')
+            else:
+                self.logger.debug(f'framerate =  {framerate},enable two threshold')
+                if self.det.detectorConfig('threshold/2/mode')['value'] == "disabled":
+                    self.det.setDetectorConfig('threshold/2/mode','enabled')
+                if self.det.detectorConfig('threshold/difference/mode')['value'] == "disabled":    
+                    self.det.setDetectorConfig('threshold/difference/mode','enabled')
+            
+        else:
+            framerate = 75 #force to no using 2nd energy
+            if self.det.detectorConfig('roi_mode')['value'] == "4M":
+                self.logger.debug(f'set detector roi_mode from 4M to disabled')
+                self.det.setDetectorConfig('roi_mode','disabled')
+            
+            if framerate > 70:
+                self.logger.debug(f'framerate =  {framerate},disable two threshold')
+                if self.det.detectorConfig('threshold/difference/mode')['value'] == "enabled":
+                    self.logger.debug(f'update detector threshold/difference/ to disabled')
+                    self.det.setDetectorConfig('threshold/difference/mode','disabled')
+                if self.det.detectorConfig('threshold/2/mode')['value'] == "enabled":
+                    self.logger.debug(f'update detector threshold/2/mode to disabled')
+                    self.det.setDetectorConfig('threshold/2/mode','disabled')
+            else:
+                self.logger.debug(f'framerate =  {framerate},enable two threshold')
+                if self.det.detectorConfig('threshold/2/mode')['value'] == "disabled":
+                    self.det.setDetectorConfig('threshold/2/mode','enabled')
+                if self.det.detectorConfig('threshold/difference/mode')['value'] == "disabled":    
+                    self.det.setDetectorConfig('threshold/difference/mode','enabled')
+            # self.det.setDetectorConfig('threshold/2/mode','enabled')
+            # self.det.setDetectorConfig('threshold/difference/mode','enabled')
+        
+        self.x_pixels_in_detector= int(self.det.detectorConfig('x_pixels_in_detector')['value'])
+        self.y_pixels_in_detector= int(self.det.detectorConfig('y_pixels_in_detector')['value'])
         # detOmega = self.oscillationRange / self.TotalFrames
         dethor = float(caget(self.Par['collect']['dethorPV']))
         detver = float(caget(self.Par['collect']['detverPV']))
@@ -241,44 +393,16 @@ class Eiger2X16M(Detector):
         
         self.det.setDetectorConfig('beam_center_x',beamx)
         self.det.setDetectorConfig('beam_center_y',beamy)
-        self.det.setDetectorConfig('detector_distance',self.distance)
+        self.det.setDetectorConfig('detector_distance',self.distance/1000)
         self.det.setDetectorConfig('omega_start',self.oscillationStart)
         self.det.setDetectorConfig('omega_increment',self.detosc)
         self.det.setDetectorConfig('chi_start',0)
         self.det.setDetectorConfig('chi_increment',0)
         self.det.setDetectorConfig('phi_start',0)
         self.det.setDetectorConfig('phi_increment',0)
-        self.det.setDetectorConfig('nimages',self.TotalFrames)
-        self.det.setDetectorConfig('trigger_mode','exts')##temp
         
-        #check frame rate?
-        framerate = self.TotalFrames / self.exposureTime
         
-        Filename = self.filename + "_" + str(self.fileindex).zfill(4)
-        TotalTime = self.TotalFrames * self.exposureTime
         
-        #detector mode
-        
-        if self.det.detectorConfig('roi_mode')['value'] == "4M":
-            self.logger.debug(f'set detector roi_mode from 4M to disabled')
-            self.det.setDetectorConfig('roi_mode','disabled')
-        
-        if framerate > 70:
-            self.logger.debug(f'framerate =  {framerate},disable two threshold')
-            if self.det.detectorConfig('threshold/difference/mode')['value'] == "enabled":
-                self.logger.debug(f'update detector threshold/difference/ to disabled')
-                self.det.setDetectorConfig('threshold/difference/mode','disabled')
-            if self.det.detectorConfig('threshold/2/mode')['value'] == "enabled":
-                self.logger.debug(f'update detector threshold/2/mode to disabled')
-                self.det.setDetectorConfig('threshold/2/mode','disabled')
-        else:
-            self.logger.debug(f'framerate =  {framerate},enable two threshold')
-            if self.det.detectorConfig('threshold/2/mode')['value'] == "disabled":
-                self.det.setDetectorConfig('threshold/2/mode','enabled')
-            if self.det.detectorConfig('threshold/difference/mode')['value'] == "disabled":    
-                self.det.setDetectorConfig('threshold/difference/mode','enabled')
-        # self.det.setDetectorConfig('threshold/2/mode','enabled')
-        # self.det.setDetectorConfig('threshold/difference/mode','enabled')
         
         header_appendix ={}
         header_appendix['user'] = self.userName
@@ -290,13 +414,35 @@ class Eiger2X16M(Detector):
         header_appendix['filename'] = Filename
         header_appendix['uid'] = getpwnam(self.userName)[2]
         header_appendix['gid'] = getpwnam(self.userName)[3]
+        if raster:
+            header_appendix['raster_X']=self.rasterinfo['x']
+            header_appendix['raster_Y']=self.rasterinfo['y']
+            # self.det.setDetectorConfig('trigger_mode','exte')##temp
+            self.det.setDetectorConfig('trigger_mode','exts')##temp
+            # self.det.setDetectorConfig('nimages',1)
+            # self.det.setDetectorConfig('ntrigger',self.TotalFrames)
+            self.det.setDetectorConfig('nimages',int(self.rasterinfo['y']))
+            self.det.setDetectorConfig('ntrigger',int(self.rasterinfo['x']))
+            # self.det.setDetectorConfig('count_time',self.exposureTime-0.0000001) 
+            # self.det.setDetectorConfig('frame_time',self.exposureTime)
+            self.det.setDetectorConfig('count_time',self.exposureTime) 
+            self.det.setDetectorConfig('frame_time',self.exposureTime)
+        else:
+            self.det.setDetectorConfig('trigger_mode','exts')##temp
+            self.det.setDetectorConfig('nimages',self.TotalFrames)
+            self.det.setDetectorConfig('ntrigger',1)
+            # self.det.setDetectorConfig('count_time',self.exposureTime-0.0000001) 
+            self.det.setDetectorConfig('count_time',self.exposureTime) 
+            self.det.setDetectorConfig('frame_time',self.exposureTime)
+        
         text = json.dumps(header_appendix)
         self.det.setStreamConfig('header_appendix',text)
         
-        if self.runIndex == 0:
-            self.det.setFileWriterConfig('nimages_per_file',0)
-        else :
-            self.det.setFileWriterConfig('nimages_per_file',int(self.Par['Detector']['nimages_per_file']))
+        # if self.runIndex == 0:
+        #     self.det.setFileWriterConfig('nimages_per_file',0)
+        # else :
+        #     self.det.setFileWriterConfig('nimages_per_file',int(self.Par['Detector']['nimages_per_file']))
+        self.det.setFileWriterConfig('nimages_per_file',int(self.Par['Detector']['nimages_per_file']))
         
         # print('Detector Energy',self.Par['EPICS']['Energy']['VAL']*1000)
         Energy = float(caget(self.Par['collect']['EnergyPV']))*1000
@@ -309,8 +455,7 @@ class Eiger2X16M(Detector):
         
     # print("Setting frame time",cam.setDetectorConfig('frame_time',exptime),exptime)
     
-        self.det.setDetectorConfig('count_time',self.exposureTime-0.0000001) 
-        self.det.setDetectorConfig('frame_time',self.exposureTime)
+
         
         
         
@@ -324,6 +469,7 @@ class Eiger2X16M(Detector):
         self.Par['Detector']['nimages'] = self.TotalFrames
         self.logger.warning(f'TYPE:{type(self.Par)}')
         
+        #update to md3
         NumberOfFramesPV = self.Par['collect']['NumberOfFramesPV']
         caput(NumberOfFramesPV,self.TotalFrames)
         
@@ -340,7 +486,7 @@ class Eiger2X16M(Detector):
     def logDetInfo(self):
         
     
-        commands = ["count_time","frame_time",'detector_distance','nimages',
+        commands = ["count_time","frame_time",'detector_distance','nimages','ntrigger',
                 'number_of_excluded_pixels','photon_energy','roi_mode',
                 'threshold_energy','threshold/1/energy',
                 'threshold/1/mode','threshold/2/energy','threshold/2/mode',

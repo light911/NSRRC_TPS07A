@@ -46,14 +46,14 @@ def getloger(logname='Main',LOG_FILENAME='log.txt',level = 'INFO'):
 
 
 
-def getloger2(logname='Main',LOG_FILENAME='log.txt',level = 'INFO'):
+def getloger2(logname='Main',LOG_FILENAME='./log/log.txt',level = 'INFO'):
     logger=logging.getLogger(logname)
     fotmatterstr = '%(asctime)s - %(name)s - %(levelname)s -%(funcName)s - %(message)s'
     formatter = logging.Formatter(fotmatterstr)
     # logging.basicConfig(stream=sys.stdout, level=logging.INFO,format = fotmatterstr)
     # logging.basicConfig(level=logging.DEBUG,format = fotmatterstr)
     
-    filehandler = logging.handlers.RotatingFileHandler(LOG_FILENAME, maxBytes=200000, backupCount=10)
+    filehandler = logging.handlers.RotatingFileHandler(LOG_FILENAME, maxBytes=20000000, backupCount=10)
     filehandler.setFormatter(formatter)
     
     

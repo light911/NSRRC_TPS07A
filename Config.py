@@ -9,15 +9,15 @@ Created on Mon Apr 12 09:49:13 2021
 Par={
     "Beamline":"TPS07A",
     "Debuglevel":"DEBUG",#ERROR,WARNING,INFO,DEBUG
-    "MinDistance":150,
+    "MinDistance":149,
     "fakedistancename":"07a:Det:Dis",
     "calfactorname":'07a-ES:DetectorDistance:OFF',
-    "minchangeGAP":0.003,#mm
+    "minchangeGAP":0.006,#mm
     "minEVchangeGAP":0.01,#Kev
     'dcss':{'host':"10.7.1.1",
             'port':14242,
             'dhsname':"EPICS",
-            'tcptimeout':0.02},
+            'tcptimeout':0.1},
     'Energy':{'gapname':'SR-ID-IU22-07:getGap',
               'cvtE2Gapname':'07a:IU22:cvtE2Gap.VAL',
               'pre_convert_energy':'07a:IU22:cvtE2Gap.X',
@@ -70,7 +70,7 @@ Par={
                                     
                                  'using':{'MD3Ver':True,
                                           'MD3Hor':True,
-                                          'SS':False,
+                                          'SS':True,
                                           'Aperture':False,
                                           'Slit4VerOP':False,
                                           'Slit4HorOP':False,

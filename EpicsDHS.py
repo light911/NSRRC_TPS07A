@@ -240,9 +240,10 @@ class DCSDHS():
                 pass
             #recive data
             try:
-                data = self.client.recv(4096)
+                data = self.client.recv(40960)
 #                print(f'data:{data}')
             except socket.timeout:
+                # self.logger.debug ("socket.timeout")
                 pass
 
             except socket.error:
@@ -252,6 +253,9 @@ class DCSDHS():
                 # epicsQ.put("exit")
                 DetctorQ.put("exit")
                 break
+            except :
+                self.logger.critical ("Error on socket ")
+                
             else:
                 if len(data) == 0:
                     self.logger.critical ("orderly shutdown on DCSS server end")
@@ -261,6 +265,8 @@ class DCSDHS():
                     break
                 else:
                     # got a message do something :)
+                    self.logger.debug (f'recive {data}' )
+                    self.logger.debug (f'after decode = {data.decode()}')
                     msg = msg + data.decode()
                     index = msg.find('\x00')
                     while index != -1:
@@ -281,8 +287,32 @@ class DCSDHS():
                         elif command[0] == "stoh_start_motor_move":
                             #"stoh_start_motor_move motorName destination
                             
+                            #check motor state
+                            if command[1] == 'camera_zoom':
+                                epicsQ.put(("stoh_start_motor_move",command[1],command[2]))
+                                
+                            else:
+                                try:
+                                    GUIname, = self.FindEpicsMotorInfo(command[1],'dcssname','GUIname')
+                                    MoveDone = self.Par['EPICS'][GUIname]['DMOV']
+                                    Pos = self.Par['EPICS'][GUIname]['RBV']
+                                    TargetPos = self.Par['EPICS'][GUIname]['VAL']
+                                    if MoveDone:
+                                        # not move
+                                        epicsQ.put(("stoh_start_motor_move",command[1],command[2]),timeout=1)
+                                        time.sleep(0.05)
+                                    else:
+                                        sendQ.put(('warning',f"{GUIname} is already moving"))
+                                        
+                                except :
+                                    #todo if not inthe list
+                                    self.logger.warning(f"command : {command} has problem")
+                                    self.logger.debug(f"GUIname = {GUIname},Par: {self.Par} ")
+                                    epicsQ.put(("stoh_start_motor_move",command[1],command[2]),timeout=1)
                             
-                            epicsQ.put(("stoh_start_motor_move",command[1],command[2]))
+                            
+                            
+                            # epicsQ.put(("stoh_start_motor_move",command[1],command[2]))
                             
                             pass
                         elif command[0] == "stoh_set_shutter_state":
@@ -313,17 +343,24 @@ class DCSDHS():
                                 command.pop(0)
                                 # print(command)
                                 DetctorQ.put(tuple(command))
+                            elif command[1] == "detector_ratser_setup" :
+                                command.pop(0)
+                                # print(command)
+                                DetctorQ.put(tuple(command))
                             elif command[1] == "detector_transfer_image" :
                                 pass
                             elif command[1] == "detector_oscillation_ready" :
                                 pass
                             elif command[1] == "detector_stop" :
                                 # ['stoh_start_operation', 'detector_stop', '1.17', '']
-                                command = command[1:-1]
+                                command.pop(0)
+                        
+                                DetctorQ.put(tuple(command))
                                 
-                                newcommand = ('operdone',) + tuple(command)
-                                # print(newcommand)
-                                sendQ.put(newcommand)
+                                # command = command[1:-1]
+                                # newcommand = ('operdone',) + tuple(command)
+                                
+                                # sendQ.put(newcommand)
                             elif command[1] == "detector_reset_run" :
                                 pass
                             elif command[1] == "detector_oscillation_ready" :
@@ -334,7 +371,17 @@ class DCSDHS():
                                 #['stoh_start_operation', 'getMD2Motor', '1.2', 'change_mode']
                                 sendQ.put(('operdone',command[1],command[2],command[3]))
                                  # self.logger.warning(f"operation from dcss : {command}")
-                            
+                            elif command[1] == "startRasterScanEx" :
+                                # ['stoh_start_operation', 'startRasterScanEx', '2.5', '1', '0.2', '0.1', '90', '-1.51537', '-0.00978', '1.45155', '0.57271', '10', '10', '0.1', '1', '1', '1']
+                                self.logger.warning(f"startRasterScanEx operation from dcss : {command}")
+                                command.pop(0)
+                                epicsQ.put(tuple(command))
+                            elif command[1] == "startRasterScan" :
+                                # ['stoh_start_operation', 'startRasterScanEx', '2.5', '1', '0.2', '0.1', '90', '-1.51537', '-0.00978', '1.45155', '0.57271', '10', '10', '0.1', '1', '1', '1']
+                                # ['stoh_start_operation', 'startRasterScan', '7.6', '0.05', '-0.2', '2', '5', '0', '269.999792', '0.5', '0', '']
+                                self.logger.warning(f"startRasterScan operation from dcss : {command}")
+                                command.pop(0)
+                                epicsQ.put(tuple(command))                                  
                             else:
                                  self.logger.warning(f"Unkonw operation from dcss : {command}")
                         elif command[0] == "stoh_read_ion_chambers":
@@ -414,7 +461,7 @@ class DCSDHS():
                             self.logger.warning(f"Unknown command:{command[0]}")
                             # print(f'Unknown command:{command[0]}')
                         index = msg.find('\x00')
-                        
+                    self.logger.debug(f'Remind str = {msg}')    
     def processrecvice(self,string):
         '''
         ex"           46            0 stoh_register_string tps_current tps_current\n\x00"
@@ -446,7 +493,10 @@ class DCSDHS():
                     self.logger.warning("Send Q get Exit")
                     break
                 else:
-                    tcpclient.sendall(command.encode())
+                    self.logger.info(f"Send direct command to dcss:{command}")
+                    todcss = self.toDCSScommand(command)
+                    tcpclient.sendall(todcss.encode())
+                    
             elif isinstance(command,tuple) :
                 #command 0:command 1:motorname 2:position 3:type 4:state
                 echo = ""

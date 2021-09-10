@@ -270,7 +270,26 @@ epicslist={
                             'dcssname':"",
                             'dcsstype':"log",
                             }, 
-             
+              "07a:md3:startRasterScanEx":{
+                            "PVname":"07a:md3:startRasterScanEx",  
+                            "PVID":"",#for uid object
+                            "GUIname":"startRasterScanEx",
+                            "old_value":"0",
+                            "camon":True,
+                            "deadband":0,
+                            'dcssname':"",
+                            'dcsstype':"opertation",
+                            }, 
+             "07a:md3:startRasterScan":{
+                            "PVname":"07a:md3:startRasterScan",  
+                            "PVID":"",#for uid object
+                            "GUIname":"startRasterScan",
+                            "old_value":"0",
+                            "camon":True,
+                            "deadband":0,
+                            'dcssname':"",
+                            'dcsstype':"opertation",
+                            }, 
              }
 
 

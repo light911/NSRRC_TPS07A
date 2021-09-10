@@ -212,6 +212,8 @@ class Beamsize():
                 self.logger.debug(f'CurrentMD3Y = {self.CurrentMD3Y}, MD3YHLM = {MD3YHLM},will move to {targetMD3Y} , will collisionMD3Y ={collisionMD3Y}') 
                 MoveTogether = not collisionMD3Y and not collisionDetY
                 self.logger.info(f'MoveTogether = {MoveTogether},since collisionMD3Y= {collisionMD3Y}, collisionDetY={collisionDetY}') 
+                #modify
+                movinglist[self.DetYMotor] = targetDetY
                 if -0.005 < detMove < 0.005:
                     #no move
                     self.logger.info(f'Target MD3Y is the too closed to Current MD3Y value,nothing move')
@@ -221,15 +223,17 @@ class Beamsize():
                     self.logger.info(f'Moving MD3Y Frist! pervent collision') 
                     self.logger.debug(f'Set {self.MD3YMotor} move to {movinglist[self.MD3YMotor]}') 
                     t1 = time.time()
-                    caput(self.MD3YMotor,movinglist[self.MD3YMotor])
+                    print(caput(self.MD3YMotor,movinglist[self.MD3YMotor]))
                     del movinglist[self.MD3YMotor]
                     while not self.check_allmotorstop([self.MD3YMotor]):
                         time.sleep(0.1)
                     self.logger.info(f'Moving MD3Y Done! Start move other motor') 
+                    #wait for limtes update
+                    time.sleep(0.2)
                     #need recheck collision,in case motor stop by abort
                     for motor in movinglist :
                         self.logger.debug(f'Set {motor} move to {movinglist[motor]}') 
-                        caput(motor,movinglist[motor])
+                        print(caput(motor,movinglist[motor]))
                     time.sleep(0.1)    
                     while not self.check_allmotorstop(movinglist.keys()):
                         time.sleep(0.1)
@@ -245,10 +249,12 @@ class Beamsize():
                     while not self.check_allmotorstop([self.DetYMotor]):
                         time.sleep(0.1)
                     self.logger.info(f'Moving DetY Done! Start move other motor') 
+                    #wait for limtes update
+                    time.sleep(0.2)
                     #need recheck collision ,in case motor stop by abort
                     for motor in movinglist :
                         self.logger.debug(f'Set {motor} move to {movinglist[motor]}') 
-                        caput(motor,movinglist[motor])
+                        print(caput(motor,movinglist[motor]))
                     time.sleep(0.1)    
                     while not self.check_allmotorstop(movinglist.keys()):
                         time.sleep(0.1)
@@ -263,7 +269,7 @@ class Beamsize():
                     t1 = time.time()
                     for motor in movinglist :
                         self.logger.debug(f'Set {motor} move to {movinglist[motor]}') 
-                        caput(motor,movinglist[motor])
+                        print(caput(motor,movinglist[motor]))
                     time.sleep(0.1)
                     while not self.check_allmotorstop(movinglist.keys()):
                         time.sleep(0.1)
@@ -284,8 +290,12 @@ class Beamsize():
         for motor in motorlist:
             if caget(f"{motor}.DMOV") == 1:
                 statearray.append(True)
+                # pos = caget(f"{motor}")
+                # self.logger.debug(f'{motor} pos at {pos}') 
             else:
                 statearray.append(False)
+                # pos = caget(f"{motor}")
+                # self.logger.debug(f'{motor} pos at {pos}') 
         
         return all(statearray)
     def check_allMD3motorstop(self,md3epicsname):
@@ -359,4 +369,4 @@ if __name__ == "__main__":
     # Par = m.dict()
     A = Beamsize()
     # A.target(30)
-    A.target(90)
+    A.target(100)
