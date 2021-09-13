@@ -520,13 +520,18 @@ class epicsdev(QThread):
                                 #Enable energy to gap(07a:IU22:cvtE2Gap_able)
                                 newenergy = TargetPos
                                 C_energy = PVID.RBV
-                                N_gap = float(caget(self.Par['Energy']['cvtE2Gapname']))
-                                C_gap = float(caget(self.Par['Energy']['gapname']))
+                                N_gap = float(caget(self.Par['Energy']['cvtE2Gapname']))#old gap output
+                                C_gap = float(caget(self.Par['Energy']['gapname']))#current gap
                                 if abs(C_gap - N_gap) > self.Par['minchangeGAP'] or abs(C_energy - newenergy) > self.Par['minEVchangeGAP']:
                                     self.logger.debug(f"det detGap {abs(C_gap - N_gap)} is higher than {self.Par['minchangeGAP']},or {abs(C_energy - newenergy)} > {self.Par['minEVchangeGAP']} change gap setting")
                                     #Enalble = 0
-                                    
-                                    self.caput(self.Par['Energy']['evtogap'],0)
+                                    ring_state = caget("TPS:OPStatus") 
+                                    self.logger.warning(f"{ring_state=}")
+                                    if caget("TPS:OPStatus") == 0:
+                                        self.logger.warning(f"ring closed")
+                                    else:
+                                        self.caput(self.Par['Energy']['evtogap'],0)
+
                                     # p = CAProcess(target=self.oldCAPUT, args=(self.Par['Energy']['evtogap'],0,))
                                     # p.start()
                                     # p.join()
