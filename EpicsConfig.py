@@ -165,7 +165,7 @@ epicsmotors={
                 "deadband":0.001,
                 'dcssname':"cam_horz",
                 'dcsstype':"motor",
-                 },
+                 },                
             }
 
 
@@ -177,8 +177,8 @@ epicslist={
                             "old_value":"0",
                             "camon":True,
                             "deadband":0,
-                            'dcssname':"",
-                            'dcsstype':"",
+                            'dcssname':"Beamsize",
+                            'dcsstype':"bypass",
                             },
               "07a:md3:FastShutterIsOpen":{
                             "PVname":"07a:md3:FastShutterIsOpen",  
@@ -290,6 +290,37 @@ epicslist={
                             'dcssname':"",
                             'dcsstype':"opertation",
                             }, 
+             "07a:md3:startScan4DEx":{
+                            "PVname":"07a:md3:startScan4DEx",  
+                            "PVID":"",#for uid object
+                            "GUIname":"startScan4DEx",
+                            "old_value":"0",
+                            "camon":True,
+                            "deadband":0,
+                            'dcssname':"",
+                            'dcsstype':"opertation",
+                            }, 
+             "07a:md3:CurrentApertureDiameterIndex":{
+                            "PVname":"07a:md3:CurrentApertureDiameterIndex",  
+                            "PVID":"",#for uid object
+                            "GUIname":"CurrentApertureDiameterIndex",
+                            "old_value":"0",
+                            "camon":True,
+                            "deadband":0,
+                            'dcssname':"CurrentApertureDiameterIndex",
+                            'dcsstype':"bypass",
+                            }, 
+            "07a:md3:startAutoSampleCentring":{
+                            "PVname":"07a:md3:startAutoSampleCentring",  
+                            "PVID":"",#for uid object
+                            "GUIname":"centerLoop",
+                            "old_value":"0",
+                            "camon":False,
+                            "deadband":0,
+                            'dcssname':"centerLoop",
+                            'dcsstype':"other",
+                            }, 
+            
              }
 
 

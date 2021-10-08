@@ -16,6 +16,7 @@ import logsetup
 import Config
 import EpicsConfig
 import numpy as np
+from DetectorCover import MOXA
 
 class Beamsize():
     def __init__(self,managerpar=None) :
@@ -116,7 +117,10 @@ class Beamsize():
         #update info
         self.updateINFO()
         self.Busy = False
-       
+        self.cover = MOXA()
+
+    
+
     def updateINFO(self):
         self.BeamSizeLists = caget(self.BeamSizeName)
         self.logger.debug(f'Update BeamSizeLists = {self.BeamSizeLists}')
@@ -159,10 +163,13 @@ class Beamsize():
         self.CurrentMD3Y = caget(self.MD3YMotor)
         self.logger.debug(f'Update MD3YMotor = {self.CurrentMD3Y}')
         
-    def target(self,beamsize=50):
+    def target(self,beamsize=50,opencover=False):
         self.Busy = True
+        self.logger.info(f'Move beam size to {beamsize} with openvoer = {opencover}')
         if beamsize == self.CurrentBeamsize:
             self.logger.debug(f'Asked for same beamsize ,not move(Current beamsize = {self.CurrentBeamsize})')
+            self.opencover(opencover)
+            self.wait_opencover(opencover)
         else:
             self.updateINFO()
             if beamsize in self.BeamSizeLists :
@@ -217,6 +224,8 @@ class Beamsize():
                 if -0.005 < detMove < 0.005:
                     #no move
                     self.logger.info(f'Target MD3Y is the too closed to Current MD3Y value,nothing move')
+                    self.opencover(opencover)
+                    self.wait_opencover(opencover)
                     pass
                 elif detMove < 0 and not MoveTogether:
                     #MD3Y move forward, move MD3Y Frist
@@ -237,6 +246,8 @@ class Beamsize():
                     time.sleep(0.1)    
                     while not self.check_allmotorstop(movinglist.keys()):
                         time.sleep(0.1)
+                    self.opencover(opencover)
+                    self.wait_opencover(opencover)
                     runtime = time.time() - t1
                     self.logger.info(f'Moving All MOTOR Done,take {runtime}sec') 
                 elif detMove >0 and not MoveTogether:
@@ -258,11 +269,14 @@ class Beamsize():
                     time.sleep(0.1)    
                     while not self.check_allmotorstop(movinglist.keys()):
                         time.sleep(0.1)
+                    self.opencover(opencover)
+                    self.wait_opencover(opencover)
                     runtime = time.time() - t1
                     self.logger.info(f'Moving All MOTOR Done,take {runtime}sec') 
                     pass
                 elif MoveTogether and detMove != 0:
                     self.logger.info(f'Moving All MOTOR at the same time') 
+                    self.opencover(opencover)
                     # movejob = movinglist
                     movinglist[self.DetYMotor] = self.CurrentDetY + detMove
                     # print(self.CurrentDetY + detMove)
@@ -273,6 +287,7 @@ class Beamsize():
                     time.sleep(0.1)
                     while not self.check_allmotorstop(movinglist.keys()):
                         time.sleep(0.1)
+                    self.wait_opencover(opencover)
                     runtime = time.time() - t1
                     self.logger.info(f'Moving All MOTOR Done,take {runtime}sec') 
                 else:
@@ -283,6 +298,18 @@ class Beamsize():
             else:
                 self.logger.warning(f'Beam size : {beamsize} ,not in beam list :{self.BeamSizeLists}')
             self.Busy = False
+    def opencover(self,opencover=False):
+            if opencover:
+                self.opcoverP = Process(target=self.cover.OpenCover,name='open_cover')
+                self.opcoverP.start()
+            else:
+                pass
+    def wait_opencover(self,opencover=False):
+            if opencover:
+                self.opcoverP.join()
+            else:
+                pass
+
     def check_allmotorstop(self,motorlist):
         if len(motorlist) == 0:
             return True
@@ -369,4 +396,4 @@ if __name__ == "__main__":
     # Par = m.dict()
     A = Beamsize()
     # A.target(30)
-    A.target(100)
+    A.target(0.5)

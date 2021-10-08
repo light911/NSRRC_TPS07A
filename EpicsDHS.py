@@ -10,6 +10,7 @@ from epics import caput,CAProcess,caget
 import socket,time,signal,sys,os
 # import multiprocessing as mp
 from multiprocessing import Process, Queue, Manager
+import multiprocessing as mp
 from epicsinit import epicsdev
 import logsetup
 # import epicsfile
@@ -24,8 +25,8 @@ class DCSDHS():
         signal.signal(signal.SIGTERM, self.quit)
         #load config
         # if managerpar == None:
-        m = Manager()
-        self.Par = m.dict()
+        self.m = Manager()
+        self.Par = self.m.dict()
         # else:
             # self.Par = managerpar
         print(f'TYPE:{type(self.Par)}')
@@ -381,6 +382,16 @@ class DCSDHS():
                                 # ['stoh_start_operation', 'startRasterScan', '7.6', '0.05', '-0.2', '2', '5', '0', '269.999792', '0.5', '0', '']
                                 self.logger.warning(f"startRasterScan operation from dcss : {command}")
                                 command.pop(0)
+                                epicsQ.put(tuple(command))
+                            elif command[1] == "startScan4DEx" :
+                                #['stoh_start_operation', 'startScan4DEx', '1.855', '0.00', '1.0', '0.2', '-0.013060', '-1.080313', '-0.027390', '-1.251581', '0.576619', '-0.013060', '-1.017883', '-0.027390', '-1.295141', '0.684219']                                  
+                                self.logger.warning(f"startScan4DEx operation from dcss : {command}")
+                                command.pop(0)
+                                epicsQ.put(tuple(command))
+                            elif command[1] == "centerLoop":
+                                # ['stoh_start_operation', 'centerLoop', '116.2', '']
+                                self.logger.warning(f"centerLoop operation from dcss : {command}")
+                                command.pop(0)
                                 epicsQ.put(tuple(command))                                  
                             else:
                                  self.logger.warning(f"Unkonw operation from dcss : {command}")
@@ -685,8 +696,17 @@ class DCSDHS():
         self.Q['Queue']['epicsQ'].put('exit')
         self.Q['Queue']['ControlQ'].put('exit')
         self.Q['Queue']['DetectorQ'].put('exit')
+        self.client.close()
         self.logger.debug(f"PID : {os.getpid()} DHS closed, Par= {self.Par} TYPE:{type(self.Par)}")
         # self.logger.info(f'PID : {os.getpid()} DHS closed') 
+        self.logger.critical(f'm pid={self.m._process.ident}')
+        self.m.shutdown()
+        active_children = mp.active_children()
+        self.logger.critical(f'active_children={active_children}')
+        if len(active_children)>0:
+            for item in active_children:
+                self.logger.warning(f'Last try to kill {item.pid}')
+                os.kill(item.pid,signal.SIGKILL)
         sys.exit()
 ####test section
 def serverTCP(port):

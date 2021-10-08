@@ -6,11 +6,15 @@ Created on Mon May  3 14:26:34 2021
 @author: blctl
 """
 from multiprocessing import Process, Queue, Manager
+import multiprocessing as mp
 import logsetup,time
 from Eiger.DEiger2Client import DEigerClient
 from epics import caput,CAProcess,caget
 import json
 from pwd import getpwnam
+from DetectorCover import MOXA
+from EPICS_special import Beamsize
+
 
 class Detector():
     def __init__(self,Par,Q) :
@@ -65,6 +69,8 @@ class Detector():
         self.TotalFrames = int() 
         self.beamsize = "" 
         self.atten = ""
+        self.cover = MOXA()
+        self.MoveBeamsize = Beamsize()
         # self.logger.warning(f'Detector {self.CommandQ}')
     def CommandMon(self) :
         self.logger.warning('Detector MON start!')
@@ -149,6 +155,8 @@ class Eiger2X16M(Detector):
     #add detector opration here
     def detector_stop(self,command):
         #check detector data is clear
+        closecoverP = Process(target=self.cover.CloseCover,name='stop_close_cover')
+        closecoverP.start()
         self.logger.info(f'command: {command[1:]}')
         
         currentfile = self.det.fileWriterFiles()
@@ -160,6 +168,7 @@ class Eiger2X16M(Detector):
             currentfile = self.det.fileWriterFiles()
         self.logger.info(f'All data in detector is downloaded: file count :{currentfile}')
         
+        closecoverP.join()
         toDcsscommand = ('operdone',) + tuple(command)
         self.sendQ.put(toDcsscommand,timeout=1)
         
@@ -299,6 +308,8 @@ class Eiger2X16M(Detector):
 
         
     def stoh_abort_all(self,command):    
+        closecoverP = Process(target=self.cover.CloseCover,name='abort_close_cover')
+        closecoverP.start()
         state = self.det.detectorStatus('state')
         if state == 'idle':
             pass
@@ -311,8 +322,12 @@ class Eiger2X16M(Detector):
     
     def basesetup(self,raster=False,roi=False):
         t0 = time.time()
-        
-        
+
+        # old open cover, now move to beamsize
+        # opcoverP = Process(target=self.cover.OpenCover,name='open_cover')
+        # opcoverP.start()
+        beamsizeP = CAProcess(target=self.MoveBeamsize.target,args=(float(self.beamsize),True,),name='MoveBeamSize')
+        beamsizeP.start()
         
         self.logger.debug(f'TotalFrames =  {self.TotalFrames},exposureTime = {self.exposureTime} ')
         self.logger.debug(f'oscillationStart =  {self.oscillationStart},framewidth = {self.detosc}')
@@ -467,7 +482,7 @@ class Eiger2X16M(Detector):
         self.Par['Detector']['Filename'] = Filename
         self.Par['Detector']['Fileindex'] = self.fileindex
         self.Par['Detector']['nimages'] = self.TotalFrames
-        self.logger.warning(f'TYPE:{type(self.Par)}')
+        # self.logger.warning(f'TYPE:{type(self.Par)}')
         
         #update to md3
         NumberOfFramesPV = self.Par['collect']['NumberOfFramesPV']
@@ -478,6 +493,8 @@ class Eiger2X16M(Detector):
         
         
         self.logDetInfo()
+        # self.cover.wait_for_state(wait='open',timeout=3)
+        beamsizeP.join()
         t1 = time.time()
         
         self.logger.debug(f'setup time = {t1-t0},Detector energy={Energy}')

@@ -6,6 +6,7 @@ Created on Wed Dec 25 09:56:32 2019
 TODO:update DisY uperlimits
 """
 
+from typing import ValuesView
 from epics import PV,Motor,ca,CAProcess,caget,caput
 import numpy as np
 import sys,time,os,signal
@@ -60,6 +61,9 @@ class epicsdev(QThread):
         self.startRasterScan = {}
         self.startRasterScan['moving'] = False
         self.startRasterScan['id'] = ""
+        self.startScan4DEx = {}
+        self.startScan4DEx['moving'] = False
+        self.startScan4DEx['id'] = ""
         self.md3TaskBusy=False
         self.tempcommand=[]
         self.saveCentringPositionFlag_sample_z = False
@@ -291,7 +295,7 @@ class epicsdev(QThread):
         dcsstype = self.epicslist[pvname]["dcsstype"]
         self.Par['EPICS'][guiname] = value
         self.epicslist[pvname]["valueupdated"] = True
-        
+        self.epicslist[pvname]["current_value"] = value
         if dcsstype == "par":
             if guiname == 'zoom_scale_x' or guiname == 'zoom_scale_y' :
                 value = value *1000
@@ -323,7 +327,10 @@ class epicsdev(QThread):
                          self.logger.warning(f"Recover {command}(pervious sicne MD3 busy)")
                          self.epicsQ.put(command)
                     self.tempcommand=[]
-                    
+            elif value[6] != "null":
+                #['Auto Centring', '8', '2021-10-07 12:33:29.267', '2021-10-07 12:34:04.733', 'true', 'null', '1']
+                #['Auto Centring' '8' '2021-10-07 12:39:31.811' '2021-10-07 12:39:42.288','null' 'Invalid position: -173375007607934.7200' '-1'] 
+                self.md3TaskBusy = False
             else:
                 self.md3TaskBusy =True
                 
@@ -349,6 +356,28 @@ class epicsdev(QThread):
                     self.startRasterScan['moving'] = False
                     opid = self.startRasterScan['id']
                     self.sendQ.put(('operdone','startRasterScan',opid,'normal'))
+            if self.startScan4DEx['moving'] :
+                # start
+                # ['Raster Scan', '8', '2021-07-23 14:12:28.47', 'null', 'null', 'null', 'null']
+                # end
+                # ['Raster Scan', '8', '2021-07-23 14:12:28.47', '2021-07-23 14:12:41.972', 'org.embl.dev.pmac.PmacDiagnosticInfo@77', 'null', '1'] 
+                # error 
+                # ['Multi Axis Scan', '8', '2021-10-07 16:17:19.582', '2021-10-07 16:17:27.672', 'null', 'Invalid value: Centring Y speed', '-1']
+                
+                if value[0] == 'Multi Axis Scan' and value[6] == "1":
+                # if value[6] == "1":
+                    self.startScan4DEx['moving'] = False
+                    opid = self.startScan4DEx['id']
+                    self.sendQ.put(('operdone','startScan4DEx',opid,'normal'))
+                elif value[0] == 'Multi Axis Scan' and value[6] == "1":
+                    self.logger.warning(f'startScan4DEx fail :{value[5]}')
+                    self.startScan4DEx['moving'] = False
+                    opid = self.startScan4DEx['id']
+                    self.sendQ.put(('operdone','startScan4DEx',opid,'normal'))
+            
+            # if value[0] == 'Set Centring Phase' and value[6] == "1":
+                   
+            #         self.sendQ.put(('operdone','startRasterScanEx',opid,'normal'))
         #for other            
         if self.init_update:
             self.epicslist[pvname]["old_value"] = value
@@ -605,7 +634,13 @@ class epicsdev(QThread):
                     elif dcsstype == "change_mode":
                             self.sendQ.put(("startmove",command[1],command[2],"Normal"))
                             value = int(float(command[2]))
-                            self.caput(PVname,value)
+                            # PVname, = self.FindEpicsListInfo('change_mode','GUIname','PVname')
+                            if int(self.epicslist[PVname]["current_value"]) == int(value):
+                                dcssname = command[1]
+                                value = command[2]
+                                self.sendQ.put(('endmove',dcssname,value,'normal'))
+                            else:
+                                self.caput(PVname,value)
                             # p = CAProcess(target=self.CAPUT, args=(PVname,float(command[2]),))
                             # p.start()
                             # p.join()
@@ -620,6 +655,10 @@ class epicsdev(QThread):
                             # p.start()
                             # p.join()
                             self.sendQ.put(('endmove',command[1],command[2],'normal'))#bug??
+                    elif dcsstype == "bypass":
+                        # self.sendQ.put(("startmove",command[1],command[2],"Normal"))
+                        self.sendQ.put(('endmove',command[1],command[2],'normal'))
+                        pass
                     else:
                         pos = command[2]
                         dcssname = command[1]
@@ -736,6 +775,41 @@ class epicsdev(QThread):
                     p = CAProcess(target=self.oldCAPUT , args=(PVname,value,))
                     p.start()
                     p.join()   
+                elif command[0] == "startScan4DEx":
+                    #['startScan4DEx', '1.855', '0.00', '1.0', '0.2', '-0.013060', '-1.080313', '-0.027390', '-1.251581', '0.576619', '-0.013060', '-1.017883', '-0.027390', '-1.295141', '0.684219']                                  
+                    #['startScan4DEx', '1.855', 'angl', 'sca', 'exp', 'alignx no', '    starty', '-0.027390', '-1.251581', '0.576619', '-0.013060', '-1.017883', '-0.027390', '-1.295141', '0.684219']
+                    self.startScan4DEx['moving'] = True
+                    self.startScan4DEx['id'] = command[1]
+                    PVname, = self.FindEpicsListInfo(command[0],'GUIname','PVname')
+                    # temp =list(command)
+                    # temp.pop(0)#del startRasterScanEx
+                    # temp.pop(0)#del client id
+                    value =[]
+                    
+                    value.append(float(command[2]))# start_angle
+                    value.append(float(command[3]))# scanrange
+                    value.append(float(command[4]))# exposure_time
+
+                    value.append(float(command[6]))# starty
+                    value.append(float(command[7]))# startz
+                    value.append(float(command[9]))# startcx
+                    value.append(float(command[8]))# startcy
+
+                    value.append(float(command[11]))# stop_y
+                    value.append(float(command[12]))# stop_z
+                    value.append(float(command[14]))# stop_cx
+                    value.append(float(command[13]))# stop_cy       
+                    
+                    
+                    
+                             
+                    p = CAProcess(target=self.oldCAPUT , args=(PVname,value,))
+                    p.start()
+                    p.join()        
+                elif command[0] == "centerLoop" :
+                    opid= command[1]
+                    pcenter = CAProcess(target=self.centerLoop , args=(opid,))
+                    pcenter.start()
 
                 elif command[0] == "stoh_abort_all" :
                     
@@ -780,7 +854,73 @@ class epicsdev(QThread):
             else:
                 pass
         pass
-
+    def centerLoop(self,opid,timeout=60):
+        #check current md3 phase
+        t0 = time.time()
+        stop = False
+        error =False
+        phase = caget('07a:md3:CurrentPhase')
+        # phase = 0
+        if  phase== 0:#center            
+            self.logger.info('Start MD3 Auto Sample Centering')
+            caput('07a:md3:startAutoSampleCentring',"CRYSTAL_CENTRING")
+            # caput('07a:md3:startAutoSampleCentring',"NEEDLE_CENTRING_ONLY")
+            
+        else:
+            self.logger.info('move to center mode before Auto center')
+            PVname, = self.FindEpicsListInfo('centerLoop','GUIname','PVname')
+            caput('07a:md3:CurrentPhase',0)
+            time.sleep(0.5)
+            wait = True
+            PVname, = self.FindEpicsListInfo('LastTaskInfo','GUIname','PVname')
+            while wait:
+                time.sleep(0.1)
+                # job = caget('07a:md3:LastTaskInfo')
+                job = caget(PVname)
+                self.logger.debug(f'TASK: {job}')
+                if job[0] == 'Set Centring Phase' and job[6] == "1":
+                # if job[6] == "1":
+                    wait = False
+                if (time.time()-t0) > timeout:
+                    wait = False
+                    stop = True
+            self.logger.info('Start MD3 Auto Sample Centering')
+            PVname, = self.FindEpicsListInfo('centerLoop','GUIname','PVname')
+            # caput('07a:md3:startAutoSampleCentring',"CRYSTAL_CENTRING")
+            caput(PVname,"CRYSTAL_CENTRING")
+        #Check center job done
+        
+        if stop:
+            self.logger.info('MD3 Auto Sample Centering timeout in {timeout} sec(change phase')
+            self.sendQ.put(('operdone','centerLoop',opid,'normal'))
+        else:
+            wait = True
+            while wait:
+                time.sleep(0.1)
+                job = caget('07a:md3:LastTaskInfo')
+                self.logger.debug(f'TASK: {job}')
+                #['Auto Centring', '8', '2021-10-07 12:33:29.267', '2021-10-07 12:34:04.733', 'true', 'null', '1']
+                #['Auto Centring' '8' '2021-10-07 12:39:31.811' '2021-10-07 12:39:42.288','null' 'Invalid position: -173375007607934.7200' '-1'] 
+                if job[0] == 'Auto Centring' and job[6] == "1":
+                # if job[6] == "1":
+                    wait = False
+                elif job[0] == 'Auto Centring' and job[6] == "-1":
+                    wait = False
+                    error = True
+                elif (time.time()-t0) > timeout:
+                    wait = False
+                    stop = True
+            if error:
+                self.logger.warning(f"Error on center :{job[5]}")
+                self.sendQ.put(('operdone','centerLoop',opid,'normal'))
+            elif stop:
+                self.logger.info('MD3 Auto Sample Centering timeout in {timeout} sec(center loop)')
+            else:
+                PV = self.Par['collect']['saveCentringPositionsPV']
+                self.logger.debug("Save current pos for Center pos (Autocenter stop)")
+                self.caput(PV,'__EMPTY__')
+                self.sendQ.put(('operdone','centerLoop',opid,'normal'))
+        pass
     def FindEpicsListInfo(self,target,name='PVname',*args):
         '''
          ex: guiname = self.FindEpicsListInfo(detector_z,'dcssname','GUIname')
