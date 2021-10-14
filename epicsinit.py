@@ -50,6 +50,7 @@ class epicsdev(QThread):
         self.reciveQ = Q['Queue']['reciveQ']
         self.sendQ = Q['Queue']['sendQ']
         self.controlQ = Q['Queue']['ControlQ']
+        self.AttenQ = Q['Queue']['attenQ']
         
         self.init_update=True
         #used to a Flag for update limits @motor start moving
@@ -167,6 +168,8 @@ class epicsdev(QThread):
                     # p.join()
                     pos = self.epicsmotors[guiname]['PVID'].get('RBV') * 1000
                     self.sendQ.put(('endmove',dcssname,pos,'normal'), block=False)
+                    #also update atten
+                    self.AttenQ.put(("stoh_abort_all",''))
             
             elif guiname == "cam_horz" or guiname == "SampleZ":
                 if value == 1:
@@ -261,8 +264,15 @@ class epicsdev(QThread):
     def setcallback(self):
         for item in self.epicslist:
             self.logger.info(f'EPICS set {item}')
-            self.epicslist[item]["connected"] = False
-            self.epicslist[item]["valueupdated"] = False
+            if item == "07a:md3:startAutoSampleCentring":
+                self.epicslist[item]["connected"] = True
+                self.epicslist[item]["valueupdated"] = True
+            elif item =="07a:md3:FastShutterIsOpen":
+                self.epicslist[item]["connected"] = True
+                self.epicslist[item]["valueupdated"] = True
+            else:
+                self.epicslist[item]["connected"] = False
+                self.epicslist[item]["valueupdated"] = False
         for item in self.epicslist:
             if self.epicslist[item]["camon"] == True:
                 self.epicslist[item]["PVID"] = PV(item,
@@ -378,6 +388,10 @@ class epicsdev(QThread):
             # if value[0] == 'Set Centring Phase' and value[6] == "1":
                    
             #         self.sendQ.put(('operdone','startRasterScanEx',opid,'normal'))
+        elif dcsstype == "shutter" :
+            self.sendQ.put(('updatevalue',dcssname,value,dcsstype,"normal"))
+
+            pass
         #for other            
         if self.init_update:
             self.epicslist[pvname]["old_value"] = value
@@ -407,8 +421,8 @@ class epicsdev(QThread):
             else :#everthing is fine 
                 # self.logger.debug('PV value changed: %s=%s ' % ( guiname, value))
                 self.logger.debug(f'PV value changed: {guiname}={value} ')
-                if guiname == "shutter":
-                    self.sendQ.put(('updatevalue',dcssname,value,dcsstype,"normal"))
+                # if guiname == "shutter":
+                #     self.sendQ.put(('updatevalue',dcssname,value,dcsstype,"normal"))
                 self.epicslist[pvname]["old_value"] = value
                 
                 
@@ -535,9 +549,13 @@ class epicsdev(QThread):
                         except:
                             dcsstype = ""
                             self.logger.debug("dcssname can not find in EPICS List")
-                            
-                    self.logger.debug(f"command stoh_start_motor_move PVID={PVID},dcsstype={dcsstype},PVname={PVname},deadband={deadband}")                    
-                    
+                    try:        
+                        self.logger.debug(f"command stoh_start_motor_move PVID={PVID},dcsstype={dcsstype},PVname={PVname},deadband={deadband}")                    
+                    except:
+                        #some thing not in list
+                        self.logger.warning(f"command={command} has something worng")                    
+                        pass
+
                     if dcsstype == 'motor':  #only in epicsmotors is dcsstype = motor      
                         TargetPos = float(command[2])
                         if command[1] == 'energy':

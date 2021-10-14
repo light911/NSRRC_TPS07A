@@ -88,6 +88,8 @@ class Detector():
             #from reviceQ (DCSS),update or move some thing for it
             elif isinstance(command,tuple):
                 self.HandleCommand(command)
+            else:
+                self.logger.warning('Detector DHS Get undefine Command! {command}')
       
                     
     def exit(self):
@@ -126,7 +128,9 @@ class Detector():
     def detector_ratser_setup(self,command):
         self.logger.info(f'command: {command[1:]}')
     def stoh_abort_all(self,command):
-         self.logger.info(f'command: {command[1:]}')
+        self.logger.info(f'command: {command[1:]}')
+    def changeBeamSize(self,command):
+        self.logger.info(f'command: {command[1:]}')
     def test(self,command):
         # self.logger.info(f'Default action for {command[0]}:{command[1:]}')
         self.logger.info(f'command: {command[1:]}')
@@ -153,6 +157,17 @@ class Eiger2X16M(Detector):
         self.y_pixel_size= float(self.det.detectorConfig('y_pixel_size')['value'])
         
     #add detector opration here
+    def changeBeamSize(self,command):
+        #just for easy put beam size here
+        # beamsize = command[2]
+        # opid =command[1]
+        # beamsizeP = CAProcess(target=self.MoveBeamsize.target,args=(float(beamsize),False,),name='MoveBeamSize')
+        # beamsizeP.start()
+        # beamsizeP.join()
+        self.logger.warning(f'proc {command}')
+        toDcsscommand = ('operdone',) + tuple(command)
+        self.sendQ.put(toDcsscommand,timeout=1)
+
     def detector_stop(self,command):
         #check detector data is clear
         closecoverP = Process(target=self.cover.CloseCover,name='stop_close_cover')

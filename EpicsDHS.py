@@ -17,6 +17,7 @@ import logsetup
 import Config
 import EpicsConfig
 import Detector
+from Flux07A.AttenServer import atten
 
 class DCSDHS():
     def __init__(self,managerpar=None) :
@@ -58,12 +59,15 @@ class DCSDHS():
         self.Q['Queue']['epicsQ'] = Queue()
         self.Q['Queue']['ControlQ'] = Queue()
         self.Q['Queue']['DetectorQ'] = Queue()
+        self.Q['Queue']['attenQ'] = Queue()
         #setup for tcp
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.client.settimeout(self.tcptimeout)
         
         self.epcisPV_ = Process(target=self.epicsPV, args=(self.Par,self.Q,self.client,))
         self.epcisPV_.start()
+        self.Atten_ = Process(target=self.Attenserver, args=(self.Q,self.Par,))
+        self.Atten_.start()
         time.sleep(2)
         self.logger.debug("Par After epicsPV Start=======")
         self.logger.debug(self.Par)
@@ -227,6 +231,7 @@ class DCSDHS():
         epicsQ = Q['Queue']['epicsQ']
         ContrlQ = Q['Queue']['ControlQ']
         DetctorQ = Q['Queue']['DetectorQ']
+        AttenQ = Q['Queue']['attenQ']
         msg = ""
         while True:
             #check command
@@ -284,6 +289,7 @@ class DCSDHS():
                         if command[0] == "stoh_abort_all":
                             epicsQ.put(("stoh_abort_all",''))
                             DetctorQ.put(("stoh_abort_all",''))
+                            AttenQ.put(("stoh_abort_all",''))
                             pass
                         elif command[0] == "stoh_start_motor_move":
                             #"stoh_start_motor_move motorName destination
@@ -291,7 +297,8 @@ class DCSDHS():
                             #check motor state
                             if command[1] == 'camera_zoom':
                                 epicsQ.put(("stoh_start_motor_move",command[1],command[2]))
-                                
+                            elif command[1] == 'attenuation':
+                                AttenQ.put(("stoh_start_motor_move",command[1],command[2]))
                             else:
                                 try:
                                     GUIname, = self.FindEpicsMotorInfo(command[1],'dcssname','GUIname')
@@ -393,10 +400,17 @@ class DCSDHS():
                                 self.logger.warning(f"centerLoop operation from dcss : {command}")
                                 command.pop(0)
                                 epicsQ.put(tuple(command))                                  
+                                
+                            elif command[1] == "changeBeamSize":
+                                self.logger.warning(f"changeBeamSize operation from dcss : {command}")
+                                command.pop(0)
+                                DetctorQ.put(tuple(command))
+                                pass
                             else:
                                  self.logger.warning(f"Unkonw operation from dcss : {command}")
                         elif command[0] == "stoh_read_ion_chambers":
                             #stoh_read_ion_chambers time repeat ch1 [ch2 [ch3 [...]]]
+                            AttenQ.put(tuple(command))
                             pass
                         elif command[0] == "stoh_register_string":
                             pass
@@ -406,20 +420,26 @@ class DCSDHS():
                             #if not move report move htos_motor_move_completed and POS(VAL or RBV?
                             #if moving report htos_motor_move_started with VAL
                             #note if send move_completed seem will have abort on dcss so goback to update
-                            try:
-                                GUIname, = self.FindEpicsMotorInfo(command[1],'dcssname','GUIname')
-                                MoveDone = self.Par['EPICS'][GUIname]['DMOV']
-                                Pos = self.Par['EPICS'][GUIname]['RBV']
-                                TargetPos = self.Par['EPICS'][GUIname]['VAL']
-                                if MoveDone:
-                                    # sendQ.put(('endmove',command[1],Pos,'Normal'))
-                                    sendQ.put(('updatevalue',command[1],Pos,'motor','Normal'))
-                                else:
-                                    sendQ.put(('updatevalue',command[1],Pos,'motor','Normal'))
-                                    sendQ.put(('startmove',command[1],TargetPos,'motor','Normal'))
-                            except :
-                                self.logger.warning(f"command : {command} has problem")
-                                self.logger.debug(f"GUIname = {GUIname},Par: {self.Par} ")
+                            if command[1] == 'attenuation':
+                                AttenQ.put(("stoh_register_real_motor",command[1]))
+                            elif command[1] == 'attenuation':
+                                pass
+                            else:
+                                
+                                try:
+                                    GUIname, = self.FindEpicsMotorInfo(command[1],'dcssname','GUIname')
+                                    MoveDone = self.Par['EPICS'][GUIname]['DMOV']
+                                    Pos = self.Par['EPICS'][GUIname]['RBV']
+                                    TargetPos = self.Par['EPICS'][GUIname]['VAL']
+                                    if MoveDone:
+                                        # sendQ.put(('endmove',command[1],Pos,'Normal'))
+                                        sendQ.put(('updatevalue',command[1],Pos,'motor','Normal'))
+                                    else:
+                                        sendQ.put(('updatevalue',command[1],Pos,'motor','Normal'))
+                                        sendQ.put(('startmove',command[1],TargetPos,'motor','Normal'))
+                                except :
+                                    self.logger.warning(f"command : {command} has problem")
+                                    self.logger.debug(f"GUIname = {GUIname},Par: {self.Par} ")
                             
 
 
@@ -454,20 +474,23 @@ class DCSDHS():
                             epicsQ.put((command[0],command[1],command[2]))
                         elif command[0] == "stoh_register_pseudo_motor" :
                             #stoh_register_pseudo_motor energy standardVirtualMotor
-                            GUIname, = self.FindEpicsMotorInfo(command[1],'dcssname','GUIname')
-                            MoveDone = self.Par['EPICS'][GUIname]['DMOV']
-                            Pos = self.Par['EPICS'][GUIname]['RBV']
-                            TargetPos = self.Par['EPICS'][GUIname]['VAL']
-                            if command[1] == 'energy':
-                                Pos = Pos*1000
-                                TargetPos = TargetPos*1000
-                                # print(f'Pos={Pos},TargetPos={TargetPos}')
-                            if MoveDone:
-                                # sendQ.put(('endmove',command[1],Pos,'Normal'))
-                                sendQ.put(('updatevalue',command[1],Pos,'motor','Normal'))
+                            if command[1] == 'attenuation':
+                                AttenQ.put(("stoh_register_pseudo_motor",command[1]))
                             else:
-                                sendQ.put(('updatevalue',command[1],Pos,'motor','Normal'))
-                                sendQ.put(('startmove',command[1],TargetPos,'motor','Normal'))
+                                GUIname, = self.FindEpicsMotorInfo(command[1],'dcssname','GUIname')
+                                MoveDone = self.Par['EPICS'][GUIname]['DMOV']
+                                Pos = self.Par['EPICS'][GUIname]['RBV']
+                                TargetPos = self.Par['EPICS'][GUIname]['VAL']
+                                if command[1] == 'energy':
+                                    Pos = Pos*1000
+                                    TargetPos = TargetPos*1000
+                                    # print(f'Pos={Pos},TargetPos={TargetPos}')
+                                if MoveDone:
+                                    # sendQ.put(('endmove',command[1],Pos,'Normal'))
+                                    sendQ.put(('updatevalue',command[1],Pos,'motor','Normal'))
+                                else:
+                                    sendQ.put(('updatevalue',command[1],Pos,'motor','Normal'))
+                                    sendQ.put(('startmove',command[1],TargetPos,'motor','Normal'))
                         else:
                             self.logger.warning(f"Unknown command:{command[0]}")
                             # print(f'Unknown command:{command[0]}')
@@ -517,7 +540,8 @@ class DCSDHS():
                         echo = "htos_update_motor_position " + str(command[1]) + " " +str(command[2]) + " " + str(command[4])
                     elif command[3]  == "ioncchamber" :
                         #htos_report_ion_chambers time ch1 counts1 [ch2 counts2 [ch3 counts3 [chN countsN]]]
-                        echo = "htos_report_ion_chambers " + str(command[1]) + " " + str(command[2])  
+                        # self.sendQ.put(('updatevalue',command[3] ,str(count),'ioncchamber',command[1]))
+                        echo = "htos_report_ion_chambers " + str(command[4]) + " " + str(command[1]) + " " + str(command[2])  
                     elif command[3]  == "operation_update" :
                         #htos_operation_update operationName operationHandle arguments
                         echo = "htos_operation_update " + str(command[1]) + " " + str(command[2])
@@ -627,7 +651,9 @@ class DCSDHS():
         self.epicsPV.epcisMon()
         self.epicsPV.clear_epics_Motor_callback()
         self.epicsPV.clear_epics_callback()
-        
+    def Attenserver(self,Q,Par):
+        a = atten(Par)
+        a.monitor(Q)
 #some Tools        
     def ansDHS(self,command):
         addNumber = 200 - len(command)
@@ -696,6 +722,7 @@ class DCSDHS():
         self.Q['Queue']['epicsQ'].put('exit')
         self.Q['Queue']['ControlQ'].put('exit')
         self.Q['Queue']['DetectorQ'].put('exit')
+        self.Q['Queue']['attenQ'].put('exit')
         self.client.close()
         self.logger.debug(f"PID : {os.getpid()} DHS closed, Par= {self.Par} TYPE:{type(self.Par)}")
         # self.logger.info(f'PID : {os.getpid()} DHS closed') 
