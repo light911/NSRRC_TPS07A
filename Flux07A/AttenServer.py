@@ -2,7 +2,11 @@
 import time,signal,os
 
 from pkg_resources import normalize_path
-from Flux07A.Tools import Filiter,cal_thickness,cal_tr
+try:
+    from Flux07A.Tools import Filiter,cal_thickness,cal_tr
+except :
+    from Tools import Filiter,cal_thickness,cal_tr
+
 from epics import caput,caget_many,caget
 from multiprocessing import Process, Queue, Manager
 import multiprocessing as mp
@@ -125,7 +129,7 @@ class atten():
                         dev='dbpm3'
                     else:
                         dev='dbpm3'
-                    count = self.read_flux(dev)
+                    count,flux = self.read_flux(dev)
                     self.sendQ.put(('updatevalue',command[3] ,str(count),'ioncchamber',command[1]))
                 else:
                     self.logger.warning(f'Unknow command : {command}')
@@ -133,6 +137,9 @@ class atten():
                 self.logger.warning(f'Unknow command : {command}')
                 pass
     def read_flux(self,dev="dbpm3"):
+        '''
+        dev="dbpm3",dbpm5,dbpm6,sample
+        '''
         if dev=="dbpm3":
             fluxPV = "07a-ES:DBPM3:Flux"
         elif dev == "dbpm5":
@@ -148,7 +155,7 @@ class atten():
         normalize_max = 1000000
         newcount = flux /max * normalize_max
         self.logger.info(f"Flux {dev} = {flux} , after normaliz = {newcount}")
-        return newcount
+        return newcount,flux
 
         pass
     def Target(self,ratio,requestedAttenuation=True,select='closest'):
@@ -367,7 +374,27 @@ class atten():
             self.logger.warning(f'[cal atten{attnum},angle ={angle}] minangle is smaller than 1,{minangle},cal may be wrong') 
         
         return althickness,selectindex,selectinfo
-
+    def TargetFlux(self,flux):
+        old_atten = self.get_cerrnt_atten()
+        #open all filter
+        self.Target(0)
+        time.sleep(0.3)
+        count,dbpm3 = self.read_flux(dev="dbpm3")
+        count,sample = self.read_flux(dev="sample")
+        if sample < 1e5:
+            self.logger.warning('No beam!')
+            self.logger.warning(f'Dbpm3 flux:{dbpm3:.4g} , sample flux = {sample:.4g}')
+        elif flux > sample:
+            self.logger.warning(f'Request flux:{flux:.4g} is higher than max flux{sample:.4g}')
+            self.logger.warning('set atten to 0 %')
+        else:
+            ratio = flux/sample
+            Fit_Attenuation = self.Target(ratio,False)
+            time.sleep(0.3)
+            count,newsample = self.read_flux(dev="sample")
+            self.logger.warning(f'final flux:{newsample:.4g},Request flux:{flux:.4g},Full flux {sample:.4g},atten set to {Fit_Attenuation}')
+        return
+        pass
     def quit(self,signum,frame):
 
         self.logger.debug(f"PID : {os.getpid()} DHS closed, Par= {self.Par} TYPE:{type(self.Par)}")
@@ -382,12 +409,12 @@ class atten():
                 os.kill(item.pid,signal.SIGKILL)
 
 if __name__ == "__main__":
-    from Tools import Filiter,cal_thickness,cal_tr
+    
     # DBPM = Filiter("Diamond")
     # Kapton=Filiter("Kapton")
     # Air = Filiter("Air")
     # Al = Filiter("Al")
     a = atten()
-    print(a.Target(30))
+    print(a.TargetFlux(1e9))
     # print(a.get_cerrnt_atten())
     
