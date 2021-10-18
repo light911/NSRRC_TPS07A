@@ -88,6 +88,7 @@ class Beamsize():
         self.DetYMotor = self.Par['EPICS_special']['BeamSize']['DetYMotor']
         self.ApertureMotor = self.Par['EPICS_special']['BeamSize']['ApertureMotor']
         
+        
         self.MinDistance = self.Par['MinDistance']
         
         self.BeamSizeLists = []
@@ -163,10 +164,12 @@ class Beamsize():
         self.CurrentMD3Y = caget(self.MD3YMotor)
         self.logger.debug(f'Update MD3YMotor = {self.CurrentMD3Y}')
         
-    def target(self,beamsize=50,opencover=False):
+    def target(self,beamsize=50,Targetdistance=150,opencover=False,checkdis=False):
         self.Busy = True
         self.logger.info(f'Move beam size to {beamsize} with openvoer = {opencover}')
-        if beamsize == self.CurrentBeamsize:
+        current_dis = caget(self.fakeDistanceName)
+        
+        if beamsize == self.CurrentBeamsize and ((current_dis-Targetdistance <1) or not checkdis ):
             self.logger.debug(f'Asked for same beamsize ,not move(Current beamsize = {self.CurrentBeamsize})')
             self.opencover(opencover)
             self.wait_opencover(opencover)
@@ -209,7 +212,11 @@ class Beamsize():
                 #check DetY
                 #case1 lower than DetYLLM,case2 lower than MinDistance in cinfig, case3 lower than 40mm (impossbilie)
                 DetYLLM =  caget(self.DetYMotor + ".LLM")
-                targetDetY = (self.CurrentDetY + detMove)
+                if checkdis:
+                    detDist = current_dis - Targetdistance
+                    targetDetY = (self.CurrentDetY + detMove) - detDist
+                else:
+                    targetDetY = (self.CurrentDetY + detMove)
                 collisionDetY = targetDetY < DetYLLM or targetDetY < 40 or targetDetY < self.MinDistance
                 #check MD3Y
                 MD3YHLM =  caget(self.MD3YMotor + ".HLM")
@@ -297,6 +304,7 @@ class Beamsize():
                 
             else:
                 self.logger.warning(f'Beam size : {beamsize} ,not in beam list :{self.BeamSizeLists}')
+            caput('07a-ES:Beamsize',beamsize)
             self.Busy = False
     def opencover(self,opencover=False):
             if opencover:

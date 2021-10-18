@@ -14,7 +14,8 @@ import json
 from pwd import getpwnam
 from DetectorCover import MOXA
 from EPICS_special import Beamsize
-
+from ldapclient import ladpcleint
+import math
 
 class Detector():
     def __init__(self,Par,Q) :
@@ -71,6 +72,7 @@ class Detector():
         self.atten = ""
         self.cover = MOXA()
         self.MoveBeamsize = Beamsize()
+        self.ladp = ladpcleint()
         # self.logger.warning(f'Detector {self.CommandQ}')
     def CommandMon(self) :
         self.logger.warning('Detector MON start!')
@@ -155,15 +157,92 @@ class Eiger2X16M(Detector):
         self.y_pixels_in_detector= int(self.det.detectorConfig('y_pixels_in_detector')['value'])
         self.x_pixel_size= float(self.det.detectorConfig('x_pixel_size')['value'])
         self.y_pixel_size= float(self.det.detectorConfig('y_pixel_size')['value'])
+
+    def updatefilestring(self):
+        t0 = time.time()
+        self.logger.info('Start updatefilestring')
         
+        Filename = self.filename + "_" + str(self.fileindex).zfill(4)
+        masterfile = Filename + "_master.h5"
+        masterpath = f'{self.directory }/{masterfile}'
+        command=["","","","","",""]
+        _check = True
+        currentfile = self.det.fileWriterFiles()
+        while _check:
+            if masterfile in currentfile:
+                command[0] = 'updatevalue'
+                command[1] = 'lastMasterCollected'
+                command[2] = masterpath
+                command[3] = 'string'
+                command[4] = 'normal'
+                self.sendQ.put((command[0],command[1],command[2],command[3],command[4]))
+                _check = False
+            if (time.time()-t0) > 60:
+                return False
+                
+            time.sleep(0.1)
+            currentfile = self.det.fileWriterFiles()
+        #wait for new file
+        while len(currentfile) != 0:
+            currentfile.remove(masterfile)
+            filenum = len(currentfile)
+            if filenum == 0:
+                #wait for data
+                pass
+            else:
+                dataname = f'{Filename}_data_{filenum:06}.h5'
+                datapath = f'{self.directory }/{dataname}'
+                command[0] = 'updatevalue'
+                command[1] = 'lastImageCollected'
+                command[2] = datapath
+                command[3] = 'string'
+                command[4] = 'normal'
+                self.sendQ.put((command[0],command[1],command[2],command[3],command[4]))
+            #['empty_1_0001_data_000001.h5', 'empty_1_0001_master.h5']
+            time.sleep(0.1)
+            currentfile = self.det.fileWriterFiles()
+            
+            
+        #last update
+        nimages = int(self.det.detectorConfig('nimages')['value'])
+        ntrigger = int(self.det.detectorConfig('ntrigger')['value'])
+        totalframe = nimages * ntrigger
+        lastnum = math.ceil(totalframe/1000)
+        dataname = f'{Filename}_data_{lastnum:06}.h5'
+        datapath = f'{self.directory }/{dataname}'
+        command[0] = 'updatevalue'
+        command[1] = 'lastImageCollected'
+        command[2] = datapath
+        command[3] = 'string'
+        command[4] = 'normal'
+        self.sendQ.put((command[0],command[1],command[2],command[3],command[4]))
+        self.logger.info('End of monitor file for image server')
+
+
     #add detector opration here
     def changeBeamSize(self,command):
         #just for easy put beam size here
-        # beamsize = command[2]
-        # opid =command[1]
-        # beamsizeP = CAProcess(target=self.MoveBeamsize.target,args=(float(beamsize),False,),name='MoveBeamSize')
-        # beamsizeP.start()
-        # beamsizeP.join()
+        beamsize = command[2]
+        opid =command[1]
+        beamsizeP = CAProcess(target=self.MoveBeamsize.target,args=(float(beamsize),False,),name='MoveBeamSize')
+        beamsizeP.start()
+        beamsizeP.join()
+        self.logger.warning(f'proc {command}')
+        toDcsscommand = ('operdone',) + tuple(command)
+        self.sendQ.put(toDcsscommand,timeout=1)
+
+    def overlapBeamImage(self,command):
+        overlap = command[2]
+        opid =command[1]
+        caput('07a-ES:MD3image:OverlapBeam',int(overlap))
+        self.logger.warning(f'proc {command}')
+        toDcsscommand = ('operdone',) + tuple(command)
+        self.sendQ.put(toDcsscommand,timeout=1)
+
+    def displayBeamSize(self,command):
+        beamsize = command[2]
+        opid =command[1]
+        caput('07a-ES:Beamsize',float(beamsize))
         self.logger.warning(f'proc {command}')
         toDcsscommand = ('operdone',) + tuple(command)
         self.sendQ.put(toDcsscommand,timeout=1)
@@ -338,11 +417,8 @@ class Eiger2X16M(Detector):
     def basesetup(self,raster=False,roi=False):
         t0 = time.time()
 
-        # old open cover, now move to beamsize
-        # opcoverP = Process(target=self.cover.OpenCover,name='open_cover')
-        # opcoverP.start()
-        beamsizeP = CAProcess(target=self.MoveBeamsize.target,args=(float(self.beamsize),True,),name='MoveBeamSize')
-        beamsizeP.start()
+        
+
         
         self.logger.debug(f'TotalFrames =  {self.TotalFrames},exposureTime = {self.exposureTime} ')
         self.logger.debug(f'oscillationStart =  {self.oscillationStart},framewidth = {self.detosc}')
@@ -353,14 +429,21 @@ class Eiger2X16M(Detector):
         # self.det.setDetectorConfig('count_time',1-0.0000001) 
         # self.det.setDetectorConfig('frame_time',1)
         
-        
+
+
+        # old open cover, now move to beamsize
+        # opcoverP = Process(target=self.cover.OpenCover,name='open_cover')
+        # opcoverP.start()
         
         if raster:
-            
+            beamsizeP = CAProcess(target=self.MoveBeamsize.target,args=(float(self.beamsize),self.distance ,True,True,),name='MoveBeamSize')
+            beamsizeP.start()
             framerate = 1 / self.exposureTime 
         else:
             #check frame rate?
             # framerate = self.TotalFrames / self.exposureTime
+            beamsizeP = CAProcess(target=self.MoveBeamsize.target,args=(float(self.beamsize),self.distance ,True,False),name='MoveBeamSize')
+            beamsizeP.start()
             framerate = 1 / self.exposureTime
             
         Filename = self.filename + "_" + str(self.fileindex).zfill(4)
@@ -431,7 +514,22 @@ class Eiger2X16M(Detector):
         self.det.setDetectorConfig('phi_start',0)
         self.det.setDetectorConfig('phi_increment',0)
         
-        
+        #get user info
+        #user blctl not in ladp database
+        if self.userName=='blctl':
+            uidNumber = getpwnam(self.userName)[2]
+            gidNumber = getpwnam(self.userName)[3]
+        else:
+            uidNumber,gidNumber,passwd = self.ladp.getuserinfo(self.userName)
+
+        Ebeamcurrent = caget(self.Par['collect']['EbeamPV'])
+        gap = caget(self.Par['collect']['gapPV'])
+        dbpm1flux = caget(self.Par['collect']['DBPM1PV'])
+        dbpm2flux = caget(self.Par['collect']['DBPM2PV'])
+        dbpm3flux = caget(self.Par['collect']['DBPM3PV'])
+        dbpm5flux = caget(self.Par['collect']['DBPM5PV'])
+        dbpm6flux = caget(self.Par['collect']['DBPM6PV'])
+        sampleflux = caget(self.Par['collect']['samplefluxPV'])
         
         
         header_appendix ={}
@@ -442,8 +540,18 @@ class Eiger2X16M(Detector):
         header_appendix['atten'] = self.atten
         header_appendix['fileindex'] = self.fileindex
         header_appendix['filename'] = Filename
-        header_appendix['uid'] = getpwnam(self.userName)[2]
-        header_appendix['gid'] = getpwnam(self.userName)[3]
+        # header_appendix['uid'] = getpwnam(self.userName)[2]
+        # header_appendix['gid'] = getpwnam(self.userName)[3]
+        header_appendix['uid'] = uidNumber
+        header_appendix['gid'] = gidNumber
+        header_appendix['Ebeamcurrent'] = Ebeamcurrent
+        header_appendix['gap'] = gap
+        header_appendix['dbpm1flux'] = dbpm1flux
+        header_appendix['dbpm2flux'] = dbpm2flux
+        header_appendix['dbpm3flux'] = dbpm3flux
+        header_appendix['dbpm5flux'] = dbpm5flux
+        header_appendix['dbpm6flux'] = dbpm6flux
+        header_appendix['sampleflux'] = sampleflux
         if raster:
             header_appendix['raster_X']=self.rasterinfo['x']
             header_appendix['raster_Y']=self.rasterinfo['y']
@@ -511,7 +619,9 @@ class Eiger2X16M(Detector):
         # self.cover.wait_for_state(wait='open',timeout=3)
         beamsizeP.join()
         t1 = time.time()
-        
+        self.logger.info('start to check')
+        monP = Process(target=self.updatefilestring,name='Monfile')
+        monP.start()
         self.logger.debug(f'setup time = {t1-t0},Detector energy={Energy}')
         return TotalTime,Filename
     

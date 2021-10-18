@@ -406,6 +406,16 @@ class DCSDHS():
                                 command.pop(0)
                                 DetctorQ.put(tuple(command))
                                 pass
+                            elif command[1] == "displayBeamSize":
+                                self.logger.warning(f"displayBeamSize operation from dcss : {command}")
+                                command.pop(0)
+                                DetctorQ.put(tuple(command))
+                                pass
+                            elif command[1] == "overlapBeamImage":
+                                self.logger.warning(f"overlapBeamImage operation from dcss : {command}")
+                                command.pop(0)
+                                DetctorQ.put(tuple(command))
+                                pass
                             else:
                                  self.logger.warning(f"Unkonw operation from dcss : {command}")
                         elif command[0] == "stoh_read_ion_chambers":
@@ -561,6 +571,11 @@ class DCSDHS():
                         else:
                             state = "closed"
                         echo = "htos_report_shutter_state " + str(command[1]) + " " + state
+                    elif command[3] == "string" :
+                        #htos_set_string_completed strname status arguments
+                        echo = "htos_set_string_completed " + str(command[1]) + " " + str(command[4]) + " " + str(command[2])
+                        # if str(command[1]) == "TPSstate":
+                        #     print(echo)
                         
                     else :
                         self.logger.info (f'unkonw command type:{command[3]}')
