@@ -224,7 +224,9 @@ class Eiger2X16M(Detector):
         #just for easy put beam size here
         beamsize = command[2]
         opid =command[1]
-        beamsizeP = CAProcess(target=self.MoveBeamsize.target,args=(float(beamsize),False,),name='MoveBeamSize')
+        #arg1 = beamsize , Targetdistance, opencover,checkdis
+        #set checkdis to tru will make change distance to Targetdistance
+        beamsizeP = CAProcess(target=self.MoveBeamsize.target,args=(float(beamsize),150,False,False),name='MoveBeamSize')
         beamsizeP.start()
         beamsizeP.join()
         self.logger.warning(f'proc {command}')

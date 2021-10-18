@@ -166,8 +166,18 @@ class Beamsize():
         
     def target(self,beamsize=50,Targetdistance=150,opencover=False,checkdis=False):
         self.Busy = True
+        
         self.logger.info(f'Move beam size to {beamsize} with openvoer = {opencover}')
         current_dis = caget(self.fakeDistanceName)
+        #07a:Det:Dis.LLM,07a:Det:Dis.HLM
+        disLLM = caget(f'{self.fakeDistanceName}.LLM')
+        disHLM = caget(f'{self.fakeDistanceName}.HLM')
+        if disLLM > Targetdistance:
+            Targetdistance = disLLM
+            self.logger.warning(f'Request distance :{Targetdistance} is lower than {disLLM},set to lowerest value')
+        elif disHLM < Targetdistance:
+            Targetdistance = disHLM
+            self.logger.warning(f'Request distance :{Targetdistance} is higher than {disHLM},set to higest value')
         
         if beamsize == self.CurrentBeamsize and ((current_dis-Targetdistance <1) or not checkdis ):
             self.logger.debug(f'Asked for same beamsize ,not move(Current beamsize = {self.CurrentBeamsize})')
