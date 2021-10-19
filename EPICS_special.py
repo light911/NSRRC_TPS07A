@@ -167,7 +167,7 @@ class Beamsize():
     def target(self,beamsize=50,Targetdistance=150,opencover=False,checkdis=False):
         self.Busy = True
         
-        self.logger.info(f'Move beam size to {beamsize} with openvoer = {opencover}')
+        self.logger.info(f'Move beam size to {beamsize} with openvoer = {opencover},Targetdistance = {Targetdistance} with moveit = {checkdis}')
         current_dis = caget(self.fakeDistanceName)
         #07a:Det:Dis.LLM,07a:Det:Dis.HLM
         disLLM = caget(f'{self.fakeDistanceName}.LLM')
@@ -236,9 +236,10 @@ class Beamsize():
                 self.logger.debug(f'CurrentMD3Y = {self.CurrentMD3Y}, MD3YHLM = {MD3YHLM},will move to {targetMD3Y} , will collisionMD3Y ={collisionMD3Y}') 
                 MoveTogether = not collisionMD3Y and not collisionDetY
                 self.logger.info(f'MoveTogether = {MoveTogether},since collisionMD3Y= {collisionMD3Y}, collisionDetY={collisionDetY}') 
+                detDisMove = targetDetY - self.CurrentDetY
                 #modify
                 movinglist[self.DetYMotor] = targetDetY
-                if -0.005 < detMove < 0.005:
+                if -0.005 < detMove < 0.005 and -0.1 < detDisMove < 0.1:
                     #no move
                     self.logger.info(f'Target MD3Y is the too closed to Current MD3Y value,nothing move')
                     self.opencover(opencover)
@@ -295,7 +296,24 @@ class Beamsize():
                     self.logger.info(f'Moving All MOTOR at the same time') 
                     self.opencover(opencover)
                     # movejob = movinglist
-                    movinglist[self.DetYMotor] = self.CurrentDetY + detMove
+                    movinglist[self.DetYMotor] = targetDetY
+                    # print(self.CurrentDetY + detMove)
+                    t1 = time.time()
+                    for motor in movinglist :
+                        self.logger.debug(f'Set {motor} move to {movinglist[motor]}') 
+                        print(caput(motor,movinglist[motor]))
+                    time.sleep(0.1)
+                    while not self.check_allmotorstop(movinglist.keys()):
+                        time.sleep(0.1)
+                    self.wait_opencover(opencover)
+                    runtime = time.time() - t1
+                    self.logger.info(f'Moving All MOTOR Done,take {runtime}sec')
+                elif MoveTogether and detMove == 0:
+                    self.logger.info(f'Moving det MOTOR only') 
+                    self.opencover(opencover)
+                    # movejob = movinglist
+                    del movinglist[self.MD3YMotor]
+                    movinglist[self.DetYMotor] = targetDetY
                     # print(self.CurrentDetY + detMove)
                     t1 = time.time()
                     for motor in movinglist :

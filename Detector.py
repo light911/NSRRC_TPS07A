@@ -199,7 +199,7 @@ class Eiger2X16M(Detector):
                 command[4] = 'normal'
                 self.sendQ.put((command[0],command[1],command[2],command[3],command[4]))
             #['empty_1_0001_data_000001.h5', 'empty_1_0001_master.h5']
-            time.sleep(0.1)
+            time.sleep(0.2)
             currentfile = self.det.fileWriterFiles()
             
             
@@ -251,6 +251,7 @@ class Eiger2X16M(Detector):
 
     def detector_stop(self,command):
         #check detector data is clear
+        self.logger.info('close cover after got detector stop ')
         closecoverP = Process(target=self.cover.CloseCover,name='stop_close_cover')
         closecoverP.start()
         self.logger.info(f'command: {command[1:]}')
@@ -338,6 +339,7 @@ class Eiger2X16M(Detector):
     #['stoh_start_operation', 'detector_collect_shutterless', '1.2', '0', 'test_0', '/data/blctl/test', 'blctl', 'gonio_phi', '0.1', '0.000000', '1.0', '1', '750.000080', '0.976226127404', '0.000071', '50.000000', '0', '0', 'PRIVATEA03F6ADA6F19A8DA1DEE6BFC325F4DCE', '3', '1', '50.000000', '0.0']
     # command: ('1.2', '0', 'test_0', '/data/blctl/test', 'blctl', 'gonio_phi', '0.1', '0.000009', '1.0', '1', '750.000240', '0.976226127404', '0.000187', '50.000000', '0', '0', 'PRIVATEA03F6ADA6F19A8DA1DEE6BFC325F4DCE', '9', '1', '50.000000', '0.0
     #['stoh_start_operation', 'detector_collect_shutterless', '1.16', '1', 'test_1', '/data/blctl/test', 'blctl', 'gonio_phi', '0.10', '45.000018', '0.30', '10', '799.999800', '0.976226127404', '0.000187', '50.000000', '0', '0', 'PRIVATEA03F6ADA6F19A8DA1DEE6BFC325F4DCE', '1', '10', '50.000000', '0.0']
+    #('detector_ratser_setup', '16.0', '101', 'RasterScanview1', '/data/blctl/20211019_07A/', 'blctl', 'gonio_phi', '0.01', '119.999996', '0.0', '36', '599.9839', '7.874087724013369e-05', '0.0', '0.948142', 'no', '0', '1', '50.0', '0.0', '1', '6', '6', '')
     # set operationHandle [start_waitable_operation detector_collect_shutterless \
     #                  $darkCacheNumber \
     #                  $filename \
@@ -358,7 +360,8 @@ class Eiger2X16M(Detector):
     #                  [lindex $args 0] \
     #                  $totalFrames \
     #                 $beam_size $attn]
-
+    # return [runIndex,filename,directory,userName,axisName,exposureTime,oscillationStart,detosc,TotalFrames,distance,wavelength
+    # ,detectoroffX,detectoroffY,sessionId,fileindex,unknow,beamsize,atten,roi,numofX,numofY]
         self.operationHandle = command[1]
         self.runIndex = command[2]
         self.filename = command[3]
@@ -375,6 +378,7 @@ class Eiger2X16M(Detector):
         self.detectoroffX = float(command[13])
         self.detectoroffY = float(command[14])
         
+
         self.sessionId = command[15]
         self.fileindex = int(command[16])
         self.unknow = int(command[17]) #1

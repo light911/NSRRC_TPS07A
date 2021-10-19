@@ -318,7 +318,7 @@ epicslist={
                             "camon":False,
                             "deadband":0,
                             'dcssname':"centerLoop",
-                            'dcsstype':"other",
+                            'dcsstype':"opertation",
                             }, 
             
              }

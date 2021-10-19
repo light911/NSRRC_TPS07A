@@ -17,6 +17,7 @@ from multiprocessing import  Queue,Process
 import queue
 from PyQt5.QtCore import QObject,QThread,pyqtSignal,pyqtSlot,QMutex,QMutexLocker
 import subprocess
+from DetectorCover import MOXA
 #from PyQt5.QtCore import pyqtSignal
 
 
@@ -69,6 +70,7 @@ class epicsdev(QThread):
         self.tempcommand=[]
         self.saveCentringPositionFlag_sample_z = False
         self.saveCentringPositionFlag_cam_horz = False
+        self.cover = MOXA()
         # print(self.Par)
 
     def setMotor(self):
@@ -355,7 +357,12 @@ class epicsdev(QThread):
                 if value[0] == 'Raster Scan' and value[6] == "1":
                     self.startRasterScanEx['moving'] = False
                     opid = self.startRasterScanEx['id']
+                    self.logger.info('close cover after startRasterScanEx ')
+                    closecoverP = Process(target=self.cover.CloseCover,name='stop_close_cover')
+                    closecoverP.start()
+                    closecoverP.join()
                     self.sendQ.put(('operdone','startRasterScanEx',opid,'normal'))
+                    
             if self.startRasterScan['moving'] :
                 # start
                 # ['Raster Scan', '8', '2021-07-23 14:12:28.47', 'null', 'null', 'null', 'null']
@@ -365,6 +372,10 @@ class epicsdev(QThread):
                 if value[0] == 'Raster Scan' and value[6] == "1":
                     self.startRasterScan['moving'] = False
                     opid = self.startRasterScan['id']
+                    self.logger.info('close cover after startRasterScan ')
+                    closecoverP = Process(target=self.cover.CloseCover,name='stop_close_cover')
+                    closecoverP.start()
+                    closecoverP.join()
                     self.sendQ.put(('operdone','startRasterScan',opid,'normal'))
             if self.startScan4DEx['moving'] :
                 # start
@@ -378,12 +389,22 @@ class epicsdev(QThread):
                 # if value[6] == "1":
                     self.startScan4DEx['moving'] = False
                     opid = self.startScan4DEx['id']
+                    self.logger.info('close cover after startScan4DEx ')
+                    closecoverP = Process(target=self.cover.CloseCover,name='stop_close_cover')
+                    closecoverP.start()
+                    closecoverP.join()
                     self.sendQ.put(('operdone','startScan4DEx',opid,'normal'))
                 elif value[0] == 'Multi Axis Scan' and value[6] == "1":
+                    #todo startScan4DEx fail??
+                    self.logger.info('close cover after startScan4DEx ')
+                    closecoverP = Process(target=self.cover.CloseCover,name='stop_close_cover')
+                    closecoverP.start()
+                    closecoverP.join()
                     self.logger.warning(f'startScan4DEx fail :{value[5]}')
                     self.startScan4DEx['moving'] = False
                     opid = self.startScan4DEx['id']
                     self.sendQ.put(('operdone','startScan4DEx',opid,'normal'))
+                
             
             # if value[0] == 'Set Centring Phase' and value[6] == "1":
                    
@@ -856,7 +877,7 @@ class epicsdev(QThread):
                             elif dcsstype == 'change_mode':
                                 pos = caget(dev)
                                 self.sendQ.put(('endmove',dcssname,pos,'normal'), block=False)
-                            elif dcsstype == 'log':
+                            elif dcsstype == 'log' or dcsstype == 'opertation':
                                 pass
                             
                             else:
