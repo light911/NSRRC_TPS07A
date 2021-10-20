@@ -227,7 +227,8 @@ class Beamsize():
                     targetDetY = (self.CurrentDetY + detMove) - detDist
                 else:
                     targetDetY = (self.CurrentDetY + detMove)
-                collisionDetY = targetDetY < DetYLLM or targetDetY < 40 or targetDetY < self.MinDistance
+                # collisionDetY = targetDetY < DetYLLM or targetDetY < 40 or targetDetY < self.MinDistance
+                collisionDetY = targetDetY < DetYLLM or targetDetY < 40 
                 #check MD3Y
                 MD3YHLM =  caget(self.MD3YMotor + ".HLM")
                 targetMD3Y = movinglist[self.MD3YMotor]

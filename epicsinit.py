@@ -811,9 +811,12 @@ class epicsdev(QThread):
                     p3.start()
                     # p3.join() 
                     time.sleep(0.5)
-                    p = CAProcess(target=self.oldCAPUT , args=(PVname,value,))
-                    p.start()
-                    p.join()   
+                    # p = CAProcess(target=self.oldCAPUT , args=(PVname,value,))
+                    # p.start()
+                    self.logger.info(f'Waitng put {PVname} with {value}')
+                    self.caputarray(PVname,value)
+                    # p.join()   
+                    self.logger.info(f'Done for put {PVname}')
                 elif command[0] == "startScan4DEx":
                     #['startScan4DEx', '1.855', '0.00', '1.0', '0.2', '-0.013060', '-1.080313', '-0.027390', '-1.251581', '0.576619', '-0.013060', '-1.017883', '-0.027390', '-1.295141', '0.684219']                                  
                     #['startScan4DEx', '1.855', 'angl', 'sca', 'exp', 'alignx no', '    starty', '-0.027390', '-1.251581', '0.576619', '-0.013060', '-1.017883', '-0.027390', '-1.295141', '0.684219']
@@ -1025,6 +1028,26 @@ class epicsdev(QThread):
             self.logger.critical(f"Caput {PV} value {value} Fail={error}")
             return False
         # print(ans)
+    def caputarray(self,PV,array):
+        self.logger.warning(f'caput PV={PV},value={array}')
+        # caput -a 07a:md3:startRasterScanEx 14 1 0.2 0.1 90 -1.51537 -0.00978 1.45155 0.57271 10 10 0.1 1 1 1
+        arraylen = len(array)
+        command1 = ['caput','-a',str(PV),str(arraylen)]
+        srtarray =[]
+        for item in array:
+            srtarray.append(str(item))
+
+        command = command1 + srtarray
+        ans = subprocess.run(command,capture_output=True)
+        result = ans.stdout.decode('utf-8')
+        error = ans.stderr.decode('utf-8')       
+        self.logger.debug(f'{ans}')
+        if error == '':
+            print(f'caput PV={PV},value={array} OK!')
+            return True
+        else:
+            self.logger.critical(f"Caput {PV} value {array} Fail={error}")
+            return False
     #Detector distance interolck
     def updateMD3Ylimits(self,usingVAL=False) :
         #usingVAL = True for just start moving

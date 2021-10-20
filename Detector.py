@@ -232,6 +232,8 @@ class Eiger2X16M(Detector):
         self.logger.warning(f'proc {command}')
         toDcsscommand = ('operdone',) + tuple(command)
         self.sendQ.put(toDcsscommand,timeout=1)
+        #update beam size in dcss
+        self.sendQ.put(('endmove','beamSize',beamsize,'normal'), block=False)
 
     def overlapBeamImage(self,command):
         overlap = command[2]
@@ -382,7 +384,11 @@ class Eiger2X16M(Detector):
         self.sessionId = command[15]
         self.fileindex = int(command[16])
         self.unknow = int(command[17]) #1
-        self.beamsize = command[18] # 50
+        #for raster scan we using smaller beam size 
+        tempbeamsize = float(command[18])
+        table={100:90,90:80,80:70,70:60,60:50,50:40,40:30,30:20,20:10,10:5,5:1}
+
+        self.beamsize = table[tempbeamsize]
         self.atten = command[19] #0
         if command[20] == "1":
             self.roi = True
@@ -391,6 +397,7 @@ class Eiger2X16M(Detector):
         self.rasterinfo={}
         self.rasterinfo['x']= int(command[21])
         self.rasterinfo['y']= int(command[22])
+        self.rasterinfo['gridsize'] = float(command[18])
         #  sscanf(commandBuffer.textInBuffe
         # self.logger.info(f'Default action for {command[0]}:{command[1:]}')
         self.logger.info(f'command: {command[1:]}')
@@ -444,6 +451,7 @@ class Eiger2X16M(Detector):
         if raster:
             beamsizeP = CAProcess(target=self.MoveBeamsize.target,args=(float(self.beamsize),self.distance ,True,True,),name='MoveBeamSize')
             beamsizeP.start()
+            self.sendQ.put(('endmove','beamSize',str(self.beamsize),'normal'), block=False)
             framerate = 1 / self.exposureTime 
         else:
             #check frame rate?
@@ -451,6 +459,7 @@ class Eiger2X16M(Detector):
             beamsizeP = CAProcess(target=self.MoveBeamsize.target,args=(float(self.beamsize),self.distance ,True,False),name='MoveBeamSize')
             beamsizeP.start()
             framerate = 1 / self.exposureTime
+            self.sendQ.put(('endmove','beamSize',str(self.beamsize),'normal'), block=False)
             
         Filename = self.filename + "_" + str(self.fileindex).zfill(4)
         TotalTime = self.TotalFrames * self.exposureTime
@@ -561,6 +570,9 @@ class Eiger2X16M(Detector):
         if raster:
             header_appendix['raster_X']=self.rasterinfo['x']
             header_appendix['raster_Y']=self.rasterinfo['y']
+            header_appendix['grid_width']=self.rasterinfo['gridsize']
+            header_appendix['grid_height']=self.rasterinfo['gridsize']
+            
             # self.det.setDetectorConfig('trigger_mode','exte')##temp
             self.det.setDetectorConfig('trigger_mode','exts')##temp
             # self.det.setDetectorConfig('nimages',1)
