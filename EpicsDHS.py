@@ -423,6 +423,9 @@ class DCSDHS():
                             AttenQ.put(tuple(command))
                             pass
                         elif command[0] == "stoh_register_string":
+                            if command[1] == 'currentBeamsize':
+                                command.pop(0)
+                                DetctorQ.put(tuple(command))
                             pass
                         elif command[0] == "stoh_register_real_motor":
                             #['stoh_register_real_motor', 'detector_z', 'detector_'z] 

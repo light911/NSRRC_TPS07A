@@ -220,6 +220,11 @@ class Eiger2X16M(Detector):
 
 
     #add detector opration here
+    def currentBeamsize(self,command):
+        #stoh_register_string currentBeamsize
+        beamsize = self.MoveBeamsize.report_current_beamsize()
+        self.sendQ.put(('updatevalue','currentBeamsize',beamsize,'string','normal'))
+
     def changeBeamSize(self,command):
         #just for easy put beam size here
         beamsize = command[2]
@@ -234,6 +239,7 @@ class Eiger2X16M(Detector):
         self.sendQ.put(toDcsscommand,timeout=1)
         #update beam size in dcss
         self.sendQ.put(('endmove','beamSize',beamsize,'normal'), block=False)
+        self.sendQ.put(('updatevalue','currentBeamsize',beamsize,'string','normal'))
 
     def overlapBeamImage(self,command):
         overlap = command[2]
@@ -452,6 +458,7 @@ class Eiger2X16M(Detector):
             beamsizeP = CAProcess(target=self.MoveBeamsize.target,args=(float(self.beamsize),self.distance ,True,True,),name='MoveBeamSize')
             beamsizeP.start()
             self.sendQ.put(('endmove','beamSize',str(self.beamsize),'normal'), block=False)
+            self.sendQ.put(('updatevalue','currentBeamsize',beamsize,'string','normal'))
             framerate = 1 / self.exposureTime 
         else:
             #check frame rate?
@@ -460,6 +467,7 @@ class Eiger2X16M(Detector):
             beamsizeP.start()
             framerate = 1 / self.exposureTime
             self.sendQ.put(('endmove','beamSize',str(self.beamsize),'normal'), block=False)
+            self.sendQ.put(('updatevalue','currentBeamsize',beamsize,'string','normal'))
             
         Filename = self.filename + "_" + str(self.fileindex).zfill(4)
         TotalTime = self.TotalFrames * self.exposureTime

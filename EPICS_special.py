@@ -163,7 +163,12 @@ class Beamsize():
         self.logger.debug(f'Update CurrentDetY = {self.CurrentDetY}')
         self.CurrentMD3Y = caget(self.MD3YMotor)
         self.logger.debug(f'Update MD3YMotor = {self.CurrentMD3Y}')
-        
+    def report_current_beamsize(self):
+        self.updateINFO()
+        MD3YLists = self.MD3YLists.tolist()
+        index = MD3YLists.index(int(self.CurrentMD3Y))
+        beamsize = self.BeamSizeLists[index]
+        return beamsize
     def target(self,beamsize=50,Targetdistance=150,opencover=False,checkdis=False):
         self.Busy = True
         
