@@ -458,7 +458,7 @@ class Eiger2X16M(Detector):
             beamsizeP = CAProcess(target=self.MoveBeamsize.target,args=(float(self.beamsize),self.distance ,True,True,),name='MoveBeamSize')
             beamsizeP.start()
             self.sendQ.put(('endmove','beamSize',str(self.beamsize),'normal'), block=False)
-            self.sendQ.put(('updatevalue','currentBeamsize',beamsize,'string','normal'))
+            self.sendQ.put(('updatevalue','currentBeamsize',str(self.beamsize),'string','normal'))
             framerate = 1 / self.exposureTime 
         else:
             #check frame rate?
@@ -467,7 +467,7 @@ class Eiger2X16M(Detector):
             beamsizeP.start()
             framerate = 1 / self.exposureTime
             self.sendQ.put(('endmove','beamSize',str(self.beamsize),'normal'), block=False)
-            self.sendQ.put(('updatevalue','currentBeamsize',beamsize,'string','normal'))
+            self.sendQ.put(('updatevalue','currentBeamsize',str(self.beamsize),'string','normal'))
             
         Filename = self.filename + "_" + str(self.fileindex).zfill(4)
         TotalTime = self.TotalFrames * self.exposureTime
