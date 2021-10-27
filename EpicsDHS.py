@@ -416,6 +416,11 @@ class DCSDHS():
                                 command.pop(0)
                                 DetctorQ.put(tuple(command))
                                 pass
+                            elif command[1] == "mutiPosCollect":
+                                self.logger.warning(f"mutiPosCollect operation from dcss : {command}")
+                                command.pop(0)
+                                DetctorQ.put(tuple(command))
+                                pass
                             else:
                                  self.logger.warning(f"Unkonw operation from dcss : {command}")
                         elif command[0] == "stoh_read_ion_chambers":

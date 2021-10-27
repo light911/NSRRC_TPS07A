@@ -27,6 +27,7 @@ class MOXA():
     def OpenCover(self):
         t0=time.time()
         self.set_do_state(self.DO_CloseCover,0)
+        self.set_do_state(self.DO_OpenCover,0)
         self.set_do_state(self.DO_OpenCover,1)
         self.wait_for_state('open')
         # time.sleep(0.1)
@@ -37,6 +38,7 @@ class MOXA():
     def CloseCover(self):
         t0=time.time()
         self.set_do_state(self.DO_OpenCover,0)
+        self.set_do_state(self.DO_CloseCover,0)
         self.set_do_state(self.DO_CloseCover,1)
         self.wait_for_state('close')
         # time.sleep(0.1)

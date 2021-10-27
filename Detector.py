@@ -180,7 +180,7 @@ class Eiger2X16M(Detector):
             if (time.time()-t0) > 60:
                 return False
                 
-            time.sleep(0.1)
+            time.sleep(0.2)
             currentfile = self.det.fileWriterFiles()
         #wait for new file
         while len(currentfile) != 0:
@@ -341,7 +341,115 @@ class Eiger2X16M(Detector):
         self.sendQ.put(toDcsscommand)
         # command = ('operdone',) + command
         # self.sendQ.put(command)
+    def mutiPosCollect(self,command):
+        # ans =  [runIndex,filename,directory,userName,axisName,exposureTime,oscillationStart,detosc,TotalFrames,distance,wavelength,detectoroffX,detectoroffY,sessionId,fileindex,unknow,beamsize,atten]
+        self.operationHandle = command[1]
+        self.runIndex = command[2]
+        self.filename = command[3]
+        self.directory = command[4]
+        self.userName = command[5]
+        self.axisName = command[6]
+        self.exposureTime = float(command[7])
+        self.oscillationStart = float(command[8])
         
+        self.detosc =  float(command[9])
+        self.TotalFrames = int(command[10]) #1
+        self.distance = float(command[11])
+        self.wavelength = float(command[12])
+        self.detectoroffX = float(command[13])
+        self.detectoroffY = float(command[14])
+        
+
+        self.sessionId = command[15]
+        self.fileindex = int(command[16])
+        self.unknow = int(command[17]) #1
+        self.beamsize = command[18] # 50
+        self.atten = command[19] #0
+        # htos_note changing_detector_mode
+        # toDcsscommand = ('htos_note','changing_detector_mode')
+        toDcsscommand = 'htos_set_string_completed system_status normal {Changing detector mode and Beam Size} black #d0d000'
+        self.sendQ.put(toDcsscommand)
+
+        self.roi=False
+        _oscillationTime,_filename = self.basesetup(raster=False,roi=self.roi,beamwithdis=True)
+        _filename = _filename + '.h5'
+        self.logger.warning(f"Setup for MD3 scan")
+        #tri md3
+        #List of scan parameter values, comma separated: Int,double,double,double,intframe_number (int):
+        #frame ID just for logging purpose. It is different from ScanNumberOfFrames which is used in the detector multi-triggering inside scan_range.
+        #start_angle (double): angle (deg) at which the shutter opens and omega speed is stable 
+        #scan_range (double): omega relative move angle (deg) before closing the shutter
+        #exposure_time (double): exposure time (sec) to control shutter command
+        #number_of_passes (int): number of moves forward and reverse between start angle and end angle.
+        scan_range = float(self.TotalFrames*self.detosc)
+        exposure_time = float(self.exposureTime*self.TotalFrames)
+        start_angle = float(self.oscillationStart)
+        fileindex = int(self.fileindex)
+        number_of_passes = int(1)
+        nimages = int(self.TotalFrames)
+        Timeout = 30 + exposure_time
+        
+        LastTaskInfoPV = self.Par['collect']['LastTaskInfoPV']
+        PV = self.Par['collect']['start_oscillationPV']
+        NumberOfFramesPV = self.Par['collect']['NumberOfFramesPV']
+        
+        value = [fileindex,start_angle,scan_range,exposure_time,number_of_passes]
+        self.logger.warning(f"MD3 Expouse Scan Start,with start_angle:{start_angle},scan_range:{scan_range},exposure_time:{exposure_time}, number_of_passes:{number_of_passes}  ")
+        toDcsscommand = 'htos_set_string_completed system_status normal {Wait for MD3 Scaning} black #d0d000'
+        self.sendQ.put(toDcsscommand)
+        timeStart=time.time()
+        caput(NumberOfFramesPV,1)# control by detector
+        
+        state = caput(PV,value)
+        if state != 1:
+            self.logger.critical(f"Caput {PV} value {value} Fail!")
+        time.sleep(0.5)
+        Task = caget(LastTaskInfoPV)
+        # print(Task)
+        t0 = time.time()
+        while str(Task[6]) == "null":
+            time.sleep(0.2)
+            Task = caget(LastTaskInfoPV)
+            # print(Task[6])
+            t1 = time.time()
+            if (t1-t0) > Timeout:
+                 self.logger.critical(f"Wait for MD3 scan job Timeout{Timeout},Current state = {Task})")
+                 break
+             
+        # ans = 
+        # sendQ.put(('operdone',))
+        runtime = time.time() - timeStart
+        self.logger.warning(f"MD3 Expouse Scan Done,take {runtime},with PV put state={state},Result ID = {Task[6]}")
+        # self.logger.warning(f"fileindex:{fileindex},nimages:{nimages},Par:{Par}")
+        closecoverP = Process(target=self.cover.CloseCover,name='mutiPosCollect_close_cover')
+        closecoverP.start()
+        # toDcsscommand = f"htos_set_string_completed detector_status normal Wating For Download Image "
+        toDcsscommand = 'htos_set_string_completed system_status normal {Wating For Download Image} black #d0d000'
+        self.sendQ.put(toDcsscommand)
+        currentfile = self.det.fileWriterFiles()
+        self.logger.info(f'Check for detector download data: file count :{currentfile}')
+        # while type(currentfile) != type(None):
+        while len(currentfile) != 0:
+            self.logger.info(f'wait for detector download data: file count :{currentfile}')
+            time.sleep(0.1)
+            currentfile = self.det.fileWriterFiles()
+        self.logger.info(f'All data in detector is downloaded: file count :{currentfile}')
+        
+        
+        closecoverP.join()
+
+        # htos_set_string_completed
+        toDcsscommand = f"htos_operation_completed {command[0]} {self.operationHandle} normal"
+        self.logger.info(f'send command to dcss: {toDcsscommand}')
+        self.sendQ.put(toDcsscommand)
+        #for update bluiceUI
+        # toDcsscommand = f"htos_operation_completed detector_stop {self.operationHandle} normal"
+        # toDcsscommand = f"htos_set_string_completed detector_status Ready normal"
+        
+        toDcsscommand = f'htos_set_string_completed system_status normal Ready black #00a040'
+        
+        self.sendQ.put(toDcsscommand)
+
     def detector_ratser_setup(self,command):
     #    ('detector_ratser_setup', '1.24', '1', 'test_1', '/data/blctl/test', 'blctl', 'gonio_phi', '0.1', '0.000009', '1.0', '10', '750.000060', '0.976226127404', '0.000231', '50.000000', '0', '0', 'PRIVATEA03F6ADA6F19A8DA1DEE6BFC325F4DCE', '1', '10', '50.000000', '0.0')
     #['stoh_start_operation', 'detector_collect_shutterless', '1.2', '0', 'test_0', '/data/blctl/test', 'blctl', 'gonio_phi', '0.1', '0.000000', '1.0', '1', '750.000080', '0.976226127404', '0.000071', '50.000000', '0', '0', 'PRIVATEA03F6ADA6F19A8DA1DEE6BFC325F4DCE', '3', '1', '50.000000', '0.0']
@@ -433,7 +541,7 @@ class Eiger2X16M(Detector):
         else:
             self.det.sendDetectorCommand('abort')
     
-    def basesetup(self,raster=False,roi=False):
+    def basesetup(self,raster=False,roi=False,beamwithdis=False):
         t0 = time.time()
 
         
@@ -454,7 +562,7 @@ class Eiger2X16M(Detector):
         # opcoverP = Process(target=self.cover.OpenCover,name='open_cover')
         # opcoverP.start()
         
-        if raster:
+        if raster or beamwithdis:
             beamsizeP = CAProcess(target=self.MoveBeamsize.target,args=(float(self.beamsize),self.distance ,True,True,),name='MoveBeamSize')
             beamsizeP.start()
             self.sendQ.put(('endmove','beamSize',str(self.beamsize),'normal'), block=False)
