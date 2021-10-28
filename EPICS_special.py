@@ -7,7 +7,7 @@ Created on Tue Jan 14 16:46:13 2020
 """
 
 from epics import caget,caput
-import socket,time,signal,sys,os
+import socket,time,signal,sys,os,copy
 # import multiprocessing as mp
 from multiprocessing import Process, Queue, Manager
 from epicsinit import epicsdev
@@ -245,6 +245,7 @@ class Beamsize():
                 detDisMove = targetDetY - self.CurrentDetY
                 #modify
                 movinglist[self.DetYMotor] = targetDetY
+                tempmovinglist = copy.deepcopy(movinglist)# allmotor
                 if -0.005 < detMove < 0.005 and -0.1 < detDisMove < 0.1:
                     #no move
                     self.logger.info(f'Target MD3Y is the too closed to Current MD3Y value,nothing move')
@@ -258,18 +259,32 @@ class Beamsize():
                     t1 = time.time()
                     print(caput(self.MD3YMotor,movinglist[self.MD3YMotor]))
                     del movinglist[self.MD3YMotor]
-                    while not self.check_allmotorstop([self.MD3YMotor]):
-                        time.sleep(0.1)
-                    self.logger.info(f'Moving MD3Y Done! Start move other motor') 
+                    
+                    #wait for 5 sec md3 start move
+                    self.logger.info('sleep for 3sec wait md3y move frist')
+                    time.sleep(3)
+                    self.logger.info('start to move rest motor') 
+                    # while not self.check_allmotorstop([self.MD3YMotor]):
+                    #     time.sleep(0.1)
+                    # self.logger.info(f'Moving MD3Y Done! Start move other motor') 
+
+
                     #wait for limtes update
-                    time.sleep(0.2)
+                    # time.sleep(0.2)
+
+
                     #need recheck collision,in case motor stop by abort
                     for motor in movinglist :
                         self.logger.debug(f'Set {motor} move to {movinglist[motor]}') 
                         print(caput(motor,movinglist[motor]))
                     time.sleep(0.1)    
-                    while not self.check_allmotorstop(movinglist.keys()):
+
+                    #check all stop
+                    # while not self.check_allmotorstop(movinglist.keys()):
+                    #     time.sleep(0.1)
+                    while not self.check_allmotorstop(tempmovinglist.keys()):
                         time.sleep(0.1)
+
                     self.opencover(opencover)
                     self.wait_opencover(opencover)
                     runtime = time.time() - t1
@@ -279,19 +294,33 @@ class Beamsize():
                     self.logger.info(f'Moving DetY Frist! pervent collision') 
                     self.logger.debug(f'Set {self.DetYMotor} move to {movinglist[self.DetYMotor]}') 
                     t1 = time.time()
+                    
+
                     caput(self.DetYMotor,movinglist[self.DetYMotor])
                     del movinglist[self.DetYMotor]
-                    while not self.check_allmotorstop([self.DetYMotor]):
-                        time.sleep(0.1)
-                    self.logger.info(f'Moving DetY Done! Start move other motor') 
+
+                    #wait for 5 sec dety start move
+                    self.logger.info('sleep for 3sec wait dety move frist')
+                    time.sleep(3)
+                    self.logger.info('start to move rest motor') 
+
+                    # while not self.check_allmotorstop([self.DetYMotor]):
+                    #     time.sleep(0.1)
+                    # self.logger.info(f'Moving DetY Done! Start move other motor') 
+
                     #wait for limtes update
-                    time.sleep(0.2)
+                    # time.sleep(0.2)
+
                     #need recheck collision ,in case motor stop by abort
                     for motor in movinglist :
                         self.logger.debug(f'Set {motor} move to {movinglist[motor]}') 
                         print(caput(motor,movinglist[motor]))
                     time.sleep(0.1)    
-                    while not self.check_allmotorstop(movinglist.keys()):
+
+                    #check all stop
+                    # while not self.check_allmotorstop(movinglist.keys()):
+                    #     time.sleep(0.1)
+                    while not self.check_allmotorstop(tempmovinglist.keys()):
                         time.sleep(0.1)
                     self.opencover(opencover)
                     self.wait_opencover(opencover)
@@ -335,7 +364,25 @@ class Beamsize():
                     #no move
                     self.logger.info(f'Something wired, i should not goto here') 
                     pass
-                
+                #check motor pos again,in case md3 ver or hor has some problem
+                time.sleep(0.2)
+                checkarray=[]
+                for motor in tempmovinglist:
+                    current_pos = caget(motor)
+                    diff = abs(current_pos-tempmovinglist[motor])
+                    if  diff<0.001:
+                        checkarray.append(True)
+                    else:
+                        self.logger.warning(f' motor:{motor},current pos = {current_pos} not in {tempmovinglist[motor]}')
+                        checkarray.append(False)
+                if all(checkarray):
+                    self.logger.info('all motor in position')
+                else:
+                    self.logger.warning('some motor not in position,move again')
+                    for motor in tempmovinglist :
+                        self.logger.debug(f'Set {motor} move to {movinglist[motor]}') 
+                        print(caput(motor,movinglist[motor]))
+
             else:
                 self.logger.warning(f'Beam size : {beamsize} ,not in beam list :{self.BeamSizeLists}')
             caput('07a-ES:Beamsize',beamsize)

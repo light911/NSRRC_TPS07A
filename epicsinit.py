@@ -150,11 +150,14 @@ class epicsdev(QThread):
                     if guiname == "MD3Y":
                         #MD3Y start moving should update DetY LLM
                         self.MD3Ystartmoving = True
-                        
+                        #newadd
+                        self.updateDetYlimits(usingVAL=True)
                         
                     elif guiname == "DetY":
                         #DetY start moving should update MD3Y HLM
                         self.DetYstartmoving = True
+                        #newadd
+                        self.updateMD3Ylimits(usingVAL=True)
                     else:
                         
                         pass 
@@ -799,22 +802,38 @@ class epicsdev(QThread):
                     # print(type(PVname),PVname)
                     # print(type(value),len(value),value)
                     # self.CAPUT(PVname,temp)
-                    p1 = CAProcess(target=self.caput , args=('07a:md3:ScanExposureTime',ScanExposureTime,))
-                    p1.start()
-                    # p1.join() 
-                    time.sleep(0.2)
-                    p2 = CAProcess(target=self.caput , args=('07a:md3:ScanRange',ScanRange,))
-                    p2.start()
-                    # p2.join() 
-                    time.sleep(0.2)
-                    p3 = CAProcess(target=self.caput , args=('07a:md3:ScanStartAngle',ScanStartAngle,))
-                    p3.start()
-                    # p3.join() 
+                    # p1 = CAProcess(target=self.caput , args=('07a:md3:ScanExposureTime',ScanExposureTime,))
+                    # p1.start()
+                    # # p1.join() 
+                    # time.sleep(0.2)
+                    # p2 = CAProcess(target=self.caput , args=('07a:md3:ScanRange',ScanRange,))
+                    # p2.start()
+                    # # p2.join() 
+                    # time.sleep(0.2)
+                    # p3 = CAProcess(target=self.caput , args=('07a:md3:ScanStartAngle',ScanStartAngle,))
+                    # p3.start()
+                    # # p3.join() 
+                    # time.sleep(0.5)
+                    # # p = CAProcess(target=self.oldCAPUT , args=(PVname,value,))
+                    # # p.start()
+                    a1 = self.caput('07a:md3:ScanExposureTime',ScanExposureTime)
+                    a2 = self.caput('07a:md3:ScanRange',ScanRange)
+                    a3 = self.caput('07a:md3:ScanStartAngle',ScanStartAngle)
                     time.sleep(0.5)
-                    # p = CAProcess(target=self.oldCAPUT , args=(PVname,value,))
-                    # p.start()
-                    self.logger.info(f'Waitng put {PVname} with {value}')
-                    self.caputarray(PVname,value)
+                    if a1 and a2 and a3:
+                        self.logger.info(f'Waitng put {PVname} with {value}')
+                        self.caputarray(PVname,value)
+                    else:
+                        #abort has error
+                        self.startRasterScan['moving'] = False
+                        opid = self.startRasterScan['id']
+                        self.sendQ.put(('operdone','startRasterScan',opid,'error'))
+                        todcsscommand = 'htos_log warning server {startRasterScan fail in setting Scan par}'
+                        self.sendQ.put(todcsscommand)
+                        # todcsscommand = 'gtos_abort_all soft'
+                        # self.sendQ.put(todcsscommand)
+
+                    
                     # p.join()   
                     self.logger.info(f'Done for put {PVname}')
                 elif command[0] == "startScan4DEx":

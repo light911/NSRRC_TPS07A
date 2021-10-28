@@ -263,6 +263,8 @@ class Eiger2X16M(Detector):
         closecoverP = Process(target=self.cover.CloseCover,name='stop_close_cover')
         closecoverP.start()
         self.logger.info(f'command: {command[1:]}')
+        toDcsscommand = 'htos_set_string_completed system_status normal {Wating For Download Image} black #d0d000'
+        self.sendQ.put(toDcsscommand)
         
         currentfile = self.det.fileWriterFiles()
         self.logger.info(f'Check for detector download data: file count :{currentfile}')
@@ -274,6 +276,8 @@ class Eiger2X16M(Detector):
         self.logger.info(f'All data in detector is downloaded: file count :{currentfile}')
         
         closecoverP.join()
+        toDcsscommand = 'htos_set_string_completed system_status normal Ready black #00a040'
+        self.sendQ.put(toDcsscommand)
         toDcsscommand = ('operdone',) + tuple(command)
         self.sendQ.put(toDcsscommand,timeout=1)
         
@@ -428,11 +432,24 @@ class Eiger2X16M(Detector):
         self.sendQ.put(toDcsscommand)
         currentfile = self.det.fileWriterFiles()
         self.logger.info(f'Check for detector download data: file count :{currentfile}')
-        # while type(currentfile) != type(None):
-        while len(currentfile) != 0:
+        try :
+            if len(currentfile) != 0:
+                check = True
+            else:
+                check = False
+        except:
+                check = True
+        while check:
             self.logger.info(f'wait for detector download data: file count :{currentfile}')
-            time.sleep(0.1)
+            time.sleep(0.2)
             currentfile = self.det.fileWriterFiles()
+            try :
+                if len(currentfile) != 0:
+                    check = True
+                else:
+                    check = False
+            except:
+                    check = True
         self.logger.info(f'All data in detector is downloaded: file count :{currentfile}')
         
         
