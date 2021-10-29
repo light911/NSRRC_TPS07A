@@ -330,6 +330,121 @@ def cal_thickness_for_atten(file="cal_thickness_for_atten.txt"):
         f.write(f"{command}:\n{tempnamelist}\n{templtlist}\n")
     f.close()
 
+def cal_thickness_for_atten_v2(file="cal_thickness_for_atten.txt"):
+    
+    f = open(file, 'a')
+    N = Filiter("N")
+    Al =Filiter("Al")
+    Pt = Filiter("Pt")
+    Au = Filiter("Au")
+    Cu = Filiter("Cu")
+    DBPM = Filiter("Diamond")
+    Kapton=Filiter("Kapton")
+    Diamond=Filiter("Diamond")
+
+    prefix_name = '07a:ATT:'
+    attinfo={}
+    for i in range(1,5,1):#1234
+        attinfo[i]={}
+        for j  in range(1,19,1):#1~18
+            namePV = f'{prefix_name}{i:02}name{j}'
+            posPV = f'{prefix_name}{i:02}pos{j}'
+            # name = caget(namePV)
+            # pos = caget(posPV)
+            name,pos = caget_many([namePV,posPV])
+
+
+            if name == 'undef':
+                pass
+            else:
+                # namelist = locals()[f'att{i}name']
+                # thicknesslist = locals()[f'att{i}value']
+                # try:
+                #     index = namelist.index(name)
+                # except ValueError:
+                #     thickness = -1
+                # else:
+                #     thickness = thicknesslist[index]
+
+                info={}
+                info['name']=name
+                info['pos']=pos
+                info['thickness']=-1
+                attinfo[i][j]=info
+    att1_motor_PV='07a:ATT:01'
+    att2_motor_PV='07a:ATT:02'
+    att3_motor_PV='07a:ATT:03'
+    att4_motor_PV='07a:ATT:04'
+    
+    # print(attinfo)
+    numsets = [1,2,3,4]
+    # _command = ""
+    Energy = caget ("07a:DCM:Energy.VAL")
+    for numset in numsets:
+        pv=f'07a:ATT:{numset:02}'
+        atts=attinfo[numset]
+        emptypos = 0
+        for key in atts:
+            if atts[key]['name'] == 'Empty':
+                emptypos = atts[key]['pos']
+        # print(emptypos)
+        # print(pv)
+    #     command = selectcommandbase.replace("XX",numset)
+        caput(pv,emptypos)
+        time.sleep(5)
+        #cal base line
+        flux,ebeam,ic1flux= caget_many(["07A-DBPM5:signals:sa.Sum","SR-DI-DCCT:BeamCurrent","07a-XBPM2:CurMD:FI2"])
+        emptyflux = flux/ebeam
+        emptyic1flux = ic1flux/ebeam*-1
+        DBPMcurrent = flux/1e5*1e-6
+        ic1Current = ic1flux *-1
+        emptyDBPM5flux=DBPM.cal_flux(DBPMcurrent,20,Energy)
+        emptyic1calflux = N.cal_flux(ic1Current,58000,Energy)
+
+        f.write(f"{pv}\tFullname\temptyflux\tattenflux\tebeam\tRatio\tRatio By ic1\tempty ic1 calflux\temptyDBPM5flux\tic1flux\tDBPM5Flux\tEnergy\tu\tthickness_byic1\tthickness\n")
+        print(f"{pv}\tFullname\temptyflux\tattenflux\tebeam\tRatio\tRatio By ic1\tempty ic1 calflux\temptyDBPM5flux\tic1flux\tDBPM5Flux\tEnergy\tu\tthickness_byic1\tthickness")
+        templtlist=[]
+        tempnamelist=[]
+
+        for key in atts:
+            Fullname = atts[key]['name']
+            pos = atts[key]['pos']
+            caput(pv,pos)
+            time.sleep(5)
+            flux,ebeam,ic1= caget_many(["07A-DBPM5:signals:sa.Sum","SR-DI-DCCT:BeamCurrent","07a-XBPM2:CurMD:FI2"])
+            ic1Current = ic1 * -1
+            attenflux = flux/ebeam
+            ic1flux = ic1Current/ebeam
+            tr= attenflux/emptyflux
+            tr_byic1 = ic1flux/emptyic1flux
+            DBPMcurrent = flux/1e5*1e-6
+            DBPM5flux=DBPM.cal_flux(DBPMcurrent,20,Energy)
+            ic1calflux = N.cal_flux(ic1Current,58000,Energy)
+            print(f"tr={tr}")
+            print(f"tr_byic1={tr_byic1}")
+            if tr<=0 :
+                tr=0.0000001
+            if tr_byic1<=0 :
+                tr_byic1=0.0000001
+            Element = Fullname[0:2]
+            
+            print(f"Finaltr={tr}")
+            print(f"Final tr_byic1={tr_byic1}")
+            print(f"Element={Element}")
+            
+            u,thickness = cal_thickness(tr,Element,Energy)
+            u,thickness_byic1 = cal_thickness(tr_byic1,Element,Energy)
+            subnum = key
+
+            f.write(f"{subnum}\t{Fullname}\t{emptyflux}\t{attenflux}\t{ebeam:.2f}\t{tr}\t{tr_byic1}\t{emptyic1calflux:.3g}\t{emptyDBPM5flux:.3g}\t{ic1calflux:.3g}\t{DBPM5flux:.3g}\t{Energy:.4f}\t{u}\t{thickness_byic1:.2f}\t{thickness:.2f}\n")
+            print(f"{subnum}\t{Fullname}\t{emptyflux}\t{attenflux}\t{ebeam:.2f}\t{tr}\t{tr_byic1}\t{emptyic1calflux:.3g}\t{emptyDBPM5flux:.3g}\t{ic1calflux:.3g}\t{DBPM5flux:.3g}\t{Energy:.4f}\t{u}\t{thickness_byic1:.2f}\t{thickness:.2f}")
+            templtlist.append(thickness)
+            tempnamelist.append(Fullname)
+            #retuen to empty
+            caput(pv,emptypos)
+        f.write(f"{pv}:\n{tempnamelist}\n{templtlist}\n")
+    f.close()
+
 def cal_thickness(tr,Element,Energy):
     Al =Filiter("Al")
     Pt = Filiter("Pt")
@@ -408,20 +523,20 @@ def TPS07A_atten(Energy=12.7):
 if __name__ == "__main__":
     # signal.signal(signal.SIGINT, quit)
     # signal.signal(signal.SIGTERM, quit)
-    Al =Filiter("Al",True)
-    Pt = Filiter("Pt")
-    Au = Filiter("Au")
-    Cu = Filiter("Cu")
-    Kapton=Filiter("Kapton")
-    Diamond=Filiter("Diamond")
-    Be = Filiter("Be")
-    N = Filiter("N")
-    DBPM1=Filiter("Diamond")
-    DBPM2=Filiter("Diamond")
-    DBPM3=Filiter("Diamond")
-    DBPM5=Filiter("Diamond")
-    DBPM6=Filiter("Diamond")
-    Air = Filiter("Air")
+    # Al =Filiter("Al",True)
+    # Pt = Filiter("Pt")
+    # Au = Filiter("Au")
+    # Cu = Filiter("Cu")
+    # Kapton=Filiter("Kapton")
+    # Diamond=Filiter("Diamond")
+    # Be = Filiter("Be")
+    # N = Filiter("N")
+    # DBPM1=Filiter("Diamond")
+    # DBPM2=Filiter("Diamond")
+    # DBPM3=Filiter("Diamond")
+    # DBPM5=Filiter("Diamond")
+    # DBPM6=Filiter("Diamond")
+    # Air = Filiter("Air")
     # Al.element="Al"
     # print(Al.elementN)
     # print(Al.cal_tr(10,12.7))
@@ -432,14 +547,14 @@ if __name__ == "__main__":
     # print(N.electronpair)
     # print(N.cal_flux(1e-6,57.15*1e3,12.7))
     # print(Diamond.cal_flux(1e-6,20,12.7))
-    print(Air.cal_tr(150000,12.7))
-    Kapton.cal_tr(50,12.7)
-    energy=12.7
-    AirTr = Air.cal_tr(0,energy)
-    AlTr = Al.cal_tr(40,energy)
-    KaptonTr = Kapton.cal_tr(100, energy)
-    totalTr=AirTr*AlTr*KaptonTr
-    print(totalTr,AirTr,AlTr,KaptonTr)
+    # print(Air.cal_tr(150000,12.7))
+    # Kapton.cal_tr(50,12.7)
+    # energy=12.7
+    # AirTr = Air.cal_tr(0,energy)
+    # AlTr = Al.cal_tr(40,energy)
+    # KaptonTr = Kapton.cal_tr(100, energy)
+    # totalTr=AirTr*AlTr*KaptonTr
+    # print(totalTr,AirTr,AlTr,KaptonTr)
     # Air.cal_tr(170*1e3,energy)
     # print(Al.cal_thickness(0.25230,12.7))
     # print(Al.cal_thickness(0.22759,12.4))
@@ -449,7 +564,7 @@ if __name__ == "__main__":
     # print(Pt.cal_thickness(0.000143,14))
     # print(Au.cal_thickness(0.00277,15))
     # print(Au.cal_thickness(0.00341,12.7))
-    # # cal_thickness_for_atten('cal_thickness_for_atten_20210928.txt')
+    cal_thickness_for_atten_v2('cal_thickness_for_atten_20211027_2.txt')
     # print(Al.cal_thickness(1.64529e-2,15))
     # # TPS07A_atten()
     # print(Al.cal_thickness(6.0827e-7,12.7))
@@ -470,5 +585,5 @@ if __name__ == "__main__":
     # print(Al.cal_thickness(0.01549,12.7))
     
     # print(cal_thickness(0.01549,'Al',12.7))
-    print(Cu.cal_thickness(6.512614607e-3,12.7))
+    # print(Cu.cal_thickness(6.512614607e-3,12.7))
     # print(Au.cal_thickness(0.1181811,12.7))
