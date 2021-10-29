@@ -194,6 +194,7 @@ class Beamsize():
                 index = np.where( self.BeamSizeLists == beamsize )[0][0]
                 # print(type(index))
                 movinglist = {}
+                md3movinglist ={}
                 self.logger.debug(f'Beam size : {beamsize} is in beam list index = {index}')
                 
                 movinglist[self.MD3YMotor] = self.MD3YLists[index]
@@ -202,10 +203,13 @@ class Beamsize():
                 if self.MD3VerUsing :
                     movinglist[self.MD3VerMotor] = self.MD3VerLists[index]
                 if self.MD3HorUsing :
-                    
                     movinglist[self.MD3HorMotor] = self.MD3HorLists[index]
                 if self.ApertureUsing :
-                    movinglist[self.ApertureMotor] = self.ApertureLists[index]
+                    # movinglist[self.ApertureMotor] = self.ApertureLists[index]
+                    # md3movinglist[self.ApertureMotor] = self.ApertureLists[index]
+                    #just move to pos
+                    caput(self.ApertureMotor,self.ApertureLists[index])
+
                 if self.Slit4VerOPUsing :
                     movinglist[self.Slit4VerOPMotor] = self.Slit4VerOPLists[index]
                 if self.Slit4HorOPUsing :
@@ -246,6 +250,8 @@ class Beamsize():
                 #modify
                 movinglist[self.DetYMotor] = targetDetY
                 tempmovinglist = copy.deepcopy(movinglist)# allmotor
+                
+
                 if -0.005 < detMove < 0.005 and -0.1 < detDisMove < 0.1:
                     #no move
                     self.logger.info(f'Target MD3Y is the too closed to Current MD3Y value,nothing move')
@@ -366,9 +372,12 @@ class Beamsize():
                     pass
                 #check motor pos again,in case md3 ver or hor has some problem
                 time.sleep(0.2)
+                caput('07a:MD3:SyncPM.PROC',1)
+                time.sleep(0.1)
+                #
                 checkarray=[]
                 for motor in tempmovinglist:
-                    current_pos = caget(motor)
+                    current_pos = caget(f'{motor}.RBV')
                     diff = abs(current_pos-tempmovinglist[motor])
                     if  diff<0.001:
                         checkarray.append(True)

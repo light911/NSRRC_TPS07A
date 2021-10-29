@@ -821,8 +821,20 @@ class epicsdev(QThread):
                     a3 = self.caput('07a:md3:ScanStartAngle',ScanStartAngle)
                     time.sleep(0.5)
                     if a1 and a2 and a3:
-                        self.logger.info(f'Waitng put {PVname} with {value}')
-                        self.caputarray(PVname,value)
+                        #check md3 moving state?
+                        state = self.waitMD3Ready()
+                        if state:
+                            self.logger.info(f'Waitng put {PVname} with {value}')
+                            self.caputarray(PVname,value)
+                            self.logger.info(f'Done for put {PVname}')
+                        else:
+                            #abort has error
+                            self.startRasterScan['moving'] = False
+                            opid = self.startRasterScan['id']
+                            self.sendQ.put(('operdone','startRasterScan',opid,'error'))
+                            todcsscommand = 'htos_log warning server {startRasterScan fail in waiting MD3 Ready}'
+                            self.sendQ.put(todcsscommand)
+
                     else:
                         #abort has error
                         self.startRasterScan['moving'] = False
@@ -835,7 +847,7 @@ class epicsdev(QThread):
 
                     
                     # p.join()   
-                    self.logger.info(f'Done for put {PVname}')
+                    
                 elif command[0] == "startScan4DEx":
                     #['startScan4DEx', '1.855', '0.00', '1.0', '0.2', '-0.013060', '-1.080313', '-0.027390', '-1.251581', '0.576619', '-0.013060', '-1.017883', '-0.027390', '-1.295141', '0.684219']                                  
                     #['startScan4DEx', '1.855', 'angl', 'sca', 'exp', 'alignx no', '    starty', '-0.027390', '-1.251581', '0.576619', '-0.013060', '-1.017883', '-0.027390', '-1.295141', '0.684219']
@@ -915,6 +927,22 @@ class epicsdev(QThread):
             else:
                 pass
         pass
+    def waitMD3Ready(self,timeout=10):
+        t0 = time.time()
+        check = True
+        while check:
+            md3_state = caget('07a:md3:Status ',as_string=True)
+            if md3_state== 'Ready':
+                check = False
+            else:
+                self.logger.info(f'MD3 is busy:{md3_state}')  
+            if (time.time()-t0)>timeout:
+                self.logger.info(f'MD3 is busy:{md3_state} and timeout reach')     
+                return False
+            time.sleep(0.1)
+        self.logger.info(f'MD3 is Ready')     
+        return True
+
     def centerLoop(self,opid,timeout=60):
         #check current md3 phase
         t0 = time.time()

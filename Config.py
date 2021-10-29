@@ -79,7 +79,7 @@ Par={
                                  'using':{'MD3Ver':True,
                                           'MD3Hor':True,
                                           'SS':True,
-                                          'Aperture':False,
+                                          'Aperture':True,
                                           'Slit4VerOP':False,
                                           'Slit4HorOP':False,
                                           'DBPM5Ver':False,

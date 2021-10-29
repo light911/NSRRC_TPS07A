@@ -393,6 +393,7 @@ class Eiger2X16M(Detector):
         nimages = int(self.TotalFrames)
         Timeout = 30 + exposure_time
         
+        
         LastTaskInfoPV = self.Par['collect']['LastTaskInfoPV']
         PV = self.Par['collect']['start_oscillationPV']
         NumberOfFramesPV = self.Par['collect']['NumberOfFramesPV']
@@ -404,7 +405,12 @@ class Eiger2X16M(Detector):
         timeStart=time.time()
         caput(NumberOfFramesPV,1)# control by detector
         
-        state = caput(PV,value)
+        MD3state = self.waitMD3Ready()
+        if MD3state:
+            state = caput(PV,value)
+        else:
+            state = -1
+
         if state != 1:
             self.logger.critical(f"Caput {PV} value {value} Fail!")
         time.sleep(0.5)
@@ -494,7 +500,7 @@ class Eiger2X16M(Detector):
     #                  $totalFrames \
     #                 $beam_size $attn]
     # return [runIndex,filename,directory,userName,axisName,exposureTime,oscillationStart,detosc,TotalFrames,distance,wavelength
-    # ,detectoroffX,detectoroffY,sessionId,fileindex,unknow,beamsize,atten,roi,numofX,numofY]
+    # ,detectoroffX,detectoroffY,sessionId,fileindex,unknow,beamsize,atten,roi,numofX,numofY,uid,gid,gridsizex,gridsizey]
         self.operationHandle = command[1]
         self.runIndex = command[2]
         self.filename = command[3]
@@ -516,10 +522,12 @@ class Eiger2X16M(Detector):
         self.fileindex = int(command[16])
         self.unknow = int(command[17]) #1
         #for raster scan we using smaller beam size 
-        tempbeamsize = float(command[18])
-        table={100:90,90:80,80:70,70:60,60:50,50:40,40:30,30:20,20:10,10:5,5:1}
+        #20211029 change now take par from operation
+        # tempbeamsize = float(command[18])
+        # table={100:90,90:80,80:70,70:60,60:50,50:40,40:30,30:20,20:10,10:5,5:1}
 
-        self.beamsize = table[tempbeamsize]
+        # self.beamsize = table[tempbeamsize]
+        self.beamsize = command[18]
         self.atten = command[19] #0
         if command[20] == "1":
             self.roi = True
@@ -528,7 +536,8 @@ class Eiger2X16M(Detector):
         self.rasterinfo={}
         self.rasterinfo['x']= int(command[21])
         self.rasterinfo['y']= int(command[22])
-        self.rasterinfo['gridsize'] = float(command[18])
+        self.rasterinfo['gridsizex'] = float(command[25])
+        self.rasterinfo['gridsizey'] = float(command[26])
         #  sscanf(commandBuffer.textInBuffe
         # self.logger.info(f'Default action for {command[0]}:{command[1:]}')
         self.logger.info(f'command: {command[1:]}')
@@ -536,7 +545,7 @@ class Eiger2X16M(Detector):
         # htos_note changing_detector_mode
         toDcsscommand = ('htos_note','changing_detector_mode')
         self.sendQ.put(toDcsscommand)
-        _oscillationTime,_filename = self.basesetup(raster=True,roi=self.roi)
+        _oscillationTime,_filename = self.basesetup(raster=True,roi=self.roi,beamwithdis=True)
         _filename = _filename + '.h5'
 
         toDcsscommand = f"htos_operation_completed {command[0]} {self.operationHandle} normal"
@@ -703,8 +712,8 @@ class Eiger2X16M(Detector):
         if raster:
             header_appendix['raster_X']=self.rasterinfo['x']
             header_appendix['raster_Y']=self.rasterinfo['y']
-            header_appendix['grid_width']=self.rasterinfo['gridsize']
-            header_appendix['grid_height']=self.rasterinfo['gridsize']
+            header_appendix['grid_width']=self.rasterinfo['gridsizex']
+            header_appendix['grid_height']=self.rasterinfo['gridsizey']
             
             # self.det.setDetectorConfig('trigger_mode','exte')##temp
             self.det.setDetectorConfig('trigger_mode','exts')##temp
@@ -799,7 +808,21 @@ class Eiger2X16M(Detector):
             except :
                 unit =""
             self.logger.debug(f'{command} = {value} {unit}') 
-        
+    def waitMD3Ready(self,timeout=10):
+        t0 = time.time()
+        check = True
+        while check:
+            md3_state = caget('07a:md3:Status ',as_string=True)
+            if md3_state== 'Ready':
+                check = False
+            else:
+                self.logger.info(f'MD3 is busy:{md3_state}')  
+            if (time.time()-t0)>timeout:
+                self.logger.info(f'MD3 is busy:{md3_state} and timeout reach')     
+                return False
+            time.sleep(0.1)
+        self.logger.info(f'MD3 is Ready')     
+        return True    
 if __name__ == "__main__":
     import Config
     Par = Config.Par
