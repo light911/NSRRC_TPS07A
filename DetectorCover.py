@@ -45,7 +45,7 @@ class MOXA():
         self.set_do_state(self.DO_CloseCover,0)
         print(f'Total time = {time.time()-t0}')
 
-    def wait_for_state(self,wait='open',timeout=5,interval=0.1):
+    def wait_for_state(self,wait='open',timeout=5,interval=0.2):
         t0 = time.time()
         wating = True
         while wating:

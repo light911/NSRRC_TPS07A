@@ -161,7 +161,21 @@ class DCSDHS():
         self.logger.warning(f'TYPE:{type(Par)}')
         DET = Detector.Eiger2X16M(Par,Q)
         DET.CommandMon()
-        
+    def waitMD3Ready(self,timeout=10):
+        t0 = time.time()
+        check = True
+        while check:
+            md3_state = caget('07a:md3:Status ',as_string=True)
+            if md3_state== 'Ready':
+                check = False
+            else:
+                self.logger.info(f'MD3 is busy:{md3_state}')  
+            if (time.time()-t0)>timeout:
+                self.logger.info(f'MD3 is busy:{md3_state} and timeout reach')     
+                return False
+            time.sleep(0.1)
+        self.logger.info(f'MD3 is Ready')     
+        return True    
     def start_oscillation(self,Par,Q,command):
         reciveQ = Q['Queue']['reciveQ']
         sendQ = Q['Queue']['sendQ']
@@ -190,13 +204,24 @@ class DCSDHS():
         PV = Par['collect']['start_oscillationPV']
         NumberOfFramesPV = Par['collect']['NumberOfFramesPV']
         
+
         value = [fileindex,start_angle,scan_range,exposure_time,number_of_passes]
         self.logger.warning(f"MD3 Expouse Scan Start,with start_angle:{start_angle},scan_range:{scan_range},exposure_time:{exposure_time}, number_of_passes:{number_of_passes}  ")
         timeStart=time.time()
         # caput(NumberOfFramesPV,nimages) #has some problem on managers.DictProxy
-        state = caput(PV,value)
+
+        MD3state = self.waitMD3Ready()
+        if MD3state:
+            state = caput(PV,value)
+        else:
+            state = -1
+
         if state != 1:
             self.logger.critical(f"Caput {PV} value {value} Fail!")
+
+        # state = caput(PV,value)
+        # if state != 1:
+        #     self.logger.critical(f"Caput {PV} value {value} Fail!")
         # ca.initialize_libca()
         
         # chid = ca.create_channel(PV, connect=False, callback=None, auto_cb=True)
