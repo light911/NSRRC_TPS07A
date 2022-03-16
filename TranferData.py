@@ -22,9 +22,12 @@ def recursive_chown(path,uid,gid):
     for dirpath, dirnames, filenames in os.walk(path):
         os.chown(dirpath,uid,gid)
         for filename in filenames:
-            os.chown(os.path.join(dirpath, filename),uid,gid)
-            
-            os.chmod(os.path.join(dirpath, filename), 0o700)
+            try:
+                os.chown(os.path.join(dirpath, filename),uid,gid)
+                
+                os.chmod(os.path.join(dirpath, filename), 0o700)
+            except:
+                pass
         
 def TransferData(det,saveedlist):
     currentfile = det.fileWriterFiles()
@@ -80,6 +83,23 @@ def TransferData(det,saveedlist):
                             value = bytes(str(header[data]), encoding='utf-8')
                             f['/entry/extrainfo/'].create_dataset(name, data=value)    
                         #det.streamConfig('header_appendix')['value']
+                        #modify some header
+                        f['/entry/sample/transformations/omega'].attrs['vector'] = [0,1,0]#for DIALS
+                        distance = f['/entry/instrument/detector/detector_distance'][()]
+                        dis = f['/entry/instrument/detector/transformations/translation']
+                        dis[()]=distance# DIALS use for cal res?
+                        dis.attrs['vector'] = [0,0,-1]
+
+                        # disgeo = f['/entry/instrument/detector/geometry/translation/distances']
+                        # disgeo_data=disgeo[()]#
+                        # beam1=disgeo_data[0]*-0.075
+                        # beam2=disgeo_data[1]*0.075
+                        # # beam1 = int(beam1*1000)/1000
+                        # # beam2 = int(beam2*1000)/1000
+                        # disgeo[()] = [beam1,beam2,-1000*distance]#for DIALS [-0.1555,0.163575,-150]
+
+
+
                     except Exception as e:
                         logger.warning(f'Exception : {e}')
             runtime=time.time()-t0

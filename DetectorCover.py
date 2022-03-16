@@ -26,26 +26,39 @@ class MOXA():
 
     def OpenCover(self):
         t0=time.time()
+        print("DO_CloseCover 0" )
         self.set_do_state(self.DO_CloseCover,0)
+        time.sleep(0.1)
+        print("DO_OpenCover 0" )
         self.set_do_state(self.DO_OpenCover,0)
+        time.sleep(0.1)
+        print("DO_OpenCover 1" )
         self.set_do_state(self.DO_OpenCover,1)
+        time.sleep(0.1)
         self.wait_for_state('open')
-        # time.sleep(0.1)
+        time.sleep(0.1)
         self.set_do_state(self.DO_OpenCover,0)
         print(f'Total time = {time.time()-t0}')
     
     
     def CloseCover(self):
         t0=time.time()
+        print("DO_OpenCover 0" )
         self.set_do_state(self.DO_OpenCover,0)
+        time.sleep(0.1)
+        print("DO_CloseCover 0" )
         self.set_do_state(self.DO_CloseCover,0)
+        time.sleep(0.1)
+        print("DO_CloseCover 1" )
         self.set_do_state(self.DO_CloseCover,1)
+        time.sleep(0.1)
         self.wait_for_state('close')
-        # time.sleep(0.1)
+        time.sleep(0.1)
+        
         self.set_do_state(self.DO_CloseCover,0)
         print(f'Total time = {time.time()-t0}')
 
-    def wait_for_state(self,wait='open',timeout=5,interval=0.2):
+    def wait_for_state(self,wait='open',timeout=5,interval=0.4):
         t0 = time.time()
         wating = True
         while wating:
@@ -71,8 +84,10 @@ class MOXA():
         DI = self.show_di_state()
         if DI[self.DI_Coverisopen] == 1:
             print("Open!")
+            return 'Open'
         elif DI[self.DI_CoverisClosed] == 1:
             print("Closed!")
+            return 'Closed'
         else:
             print("Unkonw!")
 

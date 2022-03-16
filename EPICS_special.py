@@ -166,8 +166,13 @@ class Beamsize():
     def report_current_beamsize(self):
         self.updateINFO()
         MD3YLists = self.MD3YLists.tolist()
-        index = MD3YLists.index(int(self.CurrentMD3Y))
-        beamsize = self.BeamSizeLists[index]
+        try:
+            index = MD3YLists.index(int(self.CurrentMD3Y))
+            beamsize = self.BeamSizeLists[index]
+        except ValueError:
+            self.logger.warn(f'MD3Y at :{self.CurrentMD3Y},not in list')
+            self.logger.warn(f'i will replay beamsize 10 frist')
+            beamsize = 10
         return beamsize
     def target(self,beamsize=50,Targetdistance=150,opencover=False,checkdis=False):
         self.Busy = True
@@ -396,14 +401,18 @@ class Beamsize():
                 self.logger.warning(f'Beam size : {beamsize} ,not in beam list :{self.BeamSizeLists}')
             caput('07a-ES:Beamsize',beamsize)
             self.Busy = False
+            self.logger.info(f'End of moving beamsize:{beamsize}')
     def opencover(self,opencover=False):
             if opencover:
                 self.opcoverP = Process(target=self.cover.OpenCover,name='open_cover')
                 self.opcoverP.start()
+                self.logger.debug(f'ask detector cover open')
             else:
                 pass
     def wait_opencover(self,opencover=False):
+            
             if opencover:
+                self.logger.debug(f'waiting detector cover open')
                 self.opcoverP.join()
             else:
                 pass

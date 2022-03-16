@@ -15,7 +15,7 @@ from pwd import getpwnam
 from DetectorCover import MOXA
 from EPICS_special import Beamsize
 from ldapclient import ladpcleint
-import math
+import math,requests
 
 class Detector():
     def __init__(self,Par,Q) :
@@ -157,7 +157,11 @@ class Eiger2X16M(Detector):
         self.y_pixels_in_detector= int(self.det.detectorConfig('y_pixels_in_detector')['value'])
         self.x_pixel_size= float(self.det.detectorConfig('x_pixel_size')['value'])
         self.y_pixel_size= float(self.det.detectorConfig('y_pixel_size')['value'])
-
+        self.dbpm1 = dbpm07a("1")
+        self.dbpm2 = dbpm07a("2")
+        self.dbpm3 = dbpm07a("3")
+        self.dbpm5 = dbpm07a("5")
+        self.dbpm6 = dbpm07a("6")
     def updatefilestring(self):
         t0 = time.time()
         self.logger.info('Start updatefilestring')
@@ -204,9 +208,11 @@ class Eiger2X16M(Detector):
             
             
         #last update
-        nimages = int(self.det.detectorConfig('nimages')['value'])
-        ntrigger = int(self.det.detectorConfig('ntrigger')['value'])
-        totalframe = nimages * ntrigger
+        nimages = self.det.detectorConfig('nimages')['value']
+        time.sleep(0.1)
+        ntrigger = self.det.detectorConfig('ntrigger')['value']
+        self.logger.debug(f'{nimages=},{ntrigger=}')
+        totalframe = int(nimages) * int(ntrigger)
         lastnum = math.ceil(totalframe/1000)
         dataname = f'{Filename}_data_{lastnum:06}.h5'
         datapath = f'{self.directory }/{dataname}'
@@ -274,6 +280,18 @@ class Eiger2X16M(Detector):
             time.sleep(0.1)
             currentfile = self.det.fileWriterFiles()
         self.logger.info(f'All data in detector is downloaded: file count :{currentfile}')
+        #send to Autostra server if Frames <= 10
+        if self.TotalFrames <= 10:
+            url = 'http://10.7.1.107:65000/job'
+            #/data/blctl/test/test_0_matser.h5
+
+            masterfile =  self.directory + "/" + self.filename + '_'  + str(self.fileindex).zfill(4) +'_master.h5'
+            # masterfile =  f'{self.directory}/{self.filename}_{str(self.fileindex).zfill(4)}_master.h5'
+            data = {'path':masterfile}
+            p = Process(target=self.sendtoAutostra,args=(url,data))
+            p.start()
+            pass
+
         
         closecoverP.join()
         toDcsscommand = 'htos_set_string_completed system_status normal Ready black #00a040'
@@ -281,7 +299,11 @@ class Eiger2X16M(Detector):
         toDcsscommand = ('operdone',) + tuple(command)
         self.sendQ.put(toDcsscommand,timeout=1)
         
-        
+    def sendtoAutostra(self,url,data):
+        response = requests.post(url , json=data)
+        print(response.text)
+
+        pass
     def detector_collect_shutterless(self,command):
     #    ('detector_collect_shutterless', '1.24', '1', 'test_1', '/data/blctl/test', 'blctl', 'gonio_phi', '0.1', '0.000009', '1.0', '10', '750.000060', '0.976226127404', '0.000231', '50.000000', '0', '0', 'PRIVATEA03F6ADA6F19A8DA1DEE6BFC325F4DCE', '1', '10', '50.000000', '0.0')
     #['stoh_start_operation', 'detector_collect_shutterless', '1.2', '0', 'test_0', '/data/blctl/test', 'blctl', 'gonio_phi', '0.1', '0.000000', '1.0', '1', '750.000080', '0.976226127404', '0.000071', '50.000000', '0', '0', 'PRIVATEA03F6ADA6F19A8DA1DEE6BFC325F4DCE', '3', '1', '50.000000', '0.0']
@@ -555,8 +577,11 @@ class Eiger2X16M(Detector):
 
         
     def stoh_abort_all(self,command):    
-        closecoverP = Process(target=self.cover.CloseCover,name='abort_close_cover')
-        closecoverP.start()
+        if self.cover.show_current_state=="Closed":
+            pass
+        else:
+            closecoverP = Process(target=self.cover.CloseCover,name='abort_close_cover')
+            closecoverP.start()
         state = self.det.detectorStatus('state')
         if state == 'idle':
             pass
@@ -687,6 +712,14 @@ class Eiger2X16M(Detector):
         dbpm5flux = caget(self.Par['collect']['DBPM5PV'])
         dbpm6flux = caget(self.Par['collect']['DBPM6PV'])
         sampleflux = caget(self.Par['collect']['samplefluxPV'])
+        #tps 07a only
+        self.dbpm1.update()
+        self.dbpm2.update()
+        self.dbpm3.update()
+        self.dbpm5.update()
+        self.dbpm6.update()
+        
+        
         
         
         header_appendix ={}
@@ -709,6 +742,16 @@ class Eiger2X16M(Detector):
         header_appendix['dbpm5flux'] = dbpm5flux
         header_appendix['dbpm6flux'] = dbpm6flux
         header_appendix['sampleflux'] = sampleflux
+        for name,value in self.dbpm1.getneedvalue():
+            header_appendix[name] = value
+        for name,value in self.dbpm2.getneedvalue():
+            header_appendix[name] = value
+        for name,value in self.dbpm3.getneedvalue():
+            header_appendix[name] = value
+        for name,value in self.dbpm5.getneedvalue():
+            header_appendix[name] = value
+        for name,value in self.dbpm6.getneedvalue():
+            header_appendix[name] = value
         if raster:
             header_appendix['raster_X']=self.rasterinfo['x']
             header_appendix['raster_Y']=self.rasterinfo['y']
@@ -808,7 +851,7 @@ class Eiger2X16M(Detector):
             except :
                 unit =""
             self.logger.debug(f'{command} = {value} {unit}') 
-    def waitMD3Ready(self,timeout=10):
+    def waitMD3Ready(self,timeout=20):
         t0 = time.time()
         check = True
         while check:
@@ -820,27 +863,82 @@ class Eiger2X16M(Detector):
             if (time.time()-t0)>timeout:
                 self.logger.info(f'MD3 is busy:{md3_state} and timeout reach')     
                 return False
-            time.sleep(0.1)
+            time.sleep(0.2)
         self.logger.info(f'MD3 is Ready')     
         return True    
-if __name__ == "__main__":
-    import Config
-    Par = Config.Par
-    #setup for Queue
-    Q={'Queue':{}}
-    Q['Queue']['reciveQ'] = Queue() 
-    Q['Queue']['sendQ'] = Queue() 
-    Q['Queue']['epicsQ'] = Queue()
-    Q['Queue']['ControlQ'] = Queue()
-    Q['Queue']['DetectorQ'] = Queue()
-    test = Eiger2X16M(Par,Q)
-    p = Process(target=test.CommandMon)
-    p.start()
+class dbpm07a():
+    def __init__(self,number) -> None:
+        #DBPM1sum:Mean
+        #DBPM1sum:Stability
+        #DBPM1x:Mean
+        #DBPM1x:Stability
+        #DBPM1y:Mean
+        #DBPM1y:Stability
+        self.number=number
+        self.genname()
+    def genname(self):
+        tmp = "07a-ES:DBPMsum:Mean"
+        namelist = ['Mean','Stability']
+        poslist = ['sum','x','y']
+        self.dbpminfo = {}
+
+
+        for pos in poslist:
+            self.dbpminfo[pos]={}
+            for item in namelist:
+                self.dbpminfo[pos][item]={}
+                temp = f"07a-ES:DBPM{self.number}{pos}:{item}"
+                self.dbpminfo[pos][item]['name'] = temp
+
+    def update(self):
+        
+        for key in self.dbpminfo:
+            
+            for key2 in self.dbpminfo[key]:
+                self.dbpminfo[key][key2]['value']=caget(self.dbpminfo[key][key2]['name'])
+                
+        # print(self.dbpminfo)    
+        pass
+    def getneedvalue(self):
+        ans = []
+        for key in self.dbpminfo:           
+            for key2 in self.dbpminfo[key]:
+                if key == 'sum':
+                    temp = (f'dbpm{self.number}_{key}_{key2}',self.dbpminfo[key][key2]['value'])
+                else:#x/y
+                    if key2 == "Stability":#change to rms um
+                        newvalue = self.dbpminfo[key]["Stability"]['value']*self.dbpminfo[key]["Mean"]['value']/100/1000
+                        temp = (f'dbpm{self.number}_{key}_rms',newvalue)
+                    else:#Mean,using um
+                        temp = (f'dbpm{self.number}_{key}_{key2}',self.dbpminfo[key][key2]['value']/1000)
+
+                ans.append(temp)
+        # print(ans)
+        return ans
     
-    # print(test.detectorip)
-    # print(test.Par)
-    # Q['Queue']['DetectorQ'].put(('test','1234'))
-    Q['Queue']['DetectorQ'].put(('detector_collect_image','213'))
-    # Q['Queue']['DetectorQ'].put(('test2','21333'))
-    Q['Queue']['DetectorQ'].put(('detector_collect_imageHS','21333'))
-    Q['Queue']['DetectorQ'].put('exit')
+
+if __name__ == "__main__":
+    # import Config
+    # Par = Config.Par
+    # #setup for Queue
+    # Q={'Queue':{}}
+    # Q['Queue']['reciveQ'] = Queue() 
+    # Q['Queue']['sendQ'] = Queue() 
+    # Q['Queue']['epicsQ'] = Queue()
+    # Q['Queue']['ControlQ'] = Queue()
+    # Q['Queue']['DetectorQ'] = Queue()
+    # test = Eiger2X16M(Par,Q)
+    # p = Process(target=test.CommandMon)
+    # p.start()
+    
+    # # print(test.detectorip)
+    # # print(test.Par)
+    # # Q['Queue']['DetectorQ'].put(('test','1234'))
+    # Q['Queue']['DetectorQ'].put(('detector_collect_image','213'))
+    # # Q['Queue']['DetectorQ'].put(('test2','21333'))
+    # Q['Queue']['DetectorQ'].put(('detector_collect_imageHS','21333'))
+    # Q['Queue']['DetectorQ'].put('exit')
+    temp = dbpm07a("5")
+    temp.update()
+    temp.getneedvalue()
+    # print(temp.dbpminfo)
