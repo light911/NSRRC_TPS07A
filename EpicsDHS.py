@@ -7,7 +7,7 @@ Created on Tue Jan 14 16:46:13 2020
 """
 
 from epics import caput,CAProcess,caget
-import socket,time,signal,sys,os
+import socket,time,signal,sys,os,subprocess
 # import multiprocessing as mp
 from multiprocessing import Process, Queue, Manager
 import multiprocessing as mp
@@ -28,16 +28,14 @@ class DCSDHS():
         # if managerpar == None:
         self.m = Manager()
         self.Par = self.m.dict()
-        # else:
-            # self.Par = managerpar
-        print(f'TYPE:{type(self.Par)}')
-        self.Par.update(Config.Par)
-        print(f'TYPE:{type(self.Par)}')
-        # self.Par['Queue']={}
-        # self.Par.update({'Queue':{}})
+
         # print(f'TYPE:{type(self.Par)}')
+        self.Par.update(Config.Par)
+        self.Par['operationRecord'] = self.m.list([])#init operationRecord make it list proxy
+        # print(f'TYPE:{type(self.Par)}')
+        
         #set log
-        self.logger = logsetup.getloger2('EPICSDHS',level = self.Par['Debuglevel'])
+        self.logger = logsetup.getloger2('EPICSDHS',LOG_FILENAME='./log/EpicsLog.txt',level = self.Par['Debuglevel'])
         self.logger.info("init EPICSDHS logging")
         self.logger.info("Logging show level = %s",self.Par['Debuglevel'])
         self.logger.debug("Par Start=======")
@@ -74,6 +72,7 @@ class DCSDHS():
         self.logger.debug(f'TYPE:{type(self.Par)}')
         self.logger.debug("Par End========")
         
+
     def initconnection(self):
         
         self.logger.info("try to connect")
@@ -117,19 +116,8 @@ class DCSDHS():
         self.run()
 
     def run(self) :
-#        print("RUN")
-        #creat reciver, sender ,PV process
         self.logger.debug('Creat sub Process')
-        # self.Par['Queue']['reciveQ'] = Queue() 
-        # self.Par['Queue']['sendQ'] = Queue() 
-        # self.Par['Queue']['epicsQ'] = Queue()
-        # self.Par['Queue']['ControlQ'] = Queue()
-        # Q={'Queue':{}}
-        # Q['Queue']['reciveQ'] = Queue() 
-        # Q['Queue']['sendQ'] = Queue() 
-        # Q['Queue']['epicsQ'] = Queue()
-        # Q['Queue']['ControlQ'] = Queue()
-        # self.Par.update(temp)
+        self.Par['operationRecord'][:] = []#clear operationRecord
         self.logger.debug(f'TYPE:{type(self.Par)}')
         
         reciver_ = Process(target=self.reciver, args=(self.Par,self.Q,self.client,))
@@ -182,7 +170,7 @@ class DCSDHS():
         epicsQ = Q['Queue']['epicsQ']
         ContrlQ = Q['Queue']['ControlQ']
         DetctorQ = Q['Queue']['DetectorQ']
-        self.logger.warning(f'TYPE:{type(Par)}')
+        # self.logger.warning(f'TYPE:{type(Par)}')
         #stoh_start_oscillation gonio_phi shutter 3.0 1.0 45.000018
         #stoh_start_oscillation motorName shutter deltaMotor deltaTime startAngle
         #
@@ -212,12 +200,13 @@ class DCSDHS():
 
         MD3state = self.waitMD3Ready()
         if MD3state:
-            state = caput(PV,value)
+            # state = caput(PV,value)
+            state = self.pipecaput(PV,value)
         else:
             state = -1
 
-        if state != 1:
-            self.logger.critical(f"Caput {PV} value {value} Fail!")
+        # if state != 1:
+        #     self.logger.critical(f"Caput {PV} value {value} Fail!")
 
         # state = caput(PV,value)
         # if state != 1:
@@ -312,9 +301,18 @@ class DCSDHS():
                         command = self.processrecvice(processdata).split(" ")
                         self.logger.debug(f"Got message from dcss : {command}")
                         if command[0] == "stoh_abort_all":
+                            self.logger.warning(f"Got {command}")
                             epicsQ.put(("stoh_abort_all",''))
                             DetctorQ.put(("stoh_abort_all",''))
                             AttenQ.put(("stoh_abort_all",''))
+                            # self.logger.warning(f"debug {self.Par['operationRecord']=}")
+                            for item in self.Par['operationRecord']:
+                                operdoneCommand = ['operdone']
+                                for command in item:
+                                    operdoneCommand.append(command)
+                                self.logger.info(f"send {item} for opdone")
+                                sendQ.put(operdoneCommand)#('operdone',command[0],command[1],command[3])
+                            
                             pass
                         elif command[0] == "stoh_start_motor_move":
                             #"stoh_start_motor_move motorName destination
@@ -324,6 +322,16 @@ class DCSDHS():
                                 epicsQ.put(("stoh_start_motor_move",command[1],command[2]))
                             elif command[1] == 'attenuation':
                                 AttenQ.put(("stoh_start_motor_move",command[1],command[2]))
+                            elif command[1] == 'FluoDetectorBack':
+                                #todo
+                                PV = '07a:md3:FluoDetectorIsBack'
+                                state = self.pipecaput(PV,int(float(command[2])))
+                                
+                                # if state != 1:
+                                #     self.logger.critical(f"Caput {PV} value {command[2]} Fail!")
+
+                                sendQ.put(('endmove',command[1],command[2],'normal'), block=False)
+                                pass
                             else:
                                 try:
                                     GUIname, = self.FindEpicsMotorInfo(command[1],'dcssname','GUIname')
@@ -355,7 +363,7 @@ class DCSDHS():
                         elif command[0] == "stoh_start_oscillation":
                             #stoh_start_oscillation gonio_phi shutter 3.0 1.0 45.000018
                             #stoh_start_oscillation motorName shutter deltaMotor deltaTime startAngle
-                            
+                            self.logger.info(f'Ask MD3 to start oscillation')
                             p = Process(target=self.start_oscillation, args=(self.Par,self.Q,command))
                             p.start()
                             pass
@@ -369,8 +377,11 @@ class DCSDHS():
                             #clientNumber.operationCounter
                             #where clientNumber is the number provided to the BLU-ICE by DCSS via the stog_login_complete message. DCSS will reject an operation message if the clientNumber does not match the client. The operationCounter is a number that the client should increment with each new operation that is started.
                             #arg1 [arg2 [arg3 [...]]] is the list of arguments that should be passed to the operation. It is recommended that the list of arguments continue to follow the general format of the DCS message structure (space separated tokens). However, this requirement can only be enforced by the writer of the operation handlers.
+
+                            unknownFlag = False
                             pass
                             if command[1] == "detector_collect_image" :
+                                command.pop(0)
                                 pass
                             elif command[1] == "detector_collect_shutterless" :
                                 command.pop(0)
@@ -381,8 +392,10 @@ class DCSDHS():
                                 # print(command)
                                 DetctorQ.put(tuple(command))
                             elif command[1] == "detector_transfer_image" :
+                                command.pop(0)
                                 pass
                             elif command[1] == "detector_oscillation_ready" :
+                                command.pop(0)
                                 pass
                             elif command[1] == "detector_stop" :
                                 # ['stoh_start_operation', 'detector_stop', '1.17', '']
@@ -395,14 +408,17 @@ class DCSDHS():
                                 
                                 # sendQ.put(newcommand)
                             elif command[1] == "detector_reset_run" :
+                                command.pop(0)
                                 pass
                             elif command[1] == "detector_oscillation_ready" :
+                                command.pop(0)
                                 pass
                             elif command[1] == "getMD2Motor" :
                                 #bypass it
                                 #['stoh_start_operation', 'getMD2Motor', '1.1', 'CurrentApertureDiameterIndex']
                                 #['stoh_start_operation', 'getMD2Motor', '1.2', 'change_mode']
                                 sendQ.put(('operdone',command[1],command[2],command[3]))
+                                command.pop(0)
                                  # self.logger.warning(f"operation from dcss : {command}")
                             elif command[1] == "startRasterScanEx" :
                                 # ['stoh_start_operation', 'startRasterScanEx', '2.5', '1', '0.2', '0.1', '90', '-1.51537', '-0.00978', '1.45155', '0.57271', '10', '10', '0.1', '1', '1', '1']
@@ -448,6 +464,16 @@ class DCSDHS():
                                 pass
                             else:
                                  self.logger.warning(f"Unkonw operation from dcss : {command}")
+                                 unknownFlag = True
+
+                            if unknownFlag:
+                                pass
+                            else:
+                                #need record operation id for abort return correct state
+                                self.logger.debug(f"Add op {command} to operationRecord")
+                                self.Par['operationRecord'].append(command)
+                                self.logger.debug(f"after add {self.Par['operationRecord'][:]=}")
+
                         elif command[0] == "stoh_read_ion_chambers":
                             #stoh_read_ion_chambers time repeat ch1 [ch2 [ch3 [...]]]
                             AttenQ.put(tuple(command))
@@ -653,7 +679,17 @@ class DCSDHS():
                         # args = ""
                    
                     echo = "htos_operation_completed " + str(command[1]) + " " + str(command[2])+ " " + "normal" + args
-                    # print('==',echo,'==')
+                    # REMOVE operation id form list
+                    removeitem = None
+                    for item in self.Par['operationRecord']:
+                        #operation command 
+                        # operationName operationHandle [arg1 [arg2 [arg3 [...]]]]
+                        if item[1] == command[2]:
+                            removeitem = item
+                    if removeitem:
+                        self.logger.debug(f'remove {removeitem} from operationRecord')
+                        self.Par['operationRecord'].remove(removeitem)
+                    # self.logger.warning(f"{removeitem=},{command=},{self.Par['operationRecord'][:]=}")
                 elif command[0] == "operupdate" :
                     #command[1] = operationName
                     #command[2] = operationHandle
@@ -687,6 +723,26 @@ class DCSDHS():
             else:
                 pass
         pass
+    def pipecaput(self,PV,value):
+        self.logger.warning(f'caput PV={PV},value={value}')
+        if type(value) is list:
+            command = ['caput',str(PV)]
+            for item in value:
+                command.append(str(item))
+        else:
+            command = ['caput',str(PV),str(value)]
+        ans = subprocess.run(command,capture_output=True)
+        result = ans.stdout.decode('utf-8')
+        error = ans.stderr.decode('utf-8')       
+        self.logger.debug(f'{ans},result={result},error={error}')
+        if error == '':
+            print(f'caput PV={PV},value={value} OK!')
+            # return True
+            return 1
+        else:
+            self.logger.critical(f"Caput {PV} value {value} Fail={error}")
+            # return False
+            return 0
 
     def epicsPV(self,Par,Q,tcpclient) :
         #init epics

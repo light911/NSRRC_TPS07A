@@ -38,7 +38,7 @@ class epicsdev(QThread):
         #     debuglevel = "INFO"
         
         
-        self.logger = logsetup.getloger2('EPICS',level = self.Par['Debuglevel'])
+        self.logger = logsetup.getloger2('EPICSdev',LOG_FILENAME='./log/epicsdevlog.txt',level = self.Par['Debuglevel'])
         self.logger.info("init EPICS logging")
                
         
@@ -970,9 +970,16 @@ class epicsdev(QThread):
                 if job[0] == 'Set Centring Phase' and job[6] == "1":
                 # if job[6] == "1":
                     wait = False
+                #['Set Centring Phase' '8' '2022-03-30 10:54:18.418','2022-03-30 10:54:19.385' 'null' 'Task was stopped' '0']
+                elif job[0] == 'Set Centring Phase' and job[5] == "Task was stopped":
+                    wait = False
+                    stop = True
+                    self.logger.info('MD3 Auto Sample Centering Stop due to Set Centring Phase,Task was stopped')
+                
                 if (time.time()-t0) > timeout:
                     wait = False
                     stop = True
+                    self.logger.info('MD3 Auto Sample Centering timeout in {timeout} sec(change phase')
             self.logger.info('Start MD3 Auto Sample Centering')
             PVname, = self.FindEpicsListInfo('centerLoop','GUIname','PVname')
             # caput('07a:md3:startAutoSampleCentring',"CRYSTAL_CENTRING")
@@ -980,7 +987,7 @@ class epicsdev(QThread):
         #Check center job done
         
         if stop:
-            self.logger.info('MD3 Auto Sample Centering timeout in {timeout} sec(change phase')
+            # self.logger.info('MD3 Auto Sample Centering timeout in {timeout} sec(change phase')
             self.sendQ.put(('operdone','centerLoop',opid,'normal'))
         else:
             wait = True

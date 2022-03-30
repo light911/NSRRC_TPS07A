@@ -7,7 +7,7 @@ Created on Tue Jan 14 16:46:13 2020
 """
 
 from epics import caget,caput
-import socket,time,signal,sys,os,copy
+import socket,time,signal,sys,os,copy,subprocess
 # import multiprocessing as mp
 from multiprocessing import Process, Queue, Manager
 from epicsinit import epicsdev
@@ -16,10 +16,10 @@ import logsetup
 import Config
 import EpicsConfig
 import numpy as np
-from DetectorCover import MOXA
+# from DetectorCoverV2 import MOXA
 
 class Beamsize():
-    def __init__(self,managerpar=None) :
+    def __init__(self,coverdhs,managerpar=None) :
 #        super(self.__class__,self).__init__(parent)
         signal.signal(signal.SIGINT, self.quit)
         signal.signal(signal.SIGTERM, self.quit)
@@ -37,7 +37,7 @@ class Beamsize():
         # self.Par.update({'Queue':{}})
         # print(f'TYPE:{type(self.Par)}')
         #set log
-        self.logger = logsetup.getloger2('BeamSize',level = self.Par['Debuglevel'])
+        self.logger = logsetup.getloger2('BeamSize',LOG_FILENAME='./log/EpicsLog.txt',level = self.Par['Debuglevel'])
         self.logger.info("init BeamSize logging")
         self.logger.info("Logging show level = %s",self.Par['Debuglevel'])
         self.logger.debug("Par Start=======")
@@ -118,7 +118,8 @@ class Beamsize():
         #update info
         self.updateINFO()
         self.Busy = False
-        self.cover = MOXA()
+        # self.cover = MOXA()
+        self.cover = coverdhs
 
     
 
@@ -213,7 +214,7 @@ class Beamsize():
                     # movinglist[self.ApertureMotor] = self.ApertureLists[index]
                     # md3movinglist[self.ApertureMotor] = self.ApertureLists[index]
                     #just move to pos
-                    caput(self.ApertureMotor,self.ApertureLists[index])
+                    self.pipecaput(self.ApertureMotor,self.ApertureLists[index])
 
                 if self.Slit4VerOPUsing :
                     movinglist[self.Slit4VerOPMotor] = self.Slit4VerOPLists[index]
@@ -268,7 +269,7 @@ class Beamsize():
                     self.logger.info(f'Moving MD3Y Frist! pervent collision') 
                     self.logger.debug(f'Set {self.MD3YMotor} move to {movinglist[self.MD3YMotor]}') 
                     t1 = time.time()
-                    print(caput(self.MD3YMotor,movinglist[self.MD3YMotor]))
+                    print(self.pipecaput(self.MD3YMotor,movinglist[self.MD3YMotor]))
                     del movinglist[self.MD3YMotor]
                     
                     #wait for 5 sec md3 start move
@@ -307,7 +308,7 @@ class Beamsize():
                     t1 = time.time()
                     
 
-                    caput(self.DetYMotor,movinglist[self.DetYMotor])
+                    self.pipecaput(self.DetYMotor,movinglist[self.DetYMotor])
                     del movinglist[self.DetYMotor]
 
                     #wait for 5 sec dety start move
@@ -347,7 +348,7 @@ class Beamsize():
                     t1 = time.time()
                     for motor in movinglist :
                         self.logger.debug(f'Set {motor} move to {movinglist[motor]}') 
-                        print(caput(motor,movinglist[motor]))
+                        print(self.pipecaput(motor,movinglist[motor]))
                     time.sleep(0.1)
                     while not self.check_allmotorstop(movinglist.keys()):
                         time.sleep(0.1)
@@ -377,7 +378,7 @@ class Beamsize():
                     pass
                 #check motor pos again,in case md3 ver or hor has some problem
                 time.sleep(0.2)
-                caput('07a:MD3:SyncPM.PROC',1)
+                self.pipecaput('07a:MD3:SyncPM.PROC',1)
                 time.sleep(0.1)
                 #
                 checkarray=[]
@@ -399,12 +400,13 @@ class Beamsize():
 
             else:
                 self.logger.warning(f'Beam size : {beamsize} ,not in beam list :{self.BeamSizeLists}')
-            caput('07a-ES:Beamsize',beamsize)
+            self.pipecaput('07a-ES:Beamsize',beamsize)
             self.Busy = False
             self.logger.info(f'End of moving beamsize:{beamsize}')
     def opencover(self,opencover=False):
             if opencover:
-                self.opcoverP = Process(target=self.cover.OpenCover,name='open_cover')
+                # self.opcoverP = Process(target=self.cover.OpenCover,name='open_cover')
+                self.opcoverP = Process(target=self.cover.askforAction,args=('open',),name='open_cover')
                 self.opcoverP.start()
                 self.logger.debug(f'ask detector cover open')
             else:
@@ -472,7 +474,28 @@ class Beamsize():
         
         return all(statearray)
     
-
+    def pipecaput(self,PV,value):
+        self.logger.warning(f'caput PV={PV},value={value}')
+        if type(value) is list:
+            command = ['caput',str(PV)]
+            for item in value:
+                command.append(str(item))
+        elif PV =="07a:md3:CurrentApertureDiameterIndex":
+            command = ['caput',str(PV),str(int(value))]
+        else:
+            command = ['caput',str(PV),str(value)]
+        ans = subprocess.run(command,capture_output=True)
+        result = ans.stdout.decode('utf-8')
+        error = ans.stderr.decode('utf-8')       
+        self.logger.debug(f'{ans},result={result},error={error}')
+        if error == '':
+            print(f'caput PV={PV},value={value} OK!')
+            # return True
+            return 1
+        else:
+            self.logger.critical(f"Caput {PV} value {value} Fail={error}")
+            # return False
+            return 0
 
     def quit(self,signum,frame):
         

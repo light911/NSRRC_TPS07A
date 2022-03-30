@@ -12,7 +12,8 @@ from Eiger.DEiger2Client import DEigerClient
 from epics import caput,CAProcess,caget
 import json
 from pwd import getpwnam
-from DetectorCover import MOXA
+# from DetectorCover import MOXA
+from DetectorCoverV2 import MOXA
 from EPICS_special import Beamsize
 from ldapclient import ladpcleint
 import math,requests
@@ -38,7 +39,7 @@ class Detector():
         self.sendQ = Queue()
         self.CommandQ = Queue()
         
-        self.logger = logsetup.getloger2('Detector',level = self.Par['Debuglevel'])
+        self.logger = logsetup.getloger2('Detector',LOG_FILENAME='./log/Detectorlog.txt',level = self.Par['Debuglevel'])
         self.logger.info("init Detector logging")
         
         self.detectorip = self.Par['Detector']['ip']
@@ -71,9 +72,12 @@ class Detector():
         self.beamsize = "" 
         self.atten = ""
         self.cover = MOXA()
-        self.MoveBeamsize = Beamsize()
+        coverP = Process(target=self.cover.run,name='Cover server')
+        coverP.start()
+        self.MoveBeamsize = Beamsize(self.cover)
         self.ladp = ladpcleint()
         # self.logger.warning(f'Detector {self.CommandQ}')
+        self.collecting = False
     def CommandMon(self) :
         self.logger.warning('Detector MON start!')
         while True:
@@ -84,6 +88,7 @@ class Detector():
                     self.exit()
                     break
                 else:
+                    self.logger.debug(f'CommandMon got str command: {command}')
                     pass
                     #may be from reviceQ (DCSS),update or move some thing for it
                     
@@ -265,8 +270,10 @@ class Eiger2X16M(Detector):
 
     def detector_stop(self,command):
         #check detector data is clear
-        self.logger.info('close cover after got detector stop ')
-        closecoverP = Process(target=self.cover.CloseCover,name='stop_close_cover')
+        t0 = time.time()
+        self.logger.info(f'close cover after got detector stop ({command}) ')
+        # closecoverP = Process(target=self.cover.CloseCover,name='stop_close_cover')
+        closecoverP = Process(target=self.cover.askforAction,args=('close',),name='stop_close_cover')
         closecoverP.start()
         self.logger.info(f'command: {command[1:]}')
         toDcsscommand = 'htos_set_string_completed system_status normal {Wating For Download Image} black #d0d000'
@@ -292,10 +299,16 @@ class Eiger2X16M(Detector):
             p.start()
             pass
 
-        
-        closecoverP.join()
+        #kill it if timeout?
+        #check closecoverP state
+        closecoverP.join(5)
+        if closecoverP.exitcode== None:
+            self.logger.warning(f'closecover P has problem kill it!')
+            closecoverP.kill()
+
         toDcsscommand = 'htos_set_string_completed system_status normal Ready black #00a040'
         self.sendQ.put(toDcsscommand)
+        self.logger.info(f'Done for detector stop ({command}) ')
         toDcsscommand = ('operdone',) + tuple(command)
         self.sendQ.put(toDcsscommand,timeout=1)
         
@@ -364,6 +377,8 @@ class Eiger2X16M(Detector):
         
         
         toDcsscommand = ('operupdate',command[0],self.operationHandle,'start_oscillation','shutter',str(_oscillationTime),_filename)
+        self.sendQ.put(toDcsscommand)
+        toDcsscommand = ('operdone',command[0],self.operationHandle)
         self.sendQ.put(toDcsscommand)
         # command = ('operdone',) + command
         # self.sendQ.put(command)
@@ -453,7 +468,8 @@ class Eiger2X16M(Detector):
         runtime = time.time() - timeStart
         self.logger.warning(f"MD3 Expouse Scan Done,take {runtime},with PV put state={state},Result ID = {Task[6]}")
         # self.logger.warning(f"fileindex:{fileindex},nimages:{nimages},Par:{Par}")
-        closecoverP = Process(target=self.cover.CloseCover,name='mutiPosCollect_close_cover')
+        # closecoverP = Process(target=self.cover.CloseCover,name='mutiPosCollect_close_cover')
+        closecoverP = Process(target=self.cover.askforAction,args=('close',),name='mutiPosCollect_close_cover')
         closecoverP.start()
         # toDcsscommand = f"htos_set_string_completed detector_status normal Wating For Download Image "
         toDcsscommand = 'htos_set_string_completed system_status normal {Wating For Download Image} black #d0d000'
@@ -577,11 +593,13 @@ class Eiger2X16M(Detector):
 
         
     def stoh_abort_all(self,command):    
-        if self.cover.show_current_state=="Closed":
-            pass
-        else:
-            closecoverP = Process(target=self.cover.CloseCover,name='abort_close_cover')
-            closecoverP.start()
+        # if self.cover.show_current_state=="Closed":
+        #     pass
+        # else:
+        #     closecoverP = Process(target=self.cover.CloseCover,name='abort_close_cover')
+        #     closecoverP.start()
+        closecoverP = Process(target=self.cover.askforAction,args=('close',),name='abort_close_cover')
+        closecoverP.start()
         state = self.det.detectorStatus('state')
         if state == 'idle':
             pass
@@ -822,10 +840,10 @@ class Eiger2X16M(Detector):
         # self.cover.wait_for_state(wait='open',timeout=3)
         beamsizeP.join()
         t1 = time.time()
-        self.logger.info('start to check')
+        self.logger.debug('start to updatefilestring check')
         monP = Process(target=self.updatefilestring,name='Monfile')
         monP.start()
-        self.logger.debug(f'setup time = {t1-t0},Detector energy={Energy}')
+        self.logger.info(f'setup time = {t1-t0},Detector energy={Energy}')
         return TotalTime,Filename
     
     def logDetInfo(self):
