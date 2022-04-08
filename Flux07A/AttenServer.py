@@ -24,9 +24,10 @@ class atten():
         
         #load config
         if Par == None:
-            self.m = Manager()
-            self.Par = self.m.dict()
-            self.Par.update(Config.Par)
+            # self.m = Manager()
+            # self.Par = self.m.dict()
+            # self.Par.update(Config.Par)
+            pass
         else:
             self.Par = Par
         self.logger = logsetup.getloger2('AttenServer',level = self.Par['Debuglevel'],LOG_FILENAME='./log/AttenServerlog.txt')

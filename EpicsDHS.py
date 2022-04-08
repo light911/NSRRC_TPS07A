@@ -7,6 +7,7 @@ Created on Tue Jan 14 16:46:13 2020
 """
 
 from epics import caput,CAProcess,caget
+from workround import myepics,workroundmd3moving
 import socket,time,signal,sys,os,subprocess
 # import multiprocessing as mp
 from multiprocessing import Process, Queue, Manager
@@ -18,30 +19,35 @@ import Config
 import EpicsConfig
 import Detector
 from Flux07A.AttenServer import atten
+from DetectorCoverV2 import MOXA
 
 class DCSDHS():
-    def __init__(self,managerpar=None) :
+    def __init__(self,par:dict=None,m:Manager=None) :
 #        super(self.__class__,self).__init__(parent)
         signal.signal(signal.SIGINT, self.quit)
         signal.signal(signal.SIGTERM, self.quit)
         #load config
-        # if managerpar == None:
-        self.m = Manager()
-        self.Par = self.m.dict()
+        # save self.m in  Manager() not work with spawn
+        # if m == None:
+        #     self.m = Manager()
+        # else:
+        #     self.m = m
+        # self.Par = m.dict()
+        self.Par = par
 
         # print(f'TYPE:{type(self.Par)}')
         self.Par.update(Config.Par)
-        self.Par['operationRecord'] = self.m.list([])#init operationRecord make it list proxy
+        self.Par['operationRecord'] = m.list([])#init operationRecord make it list proxy
         # print(f'TYPE:{type(self.Par)}')
         
         #set log
         self.logger = logsetup.getloger2('EPICSDHS',LOG_FILENAME='./log/EpicsLog.txt',level = self.Par['Debuglevel'])
         self.logger.info("init EPICSDHS logging")
         self.logger.info("Logging show level = %s",self.Par['Debuglevel'])
-        self.logger.debug("Par Start=======")
-        self.logger.debug(self.Par)
-        self.logger.debug(f'TYPE:{type(self.Par)}')
-        self.logger.debug("Par End========")
+        # self.logger.debug("Par Start=======")
+        # self.logger.debug(self.Par)
+        # self.logger.debug(f'TYPE:{type(self.Par)}')
+        # self.logger.debug("Par End========")
         
         #setup dcss par
         self.host = self.Par['dcss']['host']
@@ -58,20 +64,40 @@ class DCSDHS():
         self.Q['Queue']['ControlQ'] = Queue()
         self.Q['Queue']['DetectorQ'] = Queue()
         self.Q['Queue']['attenQ'] = Queue()
+        self.Q['Queue']['workroundQ'] = Queue()
+        # self.Q={'Queue':{}}
+        # self.Q['Queue']['reciveQ'] = self.m.Queue() 
+        # self.Q['Queue']['sendQ'] = self.m.Queue() 
+        # self.Q['Queue']['epicsQ'] = self.m.Queue()
+        # self.Q['Queue']['ControlQ'] = self.m.Queue()
+        # self.Q['Queue']['DetectorQ'] = self.m.Queue()
+        # self.Q['Queue']['attenQ'] = self.m.Queue()
+        # self.Q['Queue']['workroundQ'] = self.m.Queue()
         #setup for tcp
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.client.settimeout(self.tcptimeout)
         
-        self.epcisPV_ = Process(target=self.epicsPV, args=(self.Par,self.Q,self.client,))
-        self.epcisPV_.start()
-        self.Atten_ = Process(target=self.Attenserver, args=(self.Q,self.Par,))
-        self.Atten_.start()
-        time.sleep(2)
-        self.logger.debug("Par After epicsPV Start=======")
-        self.logger.debug(self.Par)
-        self.logger.debug(f'TYPE:{type(self.Par)}')
-        self.logger.debug("Par End========")
+        self.cover = MOXA(m)    
+        coverP = Process(target=self.cover.run,name='Cover_server')
+        coverP.start()
         
+        self.preserver()
+        # time.sleep(2)
+        # self.logger.debug("Par After epicsPV Start=======")
+        # self.logger.debug(self.Par)
+        # self.logger.debug(f'TYPE:{type(self.Par)}')
+        # self.logger.debug("Par End========")
+        self.ca=myepics(self.logger)
+
+    def preserver(self):
+        self.epcisPV_ = Process(target=self.epicsPVP, args=(self.Par,self.Q,self.cover,))
+        self.epcisPV_.start()
+        self.Atten_ = Process(target=self.Attenserver, args=(self.Par,self.Q,))
+        self.Atten_.start()
+        
+        self.workroundmd3moving_ = Process(target=self.workroundmd3moving, args=(self.Par,self.Q,))
+        self.workroundmd3moving_.start()
+        time.sleep(3)
 
     def initconnection(self):
         
@@ -122,7 +148,7 @@ class DCSDHS():
         
         reciver_ = Process(target=self.reciver, args=(self.Par,self.Q,self.client,))
         sender_ = Process(target=self.sender, args=(self.Par,self.Q,self.client,))
-        Detector_ = Process(target=self.detector, args=(self.Par,self.Q,self.client,))
+        Detector_ = Process(target=self.detector, args=(self.Par,self.Q,self.client,self.cover))
         # epcisPV_ = Process(target=self.epicsPV, args=(self.Par,Q,self.client,))
         # control_ = Process(target=self.controlCenter, args=(self.Par,self.Q,self.client,))
         
@@ -141,13 +167,13 @@ class DCSDHS():
         # control_.join()
         self.initconnection()
         
-    def detector(self,Par,Q,tcpclient):
+    def detector(self,Par,Q,tcpclient,coverdhs):
         reciveQ = Q['Queue']['reciveQ']
         sendQ = Q['Queue']['sendQ']
         epicsQ = Q['Queue']['epicsQ']
         DetctorQ = Q['Queue']['ControlQ']
-        self.logger.warning(f'TYPE:{type(Par)}')
-        DET = Detector.Eiger2X16M(Par,Q)
+        # self.logger.warning(f'TYPE:{type(Par)}')
+        DET = Detector.Eiger2X16M(Par,Q,coverdhs)
         DET.CommandMon()
     def waitMD3Ready(self,timeout=10):
         t0 = time.time()
@@ -201,7 +227,8 @@ class DCSDHS():
         MD3state = self.waitMD3Ready()
         if MD3state:
             # state = caput(PV,value)
-            state = self.pipecaput(PV,value)
+            # state = self.pipecaput(PV,value)
+            state = self.ca.caput(PV,value)
         else:
             state = -1
 
@@ -325,7 +352,8 @@ class DCSDHS():
                             elif command[1] == 'FluoDetectorBack':
                                 #todo
                                 PV = '07a:md3:FluoDetectorIsBack'
-                                state = self.pipecaput(PV,int(float(command[2])))
+                                # state = self.pipecaput(PV,int(float(command[2])))
+                                state = self.ca.caput(PV,int(float(command[2])))
                                 
                                 # if state != 1:
                                 #     self.logger.critical(f"Caput {PV} value {command[2]} Fail!")
@@ -744,20 +772,24 @@ class DCSDHS():
             # return False
             return 0
 
-    def epicsPV(self,Par,Q,tcpclient) :
+    def epicsPVP(self,Par,Q,coverdhs) :
+        self.logger.info(f'start for EPICS dev')
         #init epics
+        pass
+        self.epicsPV=epicsdev(EpicsConfig.epicslist,Par,Q,EpicsConfig.epicsmotors,coverdhs=coverdhs)
 
-        self.epicsPV=epicsdev(EpicsConfig.epicslist,Par,Q,EpicsConfig.epicsmotors)
-
-        #set motor and PV allback
+        # set motor and PV allback
         self.epicsPV.setMotor()
         self.epicsPV.setcallback()
         self.epicsPV.epcisMon()
         self.epicsPV.clear_epics_Motor_callback()
         self.epicsPV.clear_epics_callback()
-    def Attenserver(self,Q,Par):
+    def Attenserver(self,Par,Q):
         a = atten(Par)
         a.monitor(Q)
+    def workroundmd3moving(self,Par,Q):
+        b = workroundmd3moving(Q=Q,logger=None)
+        b.run()
 #some Tools        
     def ansDHS(self,command):
         addNumber = 200 - len(command)
@@ -828,10 +860,10 @@ class DCSDHS():
         self.Q['Queue']['DetectorQ'].put('exit')
         self.Q['Queue']['attenQ'].put('exit')
         self.client.close()
-        self.logger.debug(f"PID : {os.getpid()} DHS closed, Par= {self.Par} TYPE:{type(self.Par)}")
+        self.logger.debug(f"PID : {os.getpid()} DHS closed, Par= {self.Par}")
         # self.logger.info(f'PID : {os.getpid()} DHS closed') 
-        self.logger.critical(f'm pid={self.m._process.ident}')
-        self.m.shutdown()
+        # self.logger.critical(f'm pid={self.m._process.ident}')
+        # self.m.shutdown()
         active_children = mp.active_children()
         self.logger.critical(f'active_children={active_children}')
         if len(active_children)>0:
@@ -910,21 +942,37 @@ def quit(signum,frame):
     sys.exit()
     pass
 
-def EpicsDHS(par=None):
+# def EpicsDHS(m):
     
-    #par load from config.py & EpicsConfig.py
-    EpicsDHS = DCSDHS(par)
+#     #par load from config.py & EpicsConfig.py
+#     EpicsDHS = DCSDHS(m)
+#     p = Process(target=EpicsDHS.initconnection)
+
+#     p.start()
+#     p.join()
+#     print ("end")
+
+    
+if __name__ == "__main__":
+    # mp.set_forkserver_preload()
+    # mp.set_start_method('forkserver')
+    # mp.set_start_method('spawn')
+    # mp.set_start_method('fork')
+
+    signal.signal(signal.SIGINT, quit)
+    signal.signal(signal.SIGTERM, quit)
+    # logger=logsetup.getloger2('Main')
+    m = Manager()
+    Par = m.dict()
+    # EpicsDHS(m)
+    # self.logger.critical(f'm pid={self.m._process.ident}')
+    EpicsDHS = DCSDHS(Par,m)
+    print ("start")
     p = Process(target=EpicsDHS.initconnection)
 
     p.start()
     p.join()
     print ("end")
 
-    
-if __name__ == "__main__":
-    signal.signal(signal.SIGINT, quit)
-    signal.signal(signal.SIGTERM, quit)
-    logger=logsetup.getloger2('Main')
-    # m = Manager()
-    # Par = m.dict()
-    EpicsDHS()
+
+    m.shutdown()

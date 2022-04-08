@@ -6,7 +6,9 @@ Created on Tue Jan 14 16:46:13 2020
 @author: admin
 """
 
-from epics import caget,caput
+from epics import caget
+from workround import myepics
+# from epics import caget,caput
 import socket,time,signal,sys,os,copy,subprocess
 # import multiprocessing as mp
 from multiprocessing import Process, Queue, Manager
@@ -40,11 +42,12 @@ class Beamsize():
         self.logger = logsetup.getloger2('BeamSize',LOG_FILENAME='./log/EpicsLog.txt',level = self.Par['Debuglevel'])
         self.logger.info("init BeamSize logging")
         self.logger.info("Logging show level = %s",self.Par['Debuglevel'])
-        self.logger.debug("Par Start=======")
-        self.logger.debug(self.Par)
-        self.logger.debug(f'TYPE:{type(self.Par)}')
-        self.logger.debug("Par End========")
-        
+        # self.logger.debug("Par Start=======")
+        # self.logger.debug(self.Par)
+        # self.logger.debug(f'TYPE:{type(self.Par)}')
+        # self.logger.debug("Par End========")
+
+        self.ca = myepics(self.logger)
         #
         
         #setup Beamsize par
@@ -68,7 +71,7 @@ class Beamsize():
         self.Slit4VerOPName = self.Par['EPICS_special']['BeamSize']['Slit4VerOPName']
         self.Slit4HorOPName = self.Par['EPICS_special']['BeamSize']['Slit4HorOPName']
         self.DBPM5VerName = self.Par['EPICS_special']['BeamSize']['DBPM5VerName']
-        self.DBPM5HorrName = self.Par['EPICS_special']['BeamSize']['DBPM5HorName']
+        self.DBPM5HorName = self.Par['EPICS_special']['BeamSize']['DBPM5HorName']
         self.DBPM6VerName = self.Par['EPICS_special']['BeamSize']['DBPM6VerName']
         self.DBPM6HorName = self.Par['EPICS_special']['BeamSize']['DBPM6HorName']
         self.SSName = self.Par['EPICS_special']['BeamSize']['SSName']
@@ -124,49 +127,50 @@ class Beamsize():
     
 
     def updateINFO(self):
-        self.BeamSizeLists = caget(self.BeamSizeName)
+        self.BeamSizeLists = self.ca.caget(self.BeamSizeName,format=float,array=True,debug=False)
         self.logger.debug(f'Update BeamSizeLists = {self.BeamSizeLists}')
-        self.MD3YLists = caget(self.MD3YName)
+        self.MD3YLists = self.ca.caget(self.MD3YName,format=float,array=True,debug=False)
         self.logger.debug(f'Update MD3YLists = {self.MD3YLists}')
         if self.SSUsing :
-            self.SSLists =caget(self.SSName)
+            self.SSLists =self.ca.caget(self.SSName,format=float,array=True,debug=False)
             self.logger.debug(f'Update SSLists = {self.SSLists}')
         if self.MD3VerUsing :
-            self.MD3VerLists =caget(self.MD3VerName)
+            self.MD3VerLists =self.ca.caget(self.MD3VerName,format=float,array=True,debug=False)
             self.logger.debug(f'Update MD3VerLists = {self.MD3VerLists}')
         if self.MD3HorUsing :
-            self.MD3HorLists =caget(self.MD3HorName)
+            self.MD3HorLists =self.ca.caget(self.MD3HorName,format=float,array=True,debug=False)
             self.logger.debug(f'Update MD3HorLists = {self.MD3HorLists}')
         if self.Slit4VerOPUsing :
-            self.Slit4VerOPLists =caget(self.Slit4VerOPName)
+            self.Slit4VerOPLists =self.ca.caget(self.Slit4VerOPName,format=float,array=True,debug=False)
             self.logger.debug(f'Update Slit4VerOPLists = {self.Slit4VerOPLists}')
         if self.Slit4HorOPUsing :
-            self.Slit4HorOPLists =caget(self.Slit4HorOPName)
+            self.Slit4HorOPLists =self.ca.caget(self.Slit4HorOPName,format=float,array=True,debug=False)
             self.logger.debug(f'Update Slit4HorOPLists = {self.Slit4HorOPLists}')
         if self.DBPM5VerUsing :
-            self.DBPM5VerLists =caget(self.DBPM5VerName)
+            self.DBPM5VerLists =self.ca.caget(self.DBPM5VerName,format=float,array=True,debug=False)
             self.logger.debug(f'Update DBPM5VerLists = {self.DBPM5VerLists}')
         if self.DBPM5HorUsing :
-            self.DBPM5HorLists =caget(self.DBPM5HorName)
+            self.DBPM5HorLists =self.ca.caget(self.DBPM5HorName,format=float,array=True,debug=False)
             self.logger.debug(f'Update DBPM5HorLists = {self.DBPM5HorLists}')
         if self.DBPM6VerUsing :
-            self.DBPM6VerLists =caget(self.DBPM6VerName)
+            self.DBPM6VerLists =self.ca.caget(self.DBPM6VerName,format=float,array=True,debug=False)
             self.logger.debug(f'Update DBPM6VerLists = {self.DBPM6VerLists}')
         if self.DBPM6HorUsing :
-            self.DBPM5VerLists =caget(self.DBPM6HorName)
+            self.DBPM5VerLists =self.ca.caget(self.DBPM6HorName,format=float,array=True,debug=False)
             self.logger.debug(f'Update DBPM5VerLists = {self.DBPM5VerLists}')
         if self.ApertureUsing :
-            self.ApertureLists = caget(self.ApertureName)
+            self.ApertureLists = self.ca.caget(self.ApertureName,format=int,array=True,debug=False)
             self.logger.debug(f'Update ApertureLists = {self.ApertureLists}')
             
         # self.CurrentBeamsize = 0
-        self.CurrentDetY = caget(self.DetYMotor)
+        self.CurrentDetY = self.ca.caget(self.DetYMotor,format=float,array=False,debug=False)
         self.logger.debug(f'Update CurrentDetY = {self.CurrentDetY}')
-        self.CurrentMD3Y = caget(self.MD3YMotor)
+        self.CurrentMD3Y = self.ca.caget(self.MD3YMotor,format=float,array=False,debug=False)
         self.logger.debug(f'Update MD3YMotor = {self.CurrentMD3Y}')
     def report_current_beamsize(self):
         self.updateINFO()
         MD3YLists = self.MD3YLists.tolist()
+        # MD3YLists = self.MD3YLists
         try:
             index = MD3YLists.index(int(self.CurrentMD3Y))
             beamsize = self.BeamSizeLists[index]
@@ -179,10 +183,10 @@ class Beamsize():
         self.Busy = True
         
         self.logger.info(f'Move beam size to {beamsize} with openvoer = {opencover},Targetdistance = {Targetdistance} with moveit = {checkdis}')
-        current_dis = caget(self.fakeDistanceName)
+        current_dis = self.ca.caget(self.fakeDistanceName)
         #07a:Det:Dis.LLM,07a:Det:Dis.HLM
-        disLLM = caget(f'{self.fakeDistanceName}.LLM')
-        disHLM = caget(f'{self.fakeDistanceName}.HLM')
+        disLLM = self.ca.caget(f'{self.fakeDistanceName}.LLM')
+        disHLM = self.ca.caget(f'{self.fakeDistanceName}.HLM')
         if disLLM > Targetdistance:
             Targetdistance = disLLM
             self.logger.warning(f'Request distance :{Targetdistance} is lower than {disLLM},set to lowerest value')
@@ -214,7 +218,7 @@ class Beamsize():
                     # movinglist[self.ApertureMotor] = self.ApertureLists[index]
                     # md3movinglist[self.ApertureMotor] = self.ApertureLists[index]
                     #just move to pos
-                    self.pipecaput(self.ApertureMotor,self.ApertureLists[index])
+                    self.ca.caput(self.ApertureMotor,self.ApertureLists[index],int)
 
                 if self.Slit4VerOPUsing :
                     movinglist[self.Slit4VerOPMotor] = self.Slit4VerOPLists[index]
@@ -236,7 +240,7 @@ class Beamsize():
                 #check if safe to move both?
                 #check DetY
                 #case1 lower than DetYLLM,case2 lower than MinDistance in cinfig, case3 lower than 40mm (impossbilie)
-                DetYLLM =  caget(self.DetYMotor + ".LLM")
+                DetYLLM =  self.ca.caget(self.DetYMotor + ".LLM")
                 if checkdis:
                     detDist = current_dis - Targetdistance
                     targetDetY = (self.CurrentDetY + detMove) - detDist
@@ -245,7 +249,7 @@ class Beamsize():
                 # collisionDetY = targetDetY < DetYLLM or targetDetY < 40 or targetDetY < self.MinDistance
                 collisionDetY = targetDetY < DetYLLM or targetDetY < 40 
                 #check MD3Y
-                MD3YHLM =  caget(self.MD3YMotor + ".HLM")
+                MD3YHLM =  self.ca.caget(self.MD3YMotor + ".HLM")
                 targetMD3Y = movinglist[self.MD3YMotor]
                 collisionMD3Y = targetMD3Y > MD3YHLM
                 self.logger.debug(f'CurrentDetY = {self.CurrentDetY}, DetYLLM = {DetYLLM},will move to {targetDetY} , will collisionDetY ={collisionDetY}') 
@@ -269,7 +273,7 @@ class Beamsize():
                     self.logger.info(f'Moving MD3Y Frist! pervent collision') 
                     self.logger.debug(f'Set {self.MD3YMotor} move to {movinglist[self.MD3YMotor]}') 
                     t1 = time.time()
-                    print(self.pipecaput(self.MD3YMotor,movinglist[self.MD3YMotor]))
+                    self.ca.caput(self.MD3YMotor,movinglist[self.MD3YMotor])
                     del movinglist[self.MD3YMotor]
                     
                     #wait for 5 sec md3 start move
@@ -288,7 +292,7 @@ class Beamsize():
                     #need recheck collision,in case motor stop by abort
                     for motor in movinglist :
                         self.logger.debug(f'Set {motor} move to {movinglist[motor]}') 
-                        print(caput(motor,movinglist[motor]))
+                        self.ca.caput(motor,movinglist[motor])
                     time.sleep(0.1)    
 
                     #check all stop
@@ -308,7 +312,7 @@ class Beamsize():
                     t1 = time.time()
                     
 
-                    self.pipecaput(self.DetYMotor,movinglist[self.DetYMotor])
+                    self.ca.caput(self.DetYMotor,movinglist[self.DetYMotor])
                     del movinglist[self.DetYMotor]
 
                     #wait for 5 sec dety start move
@@ -326,7 +330,7 @@ class Beamsize():
                     #need recheck collision ,in case motor stop by abort
                     for motor in movinglist :
                         self.logger.debug(f'Set {motor} move to {movinglist[motor]}') 
-                        print(caput(motor,movinglist[motor]))
+                        print(self.ca.caput(motor,movinglist[motor]))
                     time.sleep(0.1)    
 
                     #check all stop
@@ -348,7 +352,7 @@ class Beamsize():
                     t1 = time.time()
                     for motor in movinglist :
                         self.logger.debug(f'Set {motor} move to {movinglist[motor]}') 
-                        print(self.pipecaput(motor,movinglist[motor]))
+                        print(self.ca.caput(motor,movinglist[motor]))
                     time.sleep(0.1)
                     while not self.check_allmotorstop(movinglist.keys()):
                         time.sleep(0.1)
@@ -365,7 +369,7 @@ class Beamsize():
                     t1 = time.time()
                     for motor in movinglist :
                         self.logger.debug(f'Set {motor} move to {movinglist[motor]}') 
-                        print(caput(motor,movinglist[motor]))
+                        print(self.ca.caput(motor,movinglist[motor]))
                     time.sleep(0.1)
                     while not self.check_allmotorstop(movinglist.keys()):
                         time.sleep(0.1)
@@ -378,12 +382,12 @@ class Beamsize():
                     pass
                 #check motor pos again,in case md3 ver or hor has some problem
                 time.sleep(0.2)
-                self.pipecaput('07a:MD3:SyncPM.PROC',1)
+                self.ca.caput('07a:MD3:SyncPM.PROC',1)
                 time.sleep(0.1)
                 #
                 checkarray=[]
                 for motor in tempmovinglist:
-                    current_pos = caget(f'{motor}.RBV')
+                    current_pos = self.ca.caget(f'{motor}.RBV',format=float,array=False,debug=False)
                     diff = abs(current_pos-tempmovinglist[motor])
                     if  diff<0.001:
                         checkarray.append(True)
@@ -396,11 +400,11 @@ class Beamsize():
                     self.logger.warning('some motor not in position,move again')
                     for motor in tempmovinglist :
                         self.logger.debug(f'Set {motor} move to {movinglist[motor]}') 
-                        print(caput(motor,movinglist[motor]))
+                        print(self.ca.caput(motor,movinglist[motor]))
 
             else:
                 self.logger.warning(f'Beam size : {beamsize} ,not in beam list :{self.BeamSizeLists}')
-            self.pipecaput('07a-ES:Beamsize',beamsize)
+            self.ca.caput('07a-ES:Beamsize',beamsize)
             self.Busy = False
             self.logger.info(f'End of moving beamsize:{beamsize}')
     def opencover(self,opencover=False):
@@ -424,13 +428,13 @@ class Beamsize():
             return True
         statearray = []
         for motor in motorlist:
-            if caget(f"{motor}.DMOV") == 1:
+            if self.ca.caget(f"{motor}.DMOV",int,False,False) == 1:
                 statearray.append(True)
-                # pos = caget(f"{motor}")
+                # pos = self.ca.caget(f"{motor}")
                 # self.logger.debug(f'{motor} pos at {pos}') 
             else:
                 statearray.append(False)
-                # pos = caget(f"{motor}")
+                # pos = self.ca.caget(f"{motor}")
                 # self.logger.debug(f'{motor} pos at {pos}') 
         
         return all(statearray)
@@ -467,7 +471,7 @@ class Beamsize():
             return True
         statearray = []
         for epicsname in md3epicsname:
-            if caget(epicsname) == 4:
+            if self.ca.caget(epicsname) == 4:
                 statearray.append(True)
             else:
                 statearray.append(False)

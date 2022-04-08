@@ -14,10 +14,13 @@ class State(Enum):
     Closing = auto()
 
 class MOXA():
-    def __init__(self) -> None:
+    def __init__(self,m:Manager=None) -> None:
         signal.signal(signal.SIGINT, self.quit)
         signal.signal(signal.SIGTERM, self.quit)
-        self.m = Manager()
+        if not m:
+            self.m = Manager()
+        else:
+            self.m = m
         self.Par = self.m.dict()
         self.Par.update(Config.Par)
         self.Par['Coverstate'] = None
@@ -45,16 +48,20 @@ class MOXA():
         self.Coverstate=None
         self.stop = False
         self.state = State.Staring
+        # self.Par['stateQ'] = Queue()
+        # self.Par['commandQ'] = Queue()
+        # self.Par['returnQ'] = Queue()
         self.Q={}
         self.Q['stateQ'] = Queue()
         self.Q['commandQ'] = Queue()
-        self.Q['returnQ'] = Queue()
+        
     def run(self):
-        _asking_state = Process(target=self.asking_state, args=(self.Par,self.Q))
+        # _asking_state = Process(target=self.asking_state, args=(self.Par,),name = 'cover_server_run')
+        _asking_state = Process(target=self.asking_state, args=(self.Par,),name = 'asking_state_server')
         _asking_state.start()
         #update state
         stateQ = self.Q['stateQ']
-        returnQ = self.Q['returnQ']
+        
         while not self.stop:
             command = stateQ.get(block=True)
             if isinstance(command,str):
@@ -74,9 +81,9 @@ class MOXA():
                 pass
 
     
-    def asking_state(self,Par,Q):
+    def asking_state(self,Par):
         # stateQ = Q['stateQ']
-        commandQ = Q['commandQ']
+        commandQ = self.Q['commandQ']
         while not self.stop:
             try:
                 command = commandQ.get(block=False)
@@ -100,26 +107,25 @@ class MOXA():
                 if ans == 'Open':
                     newstate = True
                     # stateQ.put(('Coverstate',True))
-                    self.Par['Coverstate'] = True
+                    Par['Coverstate'] = True
                 elif ans == 'Closed':
                     newstate = False
+                    # self.logger.warning(f'{type(Par)},{Par=}')
                     # stateQ.put(('Coverstate',False))
-                    self.Par['Coverstate'] = False
+                    Par['Coverstate'] = False
                 else:
                     newstate = None
                     # stateQ.put(('Coverstate',None))
-                    self.Par['Coverstate'] = None
+                    Par['Coverstate'] = None
             
             if self.Coverstate != newstate:
                 self.logger.info(f'Update Coverstate form {self.Coverstate} to {newstate}')
             self.Coverstate = newstate
-            time.sleep(0.15)#update rate
+            time.sleep(0.2)#update rate
 
     def askforAction(self,action = 'open',timeout=5):
         self.logger.info(f'Got ask for {action} cover')
-        t0 = time.time()
-        stateQ = self.Q['stateQ']
-        returnQ = self.Q['returnQ']
+        t0 = time.time()       
         commandQ = self.Q['commandQ']
         stop = False
         settingflag = True

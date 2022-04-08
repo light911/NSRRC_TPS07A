@@ -7,9 +7,11 @@ Created on Mon May  3 14:26:34 2021
 """
 from multiprocessing import Process, Queue, Manager
 import multiprocessing as mp
-import logsetup,time
+import logsetup,time,subprocess
 from Eiger.DEiger2Client import DEigerClient
-from epics import caput,CAProcess,caget
+# from epics import caput,CAProcess,caget
+from epics import caput,caget
+from workround import myepics
 import json
 from pwd import getpwnam
 # from DetectorCover import MOXA
@@ -19,7 +21,7 @@ from ldapclient import ladpcleint
 import math,requests
 
 class Detector():
-    def __init__(self,Par,Q) :
+    def __init__(self,Par,Q,coverdhs=None) :
                 
         self.detectorip = ""
         self.detectorport = 80
@@ -34,10 +36,10 @@ class Detector():
         self.phi_increment = 0
         self.nimages = 1
         self.pixel_szie = (None, None)       
-        self.Par = {}
+        # self.Par = {}
         self.Par = Par
-        self.sendQ = Queue()
-        self.CommandQ = Queue()
+        # self.sendQ = Queue()
+        # self.CommandQ = Queue()
         
         self.logger = logsetup.getloger2('Detector',LOG_FILENAME='./log/Detectorlog.txt',level = self.Par['Debuglevel'])
         self.logger.info("init Detector logging")
@@ -71,13 +73,20 @@ class Detector():
         self.TotalFrames = int() 
         self.beamsize = "" 
         self.atten = ""
-        self.cover = MOXA()
-        coverP = Process(target=self.cover.run,name='Cover server')
-        coverP.start()
-        self.MoveBeamsize = Beamsize(self.cover)
+        if not coverdhs:
+            self.cover = MOXA()
+            time.sleep(1)
+            coverP = Process(target=self.cover.run,name='Cover_server')
+            coverP.start()
+        else:
+            self.cover = coverdhs
+        print('start beamsize')
+
+        self.MoveBeamsize = Beamsize(self.cover,self.Par)
         self.ladp = ladpcleint()
         # self.logger.warning(f'Detector {self.CommandQ}')
         self.collecting = False
+        self.ca = myepics(self.logger)
     def CommandMon(self) :
         self.logger.warning('Detector MON start!')
         while True:
@@ -150,8 +159,9 @@ class Detector():
 
     
 class Eiger2X16M(Detector):
-    def __init__(self,Par,Q) :
-        super().__init__(Par,Q)#get Detector att
+    def __init__(self,Par,Q,coverdhs=None) :
+        t0= time.time()
+        super().__init__(Par,Q,coverdhs)#get Detector att
         self.roi_mode = False
         self.trigger_mode ="ints"
         self.det = DEigerClient(self.detectorip,self.detectorport,verbose=False)
@@ -167,6 +177,7 @@ class Eiger2X16M(Detector):
         self.dbpm3 = dbpm07a("3")
         self.dbpm5 = dbpm07a("5")
         self.dbpm6 = dbpm07a("6")
+        self.logger.warning(f'Eiger2X 16M DHS init Time: {time.time()-t0}')
     def updatefilestring(self):
         t0 = time.time()
         self.logger.info('Start updatefilestring')
@@ -242,7 +253,7 @@ class Eiger2X16M(Detector):
         opid =command[1]
         #arg1 = beamsize , Targetdistance, opencover,checkdis
         #set checkdis to tru will make change distance to Targetdistance
-        beamsizeP = CAProcess(target=self.MoveBeamsize.target,args=(float(beamsize),150,False,False),name='MoveBeamSize')
+        beamsizeP = Process(target=self.MoveBeamsize.target,args=(float(beamsize),150,False,False),name='MoveBeamSize')
         beamsizeP.start()
         beamsizeP.join()
         self.logger.warning(f'proc {command}')
@@ -302,9 +313,20 @@ class Eiger2X16M(Detector):
         #kill it if timeout?
         #check closecoverP state
         closecoverP.join(5)
+        self.logger.warning(f'closecoverP process {closecoverP.is_alive()=},{closecoverP.pid=},{closecoverP.sentinel=},{closecoverP.exitcode=}')
         if closecoverP.exitcode== None:
             self.logger.warning(f'closecover P has problem kill it!')
             closecoverP.kill()
+            #try to close again
+            self.logger.warning(f'Try to close it again!')
+            closecoverP2 = Process(target=self.cover.askforAction,args=('close',),name='stop_close_cover')
+            closecoverP2.start()
+            closecoverP2.join(5)
+            self.logger.warning(f'closecoverP process {closecoverP2.is_alive()=},{closecoverP2.pid=},{closecoverP2.sentinel=},{closecoverP2.exitcode=}')
+            if closecoverP2.exitcode == None:
+                self.logger.warning(f'Still fail to closed cover')
+            else:
+                self.logger.warning(f'OK for close Cover!!')
 
         toDcsscommand = 'htos_set_string_completed system_status normal Ready black #00a040'
         self.sendQ.put(toDcsscommand)
@@ -447,6 +469,7 @@ class Eiger2X16M(Detector):
             state = caput(PV,value)
         else:
             state = -1
+        
 
         if state != 1:
             self.logger.critical(f"Caput {PV} value {value} Fail!")
@@ -496,8 +519,24 @@ class Eiger2X16M(Detector):
                     check = True
         self.logger.info(f'All data in detector is downloaded: file count :{currentfile}')
         
-        
-        closecoverP.join()
+        self.logger.info(f'Check cover is cloesd,current code is {closecoverP.exitcode}')
+
+        closecoverP.join(5)
+        self.logger.warning(f'closecoverP process {closecoverP.is_alive()=},{closecoverP.pid=},{closecoverP.sentinel=},{closecoverP.exitcode=}')
+        if closecoverP.exitcode== None:
+            self.logger.warning(f'closecover P has problem kill it!')
+            closecoverP.kill()
+            #try to close again
+            self.logger.warning(f'Try to close it again!')
+            self.cover.askforAction('close')
+            # closecoverP2 = Process(target=self.cover.askforAction,args=('close',),name='mutiPosCollect_close_cover')
+            # closecoverP2.start()
+            # closecoverP2.join(5)
+            # self.logger.warning(f'closecoverP process {closecoverP2.is_alive()=},{closecoverP2.pid=},{closecoverP2.sentinel=},{closecoverP2.exitcode=}')
+            # if closecoverP2.exitcode == None:
+            #     self.logger.warning(f'Still fail to closed cover')
+            # else:
+            #     self.logger.warning(f'OK for close Cover!!')
 
         # htos_set_string_completed
         toDcsscommand = f"htos_operation_completed {command[0]} {self.operationHandle} normal"
@@ -508,7 +547,9 @@ class Eiger2X16M(Detector):
         # toDcsscommand = f"htos_set_string_completed detector_status Ready normal"
         
         toDcsscommand = f'htos_set_string_completed system_status normal Ready black #00a040'
-        
+        self.sendQ.put(toDcsscommand)
+
+        toDcsscommand = ('operdone',command[0],self.operationHandle)
         self.sendQ.put(toDcsscommand)
 
     def detector_ratser_setup(self,command):
@@ -598,8 +639,8 @@ class Eiger2X16M(Detector):
         # else:
         #     closecoverP = Process(target=self.cover.CloseCover,name='abort_close_cover')
         #     closecoverP.start()
-        closecoverP = Process(target=self.cover.askforAction,args=('close',),name='abort_close_cover')
-        closecoverP.start()
+        
+        self.logger.info(f'try to resete detector')
         state = self.det.detectorStatus('state')
         if state == 'idle':
             pass
@@ -609,6 +650,9 @@ class Eiger2X16M(Detector):
             self.det.sendDetectorCommand('disarm')
         else:
             self.det.sendDetectorCommand('abort')
+        self.logger.info(f'try to close detector cover')
+        closecoverP = Process(target=self.cover.askforAction,args=('close',),name='abort_close_cover')
+        closecoverP.start()
     
     def basesetup(self,raster=False,roi=False,beamwithdis=False):
         t0 = time.time()
@@ -632,7 +676,7 @@ class Eiger2X16M(Detector):
         # opcoverP.start()
         
         if raster or beamwithdis:
-            beamsizeP = CAProcess(target=self.MoveBeamsize.target,args=(float(self.beamsize),self.distance ,True,True,),name='MoveBeamSize')
+            beamsizeP = Process(target=self.MoveBeamsize.target,args=(float(self.beamsize),self.distance ,True,True,),name='MoveBeamSize')
             beamsizeP.start()
             self.sendQ.put(('endmove','beamSize',str(self.beamsize),'normal'), block=False)
             self.sendQ.put(('updatevalue','currentBeamsize',str(self.beamsize),'string','normal'))
@@ -640,7 +684,8 @@ class Eiger2X16M(Detector):
         else:
             #check frame rate?
             # framerate = self.TotalFrames / self.exposureTime
-            beamsizeP = CAProcess(target=self.MoveBeamsize.target,args=(float(self.beamsize),self.distance ,True,False),name='MoveBeamSize')
+            # beamsizeP = CAProcess(target=self.MoveBeamsize.target,args=(float(self.beamsize),self.distance ,True,False),name='MoveBeamSize')
+            beamsizeP = Process(target=self.MoveBeamsize.target,args=(float(self.beamsize),self.distance ,True,False),name='MoveBeamSize')
             beamsizeP.start()
             framerate = 1 / self.exposureTime
             self.sendQ.put(('endmove','beamSize',str(self.beamsize),'normal'), block=False)
@@ -829,6 +874,7 @@ class Eiger2X16M(Detector):
         # self.logger.warning(f'TYPE:{type(self.Par)}')
         
         #update to md3
+        self.logger.info(f'update to MD3 NumberOfFramesPV')
         NumberOfFramesPV = self.Par['collect']['NumberOfFramesPV']
         caput(NumberOfFramesPV,self.TotalFrames)
         
@@ -838,7 +884,53 @@ class Eiger2X16M(Detector):
         
         self.logDetInfo()
         # self.cover.wait_for_state(wait='open',timeout=3)
-        beamsizeP.join()
+        self.logger.info(f'Check beamsize and cover is done')
+        self.logger.info(f'beamsize process {beamsizeP.is_alive()=},{beamsizeP.pid=},{beamsizeP.sentinel=},{beamsizeP.exitcode=}')
+
+        
+        beamsizeP.join(5)
+        # currentbeamsize=self.MoveBeamsize.report_current_beamsize()
+        # current_dis = self.ca.caget('07a:Det:Dis')
+        # diff_dis = abs(current_dis-self.distance)
+        checkneed = False
+        if beamsizeP.exitcode == None:
+            #just wait longer time
+            checkneed = True
+            # #check beamsize /cover/distance if in position not need to join so long time
+            # detDMOV = self.ca.caget('07a:Det:Y.DMOV',int,False)
+            # md3yDMOV = self.ca.caget('07a:MD3:Y.DMOV',int,False)
+            # if self.cover.Par['Coverstate'] == True and detDMOV == 1 and md3yDMOV == 1:
+            #     #in postion
+
+            #     self.logger.warning(f'cover/beamsize/distance are in position,but BeamsizeP not ready, just kill it(should not happen)')
+            #     beamsizeP.kill()
+            # else:
+            #     #need wait more
+            #     checkneed = True
+            #     pass
+           
+        else:
+            self.logger.info(f'beamsizeP done!')
+
+        self.logger.warning(f'{checkneed=}')
+        if checkneed:   
+            beamsizeP.join(55)
+            if beamsizeP.exitcode == None:
+                self.logger.warning(f'beamsize P has problem kill it!')
+                self.logger.warning(f'beamsize process {beamsizeP.is_alive()=},{beamsizeP.pid=},{beamsizeP.sentinel=},{beamsizeP.exitcode=}')
+                beamsizeP.kill()
+                self.logger.warning(f'Try to go beamsize again!this time without new process')
+
+                if raster or beamwithdis:
+                    self.MoveBeamsize.target(float(self.beamsize),self.distance ,True,True)    
+                else:
+                    
+                    self.MoveBeamsize.target(float(self.beamsize),self.distance ,True,False)
+                    
+            else:
+                self.logger.info(f'beamsizeP done!after wait')
+                    
+
         t1 = time.time()
         self.logger.debug('start to updatefilestring check')
         monP = Process(target=self.updatefilestring,name='Monfile')
@@ -884,6 +976,46 @@ class Eiger2X16M(Detector):
             time.sleep(0.2)
         self.logger.info(f'MD3 is Ready')     
         return True    
+    def pipecaput(self,PV,value):
+        self.logger.warning(f'caput PV={PV},value={value}')
+        if type(value) is list:
+            command = ['caput',str(PV)]
+            for item in value:
+                command.append(str(item))
+        else:
+            command = ['caput',str(PV),str(value)]
+        ans = subprocess.run(command,capture_output=True)
+        result = ans.stdout.decode('utf-8')
+        error = ans.stderr.decode('utf-8')       
+        self.logger.debug(f'{ans},result={result},error={error}')
+        if error == '':
+            print(f'caput PV={PV},value={value} OK!')
+            # return True
+            return 1
+        else:
+            self.logger.critical(f"Caput {PV} value {value} Fail={error}")
+            # return False
+            return 0
+    def rcheckandretryProcess(self,beamsizeP,raster,beamwithdis):
+        beamsizeP.join(60)
+        if beamsizeP.exitcode == None:
+            self.logger.warning(f'beamsize P has problem kill it!')
+            self.logger.warning(f'beamsize process {beamsizeP.is_alive()=},{beamsizeP.pid=},{beamsizeP.sentinel=},{beamsizeP.exitcode=}')
+            beamsizeP.kill()
+            self.logger.warning(f'Try to go beamsize again!')
+            if raster or beamwithdis:
+                beamsizeP2 = Process(target=self.MoveBeamsize.target,args=(float(self.beamsize),self.distance ,True,True,),name='MoveBeamSize')
+                beamsizeP2.start()
+                self.rcheckandretryProcess(beamsizeP2,raster,beamwithdis)
+                
+            else:
+                #check frame rate?
+                # framerate = self.TotalFrames / self.exposureTime
+                # beamsizeP = CAProcess(target=self.MoveBeamsize.target,args=(float(self.beamsize),self.distance ,True,False),name='MoveBeamSize')
+                beamsizeP2 = Process(target=self.MoveBeamsize.target,args=(float(self.beamsize),self.distance ,True,False),name='MoveBeamSize')
+                beamsizeP2.start()
+                self.rcheckandretryProcess(beamsizeP2,raster,beamwithdis)
+    #todo rcheckandretryCoverProcess
 class dbpm07a():
     def __init__(self,number) -> None:
         #DBPM1sum:Mean

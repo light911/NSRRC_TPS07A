@@ -17,15 +17,16 @@ from multiprocessing import  Queue,Process
 import queue
 from PyQt5.QtCore import QObject,QThread,pyqtSignal,pyqtSlot,QMutex,QMutexLocker
 import subprocess
-from DetectorCover import MOXA
+from DetectorCoverV2 import MOXA
 #from PyQt5.QtCore import pyqtSignal
 
 
 class epicsdev(QThread):
     # EpicsValueChange=pyqtSignal(str,str,str)
     # EpicsConnectChange=pyqtSignal(str,str)    
-    def __init__(self,epicslist,par,Q,epicsmotors=None,parent=None):
+    def __init__(self,epicslist,par,Q,epicsmotors=None,parent=None,coverdhs=None):
         super(self.__class__,self).__init__(parent)
+        # super().__init__(parent)
         # self.data=np.empty(0)
         signal.signal(signal.SIGINT, self.quit)
         signal.signal(signal.SIGTERM, self.quit)
@@ -70,7 +71,10 @@ class epicsdev(QThread):
         self.tempcommand=[]
         self.saveCentringPositionFlag_sample_z = False
         self.saveCentringPositionFlag_cam_horz = False
-        self.cover = MOXA()
+        if not coverdhs:
+            self.cover = MOXA()
+        else:
+            self.cover = coverdhs
         # print(self.Par)
 
     def setMotor(self):
@@ -188,12 +192,14 @@ class epicsdev(QThread):
                         if self.saveCentringPositionFlag_sample_z:
                             self.saveCentringPositionFlag_sample_z = False
                             self.logger.debug("Save current pos for Center pos (sampleZ stop)")
+                            time.sleep(0.1)
                             self.caput(PV,'__EMPTY__')
                             # p = CAProcess(target=self.oldCAPUT, args=(PV,'__EMPTY__',))
                             # p.start()
                             # p.join()
                         elif self.saveCentringPositionFlag_cam_horz:
                             self.saveCentringPositionFlag_cam_horz = False
+                            time.sleep(0.1)
                             self.logger.debug("Save current pos for Center pos (cam_horz Stop)")
                             self.caput(PV,'__EMPTY__')
                             # p = CAProcess(target=self.oldCAPUT, args=(PV,'__EMPTY__',))
@@ -361,9 +367,11 @@ class epicsdev(QThread):
                     self.startRasterScanEx['moving'] = False
                     opid = self.startRasterScanEx['id']
                     self.logger.info('close cover after startRasterScanEx ')
-                    closecoverP = Process(target=self.cover.CloseCover,name='stop_close_cover')
-                    closecoverP.start()
-                    closecoverP.join()
+                    # closecoverP = Process(target=self.cover.CloseCover,name='stop_close_cover')
+                    # closecoverP = Process(target=self.cover.askforAction,args=('close',),name='stop_close_cover')
+                    self.cover.askforAction('close')
+                    # closecoverP.start()
+                    # closecoverP.join()
                     self.sendQ.put(('operdone','startRasterScanEx',opid,'normal'))
                     
             if self.startRasterScan['moving'] :
@@ -376,9 +384,11 @@ class epicsdev(QThread):
                     self.startRasterScan['moving'] = False
                     opid = self.startRasterScan['id']
                     self.logger.info('close cover after startRasterScan ')
-                    closecoverP = Process(target=self.cover.CloseCover,name='stop_close_cover')
-                    closecoverP.start()
-                    closecoverP.join()
+                    # closecoverP = Process(target=self.cover.CloseCover,name='stop_close_cover')
+                    # closecoverP = Process(target=self.cover.askforAction,args=('close',),name='stop_close_cover')
+                    # closecoverP.start()
+                    # closecoverP.join()
+                    self.cover.askforAction('close')
                     self.sendQ.put(('operdone','startRasterScan',opid,'normal'))
             if self.startScan4DEx['moving'] :
                 # start
@@ -393,16 +403,20 @@ class epicsdev(QThread):
                     self.startScan4DEx['moving'] = False
                     opid = self.startScan4DEx['id']
                     self.logger.info('close cover after startScan4DEx ')
-                    closecoverP = Process(target=self.cover.CloseCover,name='stop_close_cover')
-                    closecoverP.start()
-                    closecoverP.join()
+                    # closecoverP = Process(target=self.cover.CloseCover,name='stop_close_cover')
+                    # closecoverP = Process(target=self.cover.askforAction,args=('close',),name='stop_close_cover')
+                    # closecoverP.start()
+                    # closecoverP.join()
+                    self.cover.askforAction('close')
                     self.sendQ.put(('operdone','startScan4DEx',opid,'normal'))
                 elif value[0] == 'Multi Axis Scan' and value[6] == "1":
                     #todo startScan4DEx fail??
                     self.logger.info('close cover after startScan4DEx ')
-                    closecoverP = Process(target=self.cover.CloseCover,name='stop_close_cover')
-                    closecoverP.start()
-                    closecoverP.join()
+                    # closecoverP = Process(target=self.cover.CloseCover,name='stop_close_cover')
+                    # closecoverP = Process(target=self.cover.askforAction,args=('close',),name='stop_close_cover')
+                    # closecoverP.start()
+                    # closecoverP.join()
+                    self.cover.askforAction('close')
                     self.logger.warning(f'startScan4DEx fail :{value[5]}')
                     self.startScan4DEx['moving'] = False
                     opid = self.startScan4DEx['id']
@@ -1013,7 +1027,9 @@ class epicsdev(QThread):
                 self.logger.info('MD3 Auto Sample Centering timeout in {timeout} sec(center loop)')
             else:
                 PV = self.Par['collect']['saveCentringPositionsPV']
+                time.sleep(0.1)
                 self.logger.debug("Save current pos for Center pos (Autocenter stop)")
+                
                 self.caput(PV,'__EMPTY__')
                 self.sendQ.put(('operdone','centerLoop',opid,'normal'))
         pass
