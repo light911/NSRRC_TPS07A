@@ -179,8 +179,9 @@ class DCSDHS():
         t0 = time.time()
         check = True
         while check:
-            md3_state = caget('07a:md3:Status ',as_string=True)
-            if md3_state== 'Ready':
+            # md3_state = caget('07a:md3:Status ',as_string=True)
+            md3_state = caget('07a:md3:State ',as_string=True)
+            if md3_state== 'Ready' or md3_state== 'READY':
                 check = False
             else:
                 self.logger.info(f'MD3 is busy:{md3_state}')  
@@ -339,7 +340,8 @@ class DCSDHS():
                                     operdoneCommand.append(command)
                                 self.logger.info(f"send {item} for opdone")
                                 sendQ.put(operdoneCommand)#('operdone',command[0],command[1],command[3])
-                            
+                            toDcsscommand = 'htos_set_string_completed system_status normal {Abort!} black #d0d000'
+                            sendQ.put(toDcsscommand)
                             pass
                         elif command[0] == "stoh_start_motor_move":
                             #"stoh_start_motor_move motorName destination

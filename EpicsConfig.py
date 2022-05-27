@@ -165,7 +165,17 @@ epicsmotors={
                 "deadband":0.001,
                 'dcssname':"cam_horz",
                 'dcsstype':"motor",
-                 },                
+                 },    
+            'CentringTableFocus':{
+                'PVname':'07a:md3:CentringTableFocus',
+                'PVID':'',
+                'GUIname':'CentringTableFocus',
+                "old_value":"0",
+                'callbackitems':['DMOV','VAL','RBV'],
+                "deadband":0.001,
+                'dcssname':"CentringTableFocus",
+                'dcsstype':"motor",
+                 },              
             }
 
 

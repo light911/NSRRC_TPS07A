@@ -390,6 +390,14 @@ class epicsdev(QThread):
                     # closecoverP.join()
                     self.cover.askforAction('close')
                     self.sendQ.put(('operdone','startRasterScan',opid,'normal'))
+                elif value[0] == 'Raster Scan' and value[6] == "-1":
+                    self.startRasterScan['moving'] = False
+                    opid = self.startRasterScan['id']
+                    self.logger.info('Has error after startRasterScan ')
+                    self.cover.askforAction('close')
+                    warningTXT = f"{value[0]} has problem:{value}"
+                    self.sendQ.put(("warning",warningTXT))
+                    self.sendQ.put(('operdone','startRasterScan',opid,'error'))
             if self.startScan4DEx['moving'] :
                 # start
                 # ['Raster Scan', '8', '2021-07-23 14:12:28.47', 'null', 'null', 'null', 'null']
@@ -945,8 +953,9 @@ class epicsdev(QThread):
         t0 = time.time()
         check = True
         while check:
-            md3_state = caget('07a:md3:Status ',as_string=True)
-            if md3_state== 'Ready':
+            # md3_state = caget('07a:md3:Status ',as_string=True)
+            md3_state = caget('07a:md3:State ',as_string=True)
+            if md3_state== 'Ready' or md3_state== 'READY':
                 check = False
             else:
                 self.logger.info(f'MD3 is busy:{md3_state}')  

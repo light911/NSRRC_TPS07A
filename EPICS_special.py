@@ -39,7 +39,7 @@ class Beamsize():
         # self.Par.update({'Queue':{}})
         # print(f'TYPE:{type(self.Par)}')
         #set log
-        self.logger = logsetup.getloger2('BeamSize',LOG_FILENAME='./log/EpicsLog.txt',level = self.Par['Debuglevel'])
+        self.logger = logsetup.getloger2('BeamSize',LOG_FILENAME='./log/Beamsize.txt',level = self.Par['Debuglevel'])
         self.logger.info("init BeamSize logging")
         self.logger.info("Logging show level = %s",self.Par['Debuglevel'])
         # self.logger.debug("Par Start=======")
@@ -391,6 +391,7 @@ class Beamsize():
                     diff = abs(current_pos-tempmovinglist[motor])
                     if  diff<0.001:
                         checkarray.append(True)
+                        self.logger.info(f' motor:{motor},current pos = {current_pos} diff is smaller than 0.001')
                     else:
                         self.logger.warning(f' motor:{motor},current pos = {current_pos} not in {tempmovinglist[motor]}')
                         checkarray.append(False)
@@ -399,8 +400,13 @@ class Beamsize():
                 else:
                     self.logger.warning('some motor not in position,move again')
                     for motor in tempmovinglist :
-                        self.logger.debug(f'Set {motor} move to {movinglist[motor]}') 
-                        print(self.ca.caput(motor,movinglist[motor]))
+                        try:
+                            self.logger.debug(f'Set {motor} move to {tempmovinglist[motor]}') 
+                            print(self.ca.caput(motor,tempmovinglist[motor]))
+                        except Exception as e:
+                            self.logger.warning(f'Error when give {motor} command')
+                            self.logger.warning(f'Exception : {e}')
+                            pass
 
             else:
                 self.logger.warning(f'Beam size : {beamsize} ,not in beam list :{self.BeamSizeLists}')
@@ -409,25 +415,38 @@ class Beamsize():
             self.logger.info(f'End of moving beamsize:{beamsize}')
     def opencover(self,opencover=False):
             if opencover:
+                self.logger.debug(f'Try to ask detector cover open')
                 # self.opcoverP = Process(target=self.cover.OpenCover,name='open_cover')
                 self.opcoverP = Process(target=self.cover.askforAction,args=('open',),name='open_cover')
                 self.opcoverP.start()
-                self.logger.debug(f'ask detector cover open')
+                
             else:
                 pass
     def wait_opencover(self,opencover=False):
             
             if opencover:
                 self.logger.debug(f'waiting detector cover open')
-                self.opcoverP.join()
+                # self.opcoverP.join()
+                self.opcoverP.join(5)
+                self.logger.warning(f'self.opcoverP process {self.opcoverP.is_alive()=},{self.opcoverP.pid=},{self.opcoverP.sentinel=},{self.opcoverP.exitcode=}')
+                if self.opcoverP.exitcode== None:
+                    self.logger.warning(f'opcover P has problem kill it!')
+                    self.opcoverP.kill()
+                    #try to open again
+                    self.logger.warning(f'Try to open it again!')
+                    self.opcoverP = Process(target=self.cover.askforAction,args=('open',),name='open_cover')
+                    self.opcoverP.start()
+                    self.wait_opencover(opencover)
+                    # self.opcoverP.join()
             else:
                 pass
-
     def check_allmotorstop(self,motorlist):
+        self.logger.debug(f'check_allmotorstop,{motorlist=}')
         if len(motorlist) == 0:
             return True
         statearray = []
         for motor in motorlist:
+            # time.sleep(0.1)
             if self.ca.caget(f"{motor}.DMOV",int,False,False) == 1:
                 statearray.append(True)
                 # pos = self.ca.caget(f"{motor}")
@@ -436,7 +455,7 @@ class Beamsize():
                 statearray.append(False)
                 # pos = self.ca.caget(f"{motor}")
                 # self.logger.debug(f'{motor} pos at {pos}') 
-        
+        self.logger.debug(f'check_allmotorstop,{statearray=}')
         return all(statearray)
     def check_allMD3motorstop(self,md3epicsname):
         '''
@@ -467,6 +486,7 @@ class Beamsize():
         None.
 
         '''
+        self.logger.debug(f'check_allMD3motorstop,{md3epicsname=}')
         if len(md3epicsname) == 0:
             return True
         statearray = []
@@ -475,7 +495,7 @@ class Beamsize():
                 statearray.append(True)
             else:
                 statearray.append(False)
-        
+        self.logger.debug(f'check_allMD3motorstop,{statearray=}')
         return all(statearray)
     
     def pipecaput(self,PV,value):
