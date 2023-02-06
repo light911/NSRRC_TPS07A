@@ -1,10 +1,17 @@
-#! /data/program/anaconda3_2/bin/python3
+#! /data/program/dials-v3-9-1/build/bin/python
+##! /data/program/anaconda3_2/bin/python3
+ 
+
 import pathlib,json
 from pydoc import resolve
 import numpy as np
 import os,time,re,signal,argparse,pathlib,sys,math,shutil
-from subprocess import Popen, PIPE, TimeoutExpired  
-
+from subprocess import Popen, PIPE, TimeoutExpired 
+from yamtbx import util
+from yamtbx.dataproc.pointless import Pointless as pp
+from yamtbx.dataproc.xds.command_line.xds2mtz import xds2mtz
+from yamtbx.util import xtal
+from cctbx import crystal
 class BaseFunction():
     def __init__(self) -> None:
         self.processfolder = pathlib.Path()#now directory = processfolder
@@ -56,7 +63,9 @@ class BaseFunction():
                 pass
         if path:
             with open(path, 'w') as f:
-                json.dump(self.dictinfo, f)
+                # txt = json.dumps(self.dictinfo, indent = 4)
+                # f.write(txt)
+                json.dump(self.dictinfo,f, indent = 4)
         else:
             print(json.dumps(self.dictinfo, indent = 4))
         
@@ -69,6 +78,9 @@ class Pointless(BaseFunction):
         self.datapath = pathlib.Path()
         self.highres = None#5
         self.lowres = None#10
+        self.inpfilename = 'pointless.inp'
+        self.debug = True
+        self.command = ''
     def geninp(self):
         self.t0 = time.time()
         
@@ -77,16 +89,52 @@ class Pointless(BaseFunction):
             pass
         else:
             self.processfolder.mkdir(mode=0o777,exist_ok=True,parents=True)
-        self.inppath = pathlib.Path(f"{self.processfolder}/pointless.inp")
+        self.inppath = pathlib.Path(f"{self.processfolder}/{self.inpfilename}")
         if self.XDSIN:
-            Pointlessinp += f"\nXDSIN {self.XDSIN}"
+            Pointlessinp += f"XDSIN {self.XDSIN}"
+            self.command += f"XDSIN {self.XDSIN}"
         if self.highres:
             Pointlessinp += f"\nRESOLUTION HIGH {self.highres}"
+            self.command += f'\nRESOLUTION HIGH {self.highres}'
         if self.lowres:
             Pointlessinp += f"\nRESOLUTION LOW {self.lowres}"
+            self.command += f'\nRESOLUTION HIGH {self.lowres}'
+        # print(Pointlessinp,self.inppath,)
         with open(self.inppath,'w') as f:
              f.write(Pointlessinp)
+    def run(self):
+        # f = open(self.inppath,'w')
+        command=['pointless']
+        my_env = os.environ.copy()
+        exitcode, output, err = util.call('pointless',stdin=self.command, wdir=self.processfolder)
+        print(exitcode, output, err )
+        # process = Popen(command, shell=False, stdin = PIPE, stdout = PIPE, stderr = PIPE,cwd=self.processfolder,env=my_env)
+        # process = Popen(command, shell=False, stdin = self.command, stdout = PIPE, stderr = PIPE,cwd=self.processfolder,env=my_env)
+        # while True:
+        #     time.sleep(0.1)
+        #     for line in iter(process.stdout.readline, b''):
+        #         if self.debug:
+        #             print(line.decode("utf-8"),end='')
+        #         # self.readoutput(line.decode("utf-8"))
+        #         # if "!!! ERROR !!! INSUFFICIENT PERCENTAGE (< 50%) OF INDEXED REFLECTIONS" in line.decode("utf-8"):
+        #         #     self.indexfail = True
+                    
 
+                    
+        #     if process.poll()==0:
+        #         print(f"closed normal,take {time.time()-self.t0}")
+                
+        #         break
+        #     elif process.poll()==1:
+        #         processlogerr=process.stderr.readlines()
+        #         log =""
+        #         for item in processlogerr:
+        #             log += item.decode("utf-8")
+        #         print(f'{log}')
+        #         print(f"bad,take {time.time()-self.t0}")
+        #         break
+        #     else:
+        #         pass
 class QuickXDS(BaseFunction):
     def __init__(self) -> None:
         super().__init__()
@@ -98,7 +146,7 @@ class QuickXDS(BaseFunction):
         self.symm = None
         self.cell = None
         self.processState = None
-        self.errormsg = None
+        self.errormsg = ''
         self.runtime = -1
         self.msg_empty = True
         self.strategy = {}
@@ -117,9 +165,16 @@ class QuickXDS(BaseFunction):
         else:
             self.processfolder.mkdir(mode=0o777,exist_ok=True,parents=True)
         os.chdir(self.processfolder)
-        # print(self.datapath)
-        command=['generate_XDS.INP',self.datapath]
-        process = Popen(command, shell=False, stdin = PIPE, stdout = PIPE, stderr = PIPE,cwd=self.processfolder)
+        # print(f"{self.datapath}")
+        # command=['generate_XDS.INP',self.datapath]
+        my_env = os.environ.copy()
+        my_env["PATH"] = "/data/program/hdf5/bin/:" + my_env["PATH"]#using pyenv has problem h5dump seem not work?
+        # print(f'{my_env}')
+        # print(shutil.which("h5dump"))
+        command=['/data/program/XDStools/generate_XDS.INP',self.datapath]
+        process = Popen(command, shell=False, stdin = PIPE, stdout = PIPE, stderr = PIPE,cwd=self.processfolder,env=my_env)
+        # command=f"/bin/bash -x generate_XDS.INP {self.datapath}"
+        # process = Popen(command, shell=True, stdin = PIPE, stdout = PIPE, stderr = PIPE,cwd=self.processfolder)
         state = process.wait()
         print(f'done for XDS.inp with state: {state}')
         # print(f'{process.returncode}')
@@ -130,9 +185,11 @@ class QuickXDS(BaseFunction):
             self.xdsinppath = None
             return 1
         else:
+            print(process.stdout.readlines())
             self.xdsinppath = self.processfolder / 'XDS.INP'
         # print(self.processfolder)
         # print(self.xdsinppath)
+        # time.sleep(0.5)#wait for file?
         with open(self.xdsinppath,'r') as f:
             xdsinp = f.read()
         #modify txt
@@ -147,6 +204,13 @@ class QuickXDS(BaseFunction):
             xdsinp = re.sub("SPOT_RANGE=(.*)",f"SPOT_RANGE=1 {self.imagetoindex}",xdsinp)
         if self.imagetoprocess:
             xdsinp = re.sub("DATA_RANGE=(.*)",f"DATA_RANGE=1 {self.imagetoprocess}",xdsinp)
+        else:
+            ans = re.search("DATA_RANGE=1 (.*)",xdsinp)
+            # print(ans)
+            self.imagetoprocess = int(ans[1])
+            
+            # sys.exit()
+
         if self.res:
             xdsinp = re.sub("INCLUDE_RESOLUTION_RANGE=50 0",f"INCLUDE_RESOLUTION_RANGE=50 {self.res}",xdsinp)
         if bypassindex:
@@ -171,12 +235,16 @@ class QuickXDS(BaseFunction):
                 self.readoutput(line.decode("utf-8"))
                 if "!!! ERROR !!! INSUFFICIENT PERCENTAGE (< 50%) OF INDEXED REFLECTIONS" in line.decode("utf-8"):
                     self.indexfail = True
-                    
+                    if self.errormsg == '':
+                        self.errormsg = 'INSUFFICIENT PERCENTAGE (< 50%) OF INDEXED REFLECTIONS!\nIt may result from one or more additional crystals contributing to the diffraction patterns\nHowever, we still try to process it'
+                    else:
+                        self.errormsg += '\nINSUFFICIENT PERCENTAGE (< 50%) OF INDEXED REFLECTIONS!\nIt may result from one or more additional crystals contributing to the diffraction patterns\n However, we still try to process it'
 
                     
             if process.poll()==0:
                 print(f"closed normal,take {time.time()-self.t0}")
-                
+                self.processState = 0
+                self.savetojson(self.jsonlogpath)
                 break
             elif process.poll()==1:
                 processlogerr=process.stderr.readlines()
@@ -184,7 +252,10 @@ class QuickXDS(BaseFunction):
                 for item in processlogerr:
                     log += item.decode("utf-8")
                 print(f'{log}')
+                self.errormsg += f'\n{log}'
                 print(f"bad,take {time.time()-self.t0}")
+                self.processState = 1
+                self.savetojson(self.jsonlogpath)
                 break
             else:
                 pass
@@ -239,11 +310,21 @@ class QuickXDS(BaseFunction):
         ans = re.search("INSUFFICIENT PERCENTAGE \(< 50%\) OF INDEXED REFLECTIONS",msg)
         if ans:
             print('INSUFFICIENT PERCENTAGE (< 50%) OF INDEXED REFLECTIONS')
+            
     def readCORRECT(self,backup:False=False):
         self.error_table = {}
         self.table = {}
         if backup:
-            shutil.copyfile(self.processfolder/'CORRECT.LP',self.processfolder/'CORRECT.bak')
+            file = self.processfolder/'CORRECT.LP'
+            if file.exists():
+                shutil.copyfile(self.processfolder/'CORRECT.LP',self.processfolder/'CORRECT.fullres')
+            else:
+                if self.errormsg =='':
+                    add = ''
+                else:
+                    add = '\n'
+                self.errormsg += f'{add}Unable find CORRECT.LP file, maybe has problem on previous step'
+                return
         # print(self.processfolder/'CORRECT.LP')
         with open(self.processfolder/'CORRECT.LP','r') as f:
             # print(self.processfolder/'CORRECT.LP')
@@ -307,10 +388,13 @@ class QuickXDS(BaseFunction):
                             assert len(sp) == 14
                             self.table[key].setdefault("dmin", []).append(float(sp[0]) if sp[0]!="total" else None)
                             self.table[key].setdefault("redundancy", []).append(float(sp[1])/float(sp[2]) if float(sp[2]) > 0 else 0)
-                            self.table[key].setdefault("cmpl", []).append(float(sp[4][:-1]))
-                            self.table[key].setdefault("r_merge", []).append(float(sp[5][:-1]))
+                            # self.table[key].setdefault("cmpl", []).append(float(sp[4][:-1]))
+                            self.table[key].setdefault("cmpl", []).append(float(sp[4]))
+                            # self.table[key].setdefault("r_merge", []).append(float(sp[5][:-1]))
+                            self.table[key].setdefault("r_merge", []).append(float(sp[5]))
                             self.table[key].setdefault("i_over_sigma", []).append(float(sp[8]))
-                            self.table[key].setdefault("r_meas", []).append(self.safe_float(sp[9][:-1]))
+                            # self.table[key].setdefault("r_meas", []).append(self.safe_float(sp[9][:-1]))
+                            self.table[key].setdefault("r_meas", []).append(self.safe_float(sp[9]))
                             self.table[key].setdefault("cc_half", []).append(float(sp[10].replace("*","")))
                             self.table[key].setdefault("cc_ano", []).append(float(sp[11].replace("*","")))
                             self.table[key].setdefault("sig_ano", []).append(float(sp[12]))
@@ -460,7 +544,47 @@ class QuickXDS(BaseFunction):
 #  SPACE_GROUP_NUMBER=  197
 #  UNIT_CELL_CONSTANTS=    78.42    78.42    78.42  90.000  90.000  90.000
 
+def pointlessjob(integrate_hkl,root,decilog,xs_prior=None):
+    #from kamo #Author: Keitaro Yamashita
+    #integrate_hkl = xdsin or hklin?
+    #root=process folder
+    #decilog = logpath
+    # xs_prior = crystal.symmetry(params.cell_prior.cell, params.cell_prior.sgnum)
+    
+    worker = pp()
+    pointless_integrate = worker.run_for_symm(xdsin=integrate_hkl, 
+                                            logout=os.path.join(root, "pointless_integrate.log"))
+    if "symm" in pointless_integrate:
+        symm = pointless_integrate["symm"]
+        print(type(symm.space_group_info()))
+        print(" pointless using INTEGRATE.HKL suggested", symm.space_group_info(), file=decilog)
+        if xs_prior:
+            if xtal.is_same_space_group_ignoring_enantiomorph(symm.space_group(), xs_prior.space_group()):
+                print(" which is consistent with given symmetry.", file=decilog)
+            elif xtal.is_same_laue_symmetry(symm.space_group(), xs_prior.space_group()):
+                print(" which has consistent Laue symmetry with given symmetry.", file=decilog)
+            else:
+                print(" which is inconsistent with given symmetry.", file=decilog)
 
+        sgnum = symm.space_group_info().type().number()
+        # cell = []
+        cell =["%.2f"%x for x in symm.unit_cell().parameters()]
+        # cell = " ".join(["%.2f"%x for x in symm.unit_cell().parameters()])
+        # modify_xdsinp(xdsinp, inp_params=[("SPACE_GROUP_NUMBER", "%d"%sgnum),
+        #                                 ("UNIT_CELL_CONSTANTS", cell)])
+
+        # in pointless_integrate
+        # ret["symm"] = crystal.symmetry(unit_cell=best_cell, space_group_symbol=best_symm,
+        #                                assert_is_compatible_unit_cell=False)
+        return pointless_integrate,sgnum,cell
+    else:
+        print(" pointless failed.", file=decilog)
+        return None,None,None
+def convttomtz(xdsin,mztout):
+    xdsconvtxt = ""
+    xdsconvtxt += f'INPUT_FILE = {xdsin}\n'
+    xdsconvtxt += f'OUTPUT_FILE = {mztout} CCP4_I+F \n'
+    xdsconvtxt += f"FRIEDEL'S_LAW=FALSE"
 
 def quit(signum,frame):
     pass
@@ -486,6 +610,7 @@ if __name__ == '__main__':
     
     args=par.parse_args()
     
+    
     # print(directory)
     xds = QuickXDS()
     
@@ -494,10 +619,19 @@ if __name__ == '__main__':
     xds.datapath = args.file.resolve()
     if args.noano:
         xds.ano = False
-    if args.symm:
-        xds.symm=args.symm
-    if args.cell:
+    if args.symm and args.cell:
+        xs_prior = crystal.symmetry(unit_cell=args.cell,space_group_symbol=args.symm)
+        xds.sym = xs_prior.space_group_number()
         xds.cell=args.cell
+    elif args.symm:
+        xs_prior = crystal.symmetry(space_group_symbol=args.symm)
+        xds.symm = xs_prior.space_group_number()
+    elif args.cell:
+        xs_prior = crystal.symmetry(unit_cell=args.cell)
+        xds.cell = args.cell
+    else:
+        xs_prior = None
+    
     if args.res:
         xds.res=args.res
     if args.debug:
@@ -513,17 +647,204 @@ if __name__ == '__main__':
     filename = args.file.stem
     processfloder = directory / f"_QuickProcess_{filename}"
     xds.processfolder = processfloder
+
+    #cleanup old file
+    initCORRECT = processfloder / 'CORRECT.bak'
+    COLSPOT = processfloder / 'COLSPOT.LP'
+    CORRECT = processfloder / 'CORRECT.LP'
+    IDXREF = processfloder / 'IDXREF.LP'
+    INTEGRATE = processfloder / 'INTEGRATE.LP'
+    xdsjoblog = processfloder / 'xds.json'
+    pointlessjoblog = processfloder / 'pointless_integrate.log'
+    Pstop = processfloder / 'done.txt'
+    xjoblog = processfloder / 'logfile.log'
+    ctrujoblog = processfloder / 'ctruncate.log'
+
+    initCORRECT.unlink(missing_ok=True)
+    COLSPOT.unlink(missing_ok=True)
+    CORRECT.unlink(missing_ok=True)
+    IDXREF.unlink(missing_ok=True)
+    INTEGRATE.unlink(missing_ok=True)
+    ctrujoblog.unlink(missing_ok=True)
+    xjoblog.unlink(missing_ok=True)
+    Pstop.unlink(missing_ok=True)
+    xdsjoblog.unlink(missing_ok=True)
+    pointlessjoblog.unlink(missing_ok=True)
+    
+    if args.test:
+        # print(xs_prior.show_summary())
+        # print(xs_prior.space_group_number())
+        # print(xs_prior.space_group_info())
+        # p=Pointless()
+        # p.XDSIN = args.file
+        # p.datapath = os.curdir
+        
+        # p.geninp()
+        # p.run()
+        # sys.exit()
+        # p1 = pp()
+        file = str(directory/'INTEGRATE.HKL')
+        folder = str(directory)
+        # logout = str(processfloder/"pointless.log")
+        log = str(directory/"dcilog.log")
+        # # print(logout)
+        t0=time.time()
+        # ans = p1.run_for_symm(hklin = file,logout=logout)
+        with open (log,'w') as f:
+            pointless_integrate,sgnum,cell = pointlessjob(integrate_hkl=file,root=folder,decilog=f)
+        print(pointless_integrate,f'\nRuntime={time.time()-t0}')
+        symm = pointless_integrate["symm"]
+        # sgname = symm.space_group_info().type().lookup_symbol().replace(' ', '')
+        # sgname = symm.space_group_info().change_hand()#from 41212 to 43212
+        sgname = symm.inverse_hand()
+        print(f'{sgname}')
+
+        sys.exit()
     xds.genscript()
     xds.run()
+    time_xdsdone = time.time()
+    #pointless
+    INTEGRATEfile = processfloder/'INTEGRATE.HKL'
+    if INTEGRATEfile.exists():
+        pass
+    else:
+        with open(xds.jsonlogpath,'r') as f:
+            xdsdata = json.load(f)
+        with open(xds.jsonlogpath,'w') as f:
+            xdsdata["RunState"] = f'Fail for Autoprocess, Total Runtime={time.time()-t0}'
+            json.dump(xdsdata,f, indent = 4)
+        print(f'Fail for Autoprocess, Total Runtime={time.time()-t0}')
+        doneflagpath = processfloder / 'done.txt'
+        with open(doneflagpath,'w') as f:
+            f.close
+        sys.exit()
+
+
+    with open(xds.jsonlogpath,'r') as f:
+        xdsdata = json.load(f)
+
+    with open(xds.jsonlogpath,'w') as f:
+        xdsdata["RunState"] = 'POINTLESS'
+        json.dump(xdsdata,f, indent = 4)
+        
+        
+
+
+    file = str(processfloder/'INTEGRATE.HKL')
+    folder = str(processfloder)
+    log = str(processfloder/"dcilog.log")
+    with open (log,'w') as f:
+        pointless_integrate,sgnum,cell = pointlessjob(integrate_hkl=file,root=folder,decilog=f)
+    xds.process_SGn = sgnum
+    xds.process_CELL = cell
+    time_pointlessdone = time.time()
+    #res cut
     i = 0
-    while True:
+    
+    CORRECTfile = processfloder/'CORRECT.LP'
+    if CORRECTfile.exists():
+        rescut = True
+    else:
+        with open(xds.jsonlogpath,'r') as f:
+            xdsdata = json.load(f)
+        with open(xds.jsonlogpath,'w') as f:
+            xdsdata["RunState"] = f'Fail for Autoprocess, Total Runtime={time.time()-t0}'
+            json.dump(xdsdata,f, indent = 4)
+        print(f'Fail for Autoprocess, Total Runtime={time.time()-t0}')
+        doneflagpath = processfloder / 'done.txt'
+        with open(doneflagpath,'w') as f:
+            f.close
+        sys.exit()
+    while rescut:
         i += 1
         
-        if xds.highres_tableios >= 1.9:
+        if xds.highres_tableios >= 1.9 and i ==1:
+            #frist run res is ok but we want change space group
+            print("Run:",i)
+            print(f'new res:{xds.process_res}')
+            xds.runnewres(xds.process_res)
+            pass
+        elif xds.highres_tableios >= 1.9:
             break 
         elif i == 6:
+            break
+        elif xds.process_res == 50:
+            print("Unable to cut res")
             break
         else:
             print("Run:",i)
             print(f'new res:{xds.process_res}')
             xds.runnewres(xds.process_res)
+    time_xdsresdone = time.time()
+    #convert MTZ
+    with open(xds.jsonlogpath,'r') as f:
+        xdsdata = json.load(f)
+    with open(xds.jsonlogpath,'w') as f:
+        xdsdata["RunState"] = 'convert To MTZ and run xtriage'
+        xdsdata["XDSdone"] = True
+        json.dump(xdsdata,f, indent = 4)
+    worker = pp()
+    symm = pointless_integrate["symm"]
+    sgname = symm.space_group_info().type().lookup_symbol().replace(' ', '')
+    sg = symm.space_group_info().type().lookup_symbol()
+
+    file = str(processfloder/'XDS_ASCII.HKL')
+    t1=time.time()
+    xds2mtz(file, dir_name=folder,
+            run_xtriage=True, run_ctruncate=True,
+            dmin=None, dmax=None, force_anomalous=True,
+            with_multiplicity=True,
+            flag_source=None, add_flag=True,
+            space_group=sg)
+    print(f'Convert XDS_ASCII.HKL({sgname}) to MTZ,Runtime={time.time()-t1}')
+    mtzfile = pathlib.Path(processfloder/'XDS_ASCII.mtz')
+   
+    if mtzfile.exists():
+        newmtzfile = mtzfile.rename(f'{filename}_{sgname}.mtz')
+   
+    # t0=time.time()
+    # worker.run_copy(f'{filename}_{sgname}',folder,xdsin = file)
+    
+    # print(f'Convert XDS_ASCII.HKL({sgname}) to MTZ,Runtime={time.time()-t0}')
+    if crystal.symmetry.is_identical_symmetry(symm,symm.inverse_hand()):
+
+        pass
+    else:
+        sgname2 = symm.inverse_hand().space_group_info().type().lookup_symbol().replace(' ', '')
+        sg2 = symm.inverse_hand().space_group_info().type().lookup_symbol()
+        sgnum2 = symm.inverse_hand().space_group_info().type().number()
+        # worker.run_copy(f'{filename}_{sgname}',folder,xdsin = file)
+        # exitcode, output, err = util.call('pointless',f'-copy hklout {filename}_{sgname}', f'SPACEGROUP {sg}',
+        #                                     wdir=folder)
+        
+        t2 = time.time()
+        xds2mtz(file, dir_name=folder,
+            run_xtriage=False, run_ctruncate=True,
+            dmin=None, dmax=None, force_anomalous=True,
+            with_multiplicity=True,
+            flag_source=str(newmtzfile), add_flag=True,
+            space_group=sg2)
+        if mtzfile.exists():
+            newmtzfile = mtzfile.rename(f'{filename}_{sgname2}.mtz')
+        # exitcode, output, err = util.call('pointless',f'{file}',f'SPACEGROUP {sg}\nhklout {filename}_{sgname}\nwavelength 1\n',
+        #                                     wdir=folder)
+
+        print(f'Convert XDS_ASCII.HKL({sgname2}) to MTZ,Runtime={time.time()-t2}')
+        # print(exitcode,output,err)
+    
+    
+    print(f'Time for first xds run ={time_xdsdone-t0}')
+    print(f'Time for pointless run ={time_pointlessdone-time_xdsdone}')
+    print(f'Time for res.cut run ={time_xdsresdone-time_pointlessdone}')
+    
+    print(f'Time for convert to MTZ ={time.time()-time_xdsresdone}')
+    print(f'Done for Autoprocess, Total Runtime={time.time()-t0}')
+
+    with open(xds.jsonlogpath,'r') as f:
+        xdsdata = json.load(f)
+    with open(xds.jsonlogpath,'w') as f:
+        xdsdata["RunState"] = f'Done for Autoprocess, Total Runtime={time.time()-t0}'
+        json.dump(xdsdata,f, indent = 4)
+    doneflagpath = processfloder / 'done.txt'
+    with open(doneflagpath,'w') as f:
+        f.close

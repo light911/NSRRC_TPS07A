@@ -6,6 +6,7 @@ Created on Wed Dec 25 09:56:32 2019
 TODO:update DisY uperlimits
 """
 
+from socket import AI_PASSIVE
 from typing import ValuesView
 from epics import PV,Motor,ca,CAProcess,caget,caput
 import numpy as np
@@ -438,6 +439,11 @@ class epicsdev(QThread):
             self.sendQ.put(('updatevalue',dcssname,value,dcsstype,"normal"))
 
             pass
+        elif dcsstype == 'epicscommand':
+            #this is command from other program
+            self.logger.debug(f'Got command from other program, command is {value}')
+            self.handleCommand(value)
+            pass
         #for other            
         if self.init_update:
             self.epicslist[pvname]["old_value"] = value
@@ -618,13 +624,20 @@ class epicsdev(QThread):
                                 if abs(C_gap - N_gap) > self.Par['minchangeGAP'] or abs(C_energy - newenergy) > self.Par['minEVchangeGAP']:
                                     self.logger.debug(f"det detGap {abs(C_gap - N_gap)} is higher than {self.Par['minchangeGAP']},or {abs(C_energy - newenergy)} > {self.Par['minEVchangeGAP']} change gap setting")
                                     #Enalble = 0
+                                    gapmotorablemove = caget("SR-ID-IU22-07:gapAllowNewSet")#0 is can't move
                                     ring_state = caget("TPS:OPStatus") 
                                     self.logger.warning(f"{ring_state=}")
                                     if caget("TPS:OPStatus") == 0:
                                         self.logger.warning(f"ring closed")
                                     else:
                                         self.caput(self.Par['Energy']['evtogap'],0)
-
+                                    if gapmotorablemove == 0:
+                                        self.logger.warning(f"Gap is unable to move")
+                                        #bypass energy command
+                                        self.caput(self.Par['Energy']['evtogap'],1)
+                                        pos = self.epicsmotors['Energy']['PVID'].get('RBV') * 1000
+                                        self.sendQ.put(('endmove','energy',pos,'normal'), block=False)
+                                        continue#end of this while loop
                                     # p = CAProcess(target=self.oldCAPUT, args=(self.Par['Energy']['evtogap'],0,))
                                     # p.start()
                                     # p.join()
@@ -635,6 +648,7 @@ class epicsdev(QThread):
                                     # p = CAProcess(target=self.oldCAPUT, args=(self.Par['Energy']['evtogap'],1,))
                                     # p.start()
                                     # p.join()
+                                
                             
                             if abs(TargetPos - PVID.RBV) < deadband:
                                 pos = PVID.RBV
@@ -1209,7 +1223,26 @@ class epicsdev(QThread):
                 self.logger.warning(f'New Low limits cal baseon MD3YPVID.RBV={MD3YPOS}, DisPVID.OFF={DisPVID.OFF}, DisPVID.LLM={DisPVID.LLM}')
         # ca.poll()    
         self.logger.warning(f'recheck DetY LLM is :{DetYPVID.LLM}')
-        
+    def handleCommand(self,value):
+        # decode command
+        command = str(value).split()
+        if command[0] == "thx":
+            #after exe command, other program may send thx for ack,also used for recived new command
+            pass
+        elif command[0] == "DONE" or command[0] == "ERR":
+            pass
+        elif command[0] == "setatten":
+            self.AttenQ.put(tuple(command))
+            pass
+        elif command[0] == "updateatten":
+            self.AttenQ.put(tuple(command))
+            pass
+        elif command[0] == "targetflux":
+            self.AttenQ.put(tuple(command))
+            pass
+        else:
+            self.logger.warning(f'Unknow command from other program:{value},after decode {command}')
+        pass
         
     def quit(self,signum,frame):
         ca.finalize_libca()

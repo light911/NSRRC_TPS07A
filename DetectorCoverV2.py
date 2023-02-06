@@ -54,6 +54,7 @@ class MOXA():
         self.Q={}
         self.Q['stateQ'] = Queue()
         self.Q['commandQ'] = Queue()
+        self.bypass = False
         
     def run(self):
         # _asking_state = Process(target=self.asking_state, args=(self.Par,),name = 'cover_server_run')
@@ -134,51 +135,59 @@ class MOXA():
             # command = returnQ.get(block=True)
             # a,Coverstate = command
             Coverstate = self.Par['Coverstate']
+            if self.bypass:#not used yet
+                pass
+                stop = True
+                if action == 'open':
+                    self.Par['Coverstate'] = True
+                else:
+                    self.Par['Coverstate'] = False
 
-            if Coverstate == True and action == 'open':
-                # print('already open')
-                self.logger.info(f'Cover already open, Done for command')
-                # self.set_do_state(self.DO_OpenCover,0)
-                commandQ.put(('DO_OpenCover',0))
-                stop = True
-            elif Coverstate == False and action == 'close':
-                self.logger.info(f'Cover already close, Done for command')
-                # self.set_do_state(self.DO_CloseCover,0)
-                commandQ.put(('DO_CloseCover',0))
-                stop = True
-                pass
-            elif action == 'close':
-                if settingflag:
-                    #need set DO
-                    self.logger.info('Try to close')
-                    t0=time.time()
-                    # print("DO_OpenCover 0" )
-                    # self.set_do_state(self.DO_OpenCover,0)
-                    # time.sleep(0.1)
-                    # # print("DO_CloseCover 0" )
-                    # self.set_do_state(self.DO_CloseCover,0)
-                    # time.sleep(0.1)
-                    # print("DO_CloseCover 1" )
-                    # self.set_do_state(self.DO_CloseCover,1)
-                    commandQ.put(('DO_CloseCover',1))
-                    settingflag = False#already setting, now check
-                #setDI to close
-            elif action == 'open':
-                if settingflag:
-                    self.logger.info(f'Try to open cover')
-                    t0=time.time()
-                    # print("DO_CloseCover 0" )
-                    # self.set_do_state(self.DO_CloseCover,0)
-                    # time.sleep(0.1)
-                    # # print("DO_OpenCover 0" )
-                    # self.set_do_state(self.DO_OpenCover,0)
-                    # time.sleep(0.1)
-                    # print("DO_OpenCover 1" )
-                    # self.set_do_state(self.DO_OpenCover,1)
-                    commandQ.put(('DO_OpenCover',1))
-                    settingflag = False#already setting, now check
             else:
-                pass
+                if Coverstate == True and action == 'open':
+                    # print('already open')
+                    self.logger.info(f'Cover already open, Done for command')
+                    # self.set_do_state(self.DO_OpenCover,0)
+                    commandQ.put(('DO_OpenCover',0))
+                    stop = True
+                elif Coverstate == False and action == 'close':
+                    self.logger.info(f'Cover already close, Done for command')
+                    # self.set_do_state(self.DO_CloseCover,0)
+                    commandQ.put(('DO_CloseCover',0))
+                    stop = True
+                    pass
+                elif action == 'close':
+                    if settingflag:
+                        #need set DO
+                        self.logger.info('Try to close')
+                        t0=time.time()
+                        # print("DO_OpenCover 0" )
+                        # self.set_do_state(self.DO_OpenCover,0)
+                        # time.sleep(0.1)
+                        # # print("DO_CloseCover 0" )
+                        # self.set_do_state(self.DO_CloseCover,0)
+                        # time.sleep(0.1)
+                        # print("DO_CloseCover 1" )
+                        # self.set_do_state(self.DO_CloseCover,1)
+                        commandQ.put(('DO_CloseCover',1))
+                        settingflag = False#already setting, now check
+                    #setDI to close
+                elif action == 'open':
+                    if settingflag:
+                        self.logger.info(f'Try to open cover')
+                        t0=time.time()
+                        # print("DO_CloseCover 0" )
+                        # self.set_do_state(self.DO_CloseCover,0)
+                        # time.sleep(0.1)
+                        # # print("DO_OpenCover 0" )
+                        # self.set_do_state(self.DO_OpenCover,0)
+                        # time.sleep(0.1)
+                        # print("DO_OpenCover 1" )
+                        # self.set_do_state(self.DO_OpenCover,1)
+                        commandQ.put(('DO_OpenCover',1))
+                        settingflag = False#already setting, now check
+                else:
+                    pass
             if (time.time()-t0) > timeout:
                 # self.set_do_state(self.DO_CloseCover,0)
                 # self.set_do_state(self.DO_OpenCover,0)

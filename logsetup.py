@@ -7,13 +7,17 @@ Created on Fri Apr  9 14:35:20 2021
 for colored log
 https://stackoverflow.com/questions/384076/how-can-i-color-python-logging-output
 """
-import logging
+import logging,time
 from logging import handlers #this is need for tun in term
 import coloredlogs
+import psycopg
+# from datetime import datetime
+import datetime
 
 def getloger(logname='Main',LOG_FILENAME='log.txt',level = 'INFO'):
     logger=logging.getLogger(logname)
-    fotmatterstr = '%(asctime)s - %(name)s - %(levelname)s -%(funcName)s - %(message)s'
+    # fotmatterstr = '%(asctime)s - %(name)s - %(levelname)s -%(funcName)s - %(message)s'
+    fotmatterstr = " %(asctime)s - %(name)s - %(levelname)s -%(funcName)s- %(message)s (%(filename)s:%(lineno)d)"
     formatter = logging.Formatter(fotmatterstr)
     # logging.basicConfig(stream=sys.stdout, level=logging.INFO,format = fotmatterstr)
     # logging.basicConfig(level=logging.DEBUG,format = fotmatterstr)
@@ -46,9 +50,10 @@ def getloger(logname='Main',LOG_FILENAME='log.txt',level = 'INFO'):
 
 
 
-def getloger2(logname='Main',LOG_FILENAME='./log/log.txt',level = 'INFO'):
+def getloger2(logname='Main',LOG_FILENAME='./log/log.txt',level = 'INFO',bypassdb=False):
     logger=logging.getLogger(logname)
-    fotmatterstr = '%(asctime)s - %(name)s - %(levelname)s -%(funcName)s - %(message)s'
+    #fotmatterstr = '%(asctime)s - %(name)s - %(levelname)s -%(funcName)s - %(message)s'
+    fotmatterstr = " %(asctime)s - %(name)s - %(levelname)s -%(funcName)s - %(message)s (%(filename)s:%(lineno)d)"
     formatter = logging.Formatter(fotmatterstr)
     # logging.basicConfig(stream=sys.stdout, level=logging.INFO,format = fotmatterstr)
     # logging.basicConfig(level=logging.DEBUG,format = fotmatterstr)
@@ -75,6 +80,24 @@ def getloger2(logname='Main',LOG_FILENAME='./log/log.txt',level = 'INFO'):
     logger.setLevel(logging.DEBUG)
     logger.addHandler(filehandler)
     logger.addHandler(ch)
+
+    if bypassdb:
+        pass
+    else:
+        try:
+            db_tbl_log='log'#Table name in DB
+            from dbloginstr import loginstr
+            #print(loginstr())
+            conn = psycopg.connect(loginstr())
+            log_cursor = conn.cursor()
+            logdb = LogDBHandler(conn, log_cursor, db_tbl_log,loginstr())
+            logger.addHandler(logdb)
+            #print(logdb)
+        except:
+            pass
+
+    
+    
     # coloredlogs.install(fmt=fotmatterstr,level=logging.INFO,logger=logger)
     return logger
 
@@ -135,6 +158,63 @@ class CustomFormatter(logging.Formatter):
         formatter = logging.Formatter(log_fmt)
         return formatter.format(record)
     
+class LogDBHandler(logging.Handler):
+    '''
+    Customized logging handler that puts logs to the database.
+    psycopg required
+    '''
+    def __init__(self, sql_conn, sql_cursor, db_tbl_log,loginstr=''):
+        logging.Handler.__init__(self)
+        self.sql_cursor = sql_cursor
+        self.sql_conn = sql_conn
+        self.db_tbl_log = db_tbl_log
+        self.loginstr = loginstr
+        self.sql_conn.autocommit = True
+
+    def emit(self, record):
+        # Set current time
+        # tm = time.strftime("%Y-%m-%d %H:%M:%S.%f", time.localtime(record.created))
+        # tm = time.strftime("%Y-%m-%d %H:%M:%S.%f", time.localtime(record.created))
+        tm = datetime.datetime.fromtimestamp(record.created).strftime("%Y-%m-%d %H:%M:%S.%f")
+        # Clear the log message so it can be put to db via sql (escape quotes)
+        self.log_msg = f'{record.msg}'
+        if len(self.log_msg)>4990:
+            self.log_msg = self.log_msg[:4990]
+        self.log_msg = self.log_msg.strip()
+        self.log_msg = self.log_msg.replace('\x00','')
+        self.log_msg = self.log_msg.replace('\'','\'\'')
+        # Make the SQL insert
+        # sql = 'INSERT INTO ' + self.db_tbl_log + ' (log_level, ' + \
+        #     'log_levelname, log, created_at, created_by) ' + \
+        #     'VALUES (' + \
+        #     ''   + str(record.levelno) + ', ' + \
+        #     '\'' + str(record.levelno) + '\', ' + \
+        #     '\'' + str(self.log_msg) + '\', ' + \
+        #     '(convert(datetime2(7), \'' + tm + '\')), ' + \
+        #     '\'' + str(record.name) + '\')'
+        sql = f"INSERT INTO {self.db_tbl_log} (time,log_level,log_levelname,dhs ,function ,log ,file,line)\
+            values (TIMESTAMP '{tm}',{record.levelno},'{record.levelname}','{record.name}','{record.funcName}',\'{self.log_msg}\','{record.filename}',{record.lineno});"
+        try:
+            self.sql_cursor.execute(sql)
+            # self.sql_conn.commit()
+        # If error - print it out on screen. Since DB is not working - there's
+        # no point making a log about it to the database :)
+        except psycopg.OperationalError as error :
+            print(error.args)
+            
+            if error.args[0] == 'the connection is lost':
+                try:
+                    self.sql_conn = psycopg.connect(self.loginstr)
+                    self.sql_cursor = self.sql_conn.cursor()
+                    self.sql_cursor.execute(sql)
+                except Exception as e:
+                    print(f'{e}')
+                    print('Reconnect to DB fail!')
+        except Exception as e:
+            print(f'{sql}')
+            print(f'{e}')
+            print('CRITICAL DB ERROR! Logging to database not possible!')
+
 
     
 if __name__ == "__main__":

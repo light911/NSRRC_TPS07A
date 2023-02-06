@@ -14,6 +14,10 @@ Par={
     "calfactorname":'07a-ES:DetectorDistance:OFF',
     "minchangeGAP":0.006,#mm
     "minEVchangeGAP":0.01,#Kev
+    "bypasscover":False,#False 
+    "robot":{'host':"10.7.1.3",
+             'commandprot':10001
+            },
     'dcss':{'host':"10.7.1.1",
             'port':14242,
             'dhsname':"EPICS",
@@ -66,6 +70,8 @@ Par={
                                  'DBPM5HorName':'07a-ES:Table:DBPM5X',
                                  'DBPM6VerName':'07a-ES:Table:DBPM6Y',
                                  'DBPM6HorName':'07a-ES:Table:DBPM6X',
+                                 'DBPM6kxName':'07a-ES:Table:DBPM6kx',
+                                 'DBPM6kyName':'07a-ES:Table:DBPM6ky',
                                  'SSName':'07a-ES:Table:2ndslit',
                                  'ApertureName':'07a-ES:Table:MD3Aperture',
                                  
@@ -78,6 +84,9 @@ Par={
                                  'DBPM5HorMotor':'07a:DBPM5:X',
                                  'DBPM6VerMotor':'07a:DBPM6:Z',
                                  'DBPM6HorMotor':'07a:DBPM6:X',
+                                 'DBPM6kxfactor':'07A-DBPM6:dsp:kx',
+                                 'DBPM6kyfactor':'07A-DBPM6:dsp:ky',
+
                                  'SSMotor':'07a:Slits3:XOpening',
                                  'DetYMotor':'07a:Det:Y',
                                  'ApertureMotor':'07a:md3:CurrentApertureDiameterIndex',
@@ -90,7 +99,7 @@ Par={
                                           'Aperture':True,
                                           'Slit4VerOP':False,
                                           'Slit4HorOP':False,
-                                          'DBPM5Ver':False,
+                                          'DBPM5Ver':True,
                                           'DBPM5Hor':False,
                                           'DBPM6Ver':False,
                                           'DBPM6Hor':False,

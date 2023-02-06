@@ -329,7 +329,17 @@ epicslist={
                             "deadband":0,
                             'dcssname':"centerLoop",
                             'dcsstype':"opertation",
-                            }, 
+                            },
+            "07a-ES:epicsdhs:command":{
+                            "PVname":"07a-ES:epicsdhs:command",  
+                            "PVID":"",#for uid object
+                            "GUIname":"epicscommand",
+                            "old_value":"",
+                            "camon":True,
+                            "deadband":0,
+                            'dcssname':"",
+                            'dcsstype':"epicscommand",
+                            },                  
             
              }
 

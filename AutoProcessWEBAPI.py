@@ -119,11 +119,13 @@ def runjob():
             #modify pathname in XDS.inp?
             #chmod right?
             # if 'processfolder' in par:
-            
-            with h5py.File(file,'r') as f:       
-                filename = f['/entry/extrainfo']['filename'][()].decode("utf-8")
-            processfolder = f"{processfolder}/_QuickProcess_{filename}_master"
-            processlogPath=f'{processfolder}/processlog.txt'
+            try:
+                with h5py.File(file,'r') as f:       
+                    filename = f['/entry/extrainfo']['filename'][()].decode("utf-8")
+                processfolder = f"{processfolder}/_QuickProcess_{filename}_master"
+                processlogPath=f'{processfolder}/processlog.txt'
+            except Exception as e:
+                 print(f'Error:{e}')
             log=""
             try:
                 # for item in processlog:

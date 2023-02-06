@@ -20,7 +20,7 @@ from pwd import getpwnam
 from DetectorCoverV2 import MOXA
 from EPICS_special import Beamsize
 from ldapclient import ladpcleint
-import math,requests
+import math,requests,socket
 
 class Detector():
     def __init__(self,Par,Q,coverdhs=None) :
@@ -694,12 +694,13 @@ class Eiger2X16M(Detector):
         # self.det.setDetectorConfig('count_time',1-0.0000001) 
         # self.det.setDetectorConfig('frame_time',1)
         
-
-
+        #move cryjet in
+        askCryojetIn(self.Par['robot']['host'],self.Par['robot']['commandprot'])
+        
         # old open cover, now move to beamsize
         # opcoverP = Process(target=self.cover.OpenCover,name='open_cover')
         # opcoverP.start()
-
+        
         if raster or beamwithdis:
             # beamsizeP = Thread(target=self.MoveBeamsize.target,args=(float(self.beamsize),self.distance ,True,True,),name='MoveBeamSize')
             # beamsizeP.start()
@@ -746,7 +747,7 @@ class Eiger2X16M(Detector):
                     self.det.setDetectorConfig('threshold/difference/mode','enabled')
             
         else:
-            framerate = 75 #force to no using 2nd energy
+            # framerate = 75 #force to no using 2nd energy
             if self.det.detectorConfig('roi_mode')['value'] == "4M":
                 self.logger.debug(f'set detector roi_mode from 4M to disabled')
                 self.det.setDetectorConfig('roi_mode','disabled')
@@ -918,7 +919,8 @@ class Eiger2X16M(Detector):
         self.det.sendDetectorCommand('arm')
         # self.det.sendDetectorCommand('trigger')
         
-        
+        #check cryjet in?
+
         self.logDetInfo()
         # self.cover.wait_for_state(wait='open',timeout=3)
         # self.logger.info(f'Check beamsize and cover is done')
@@ -1120,7 +1122,32 @@ class dbpm07a():
         # print(ans)
         return ans
     
-
+def askCryojetIn(host,port):
+    try:
+        # host = '10.7.1.3'
+        # port = 10001
+        command = 'movecryojetin'
+        client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        client.connect((host, port))
+        sendToPLCCommand(client,command)
+        ans = client.recv(4096).decode()
+        print(f'Robot relay:{ans}')
+    except Exception as e:
+        print(f'Error on askCryoJetBack : {e}')
+def sendToPLCCommand(sockclient:socket.socket,command):
+    if type(command)==str:
+        #check is there has \r in the end
+        if command[-1:] == '\r':
+            CommandInByte = bytes(command,'utf-8')#or use str.encode()?
+        else:
+            CommandInByte = bytes(command+'\r','utf-8')
+            # CommandInByte = f'{command}\r'.encode()
+    elif type(command)==bytes:
+        CommandInByte = command
+    else:
+        # CommandInByte = b''#no command
+        pass
+    sockclient.send(CommandInByte)
 if __name__ == "__main__":
     # import Config
     # Par = Config.Par

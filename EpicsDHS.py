@@ -76,10 +76,16 @@ class DCSDHS():
         #setup for tcp
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.client.settimeout(self.tcptimeout)
-        
-        self.cover = MOXA(m)    
-        coverP = Process(target=self.cover.run,name='Cover_server')
-        coverP.start()
+        bypasscover = self.Par['bypasscover']
+        self.cover = MOXA(m)
+        if bypasscover == False: 
+            self.cover.bypass = False   
+            coverP = Process(target=self.cover.run,name='Cover_server')
+            coverP.start()
+            self.logger.warning(f'Detector Cover Fuction Enable')
+        else:
+            self.cover.bypass = True
+            self.logger.warning(f'Byass detector Cover function!')
         
         self.preserver()
         # time.sleep(2)
