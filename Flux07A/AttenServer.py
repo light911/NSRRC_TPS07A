@@ -2,10 +2,14 @@
 import time,signal,os
 
 from pkg_resources import normalize_path
+# try:
+#     from Flux07A.Tools import Filiter,cal_thickness,cal_tr
+# except :
+#     from Tools import Filiter,cal_thickness,cal_tr
 try:
-    from Flux07A.Tools import Filiter,cal_thickness,cal_tr
+    from Flux07A.Tools import Filiter
 except :
-    from Tools import Filiter,cal_thickness,cal_tr
+    from Tools import Filiter
 
 from epics import caput,caget_many,caget
 from multiprocessing import Process, Queue, Manager
@@ -137,6 +141,27 @@ class atten():
                         dev='dbpm3'
                     count,flux = self.read_flux(dev)
                     self.sendQ.put(('updatevalue',command[3] ,str(count),'ioncchamber',command[1]))
+                elif command[0] == 'setatten':
+                    # other programe want set new atten
+                    # we should note dcss and programe after done...
+                    self.sendQ.put(("startmove","attenuation",command[1],"Normal"))
+                    new_Attenuation = self.Target(float(command[1]))
+                    caput("07a-ES:epicsdhs:command",f'DONE setatten {str(new_Attenuation)}')
+                    self.sendQ.put(('endmove',"attenuation",str(new_Attenuation),'normal'))
+                    pass
+                elif command[0] == 'targetflux':
+                    # new_Attenuation = self.TargetFlux(float(command[1]),openallfilter=False)
+                    new_Attenuation = self.TargetFlux(float(command[1]),openallfilter=True)
+                    time.sleep(0.3)
+                    count,sampleflux= self.read_flux("sample")
+                    caput("07a-ES:epicsdhs:command",f'DONE targetflux {sampleflux:.3g}')
+                    self.sendQ.put(('endmove',"attenuation",str(new_Attenuation),'normal'))
+                    pass
+                elif command[0] == 'updateatten':
+                    new_Attenuation = self.get_cerrnt_atten()
+                    caput("07a-ES:epicsdhs:command",f'DONE updateatten {new_Attenuation:.6f}')
+                    self.sendQ.put(('endmove','attenuation' ,str(new_Attenuation),'normal'))
+                    pass
                 else:
                     self.logger.warning(f'Unknow command : {command}')
             else:
@@ -249,6 +274,10 @@ class atten():
         self.logger.debug(f'Target_transmission = {transmission},Fit_transmission :{Fit_transmission},{self.attinfo[1][att1_index]["name"]},{self.attinfo[2][att2_index]["name"]},{self.attinfo[3][att3_index]["name"]}')
         self.logger.debug(f'take total time = {time.time()-t0} sec')
         Fit_Attenuation = (1 - Fit_transmission)*100
+        try:
+            caput("07a-ES:getAtten",Fit_Attenuation)
+        except:
+            pass
         return Fit_Attenuation
 
     def wait_all_motor_stop(self,timeout = 10):
@@ -311,7 +340,7 @@ class atten():
                     Element = name[0:2]
                     if Element == 'Al':
                         althickness = thickness
-                        u,tr = cal_tr(Element,T=thickness,Energy=energy)
+                        u,tr = self.cal_tr(Element,T=thickness,Energy=energy)
                     elif Element == 'Em':#Empty
                         althickness = 0
                         tr = 1
@@ -319,12 +348,51 @@ class atten():
                         if thickness == -1:#for data lose or undef
                             althickness=-1
                         else:
-                            u,tr = cal_tr(Element,T=thickness,Energy=energy)
-                            u,althickness = cal_thickness(tr, 'Al', energy)
+                            u,tr = self.cal_tr(Element,T=thickness,Energy=energy)
+                            u,althickness = self.cal_thickness(tr, 'Al', energy)
                     self.attinfo[item][itempos]['althickness'] = althickness
                     self.attinfo[item][itempos]['tr'] = tr
         return energy
 
+    def cal_tr(self,Element,T=10,Energy=12.7 ) :
+        if Element == "Al":
+            u,u1,u2,u3,u4,d= self.Al.get_mu_d(Energy)
+        elif Element == "Pt":
+            u,u1,u2,u3,u4,d= self.Pt.get_mu_d(Energy)
+        elif Element == "Au":
+            u,u1,u2,u3,u4,d= self.Au.get_mu_d(Energy)
+        elif Element == "Ka":
+            u,u1,u2,u3,u4,d= self.Kapton.get_mu_d(Energy)
+        elif Element == "Cu":
+            u,u1,u2,u3,u4,d= self.Cu.get_mu_d(Energy)
+        else:
+            print(f'Unknow element {Element} using Al')
+            u,u1,u2,u3,u4,d= self.Al.get_mu_d(Energy)
+        
+        Tr=math.exp(-u*d*T*1e-4)
+        return u,Tr
+    def cal_thickness(self,tr,Element,Energy):
+
+        if Element == "Al":
+            u,u1,u2,u3,u4,d= self.Al.get_mu_d(Energy)
+            thickness = self.Al.cal_thickness(tr,Energy)
+        elif Element == "Pt":
+            u,u1,u2,u3,u4,d= self.Pt.get_mu_d(Energy)
+            thickness = self.Pt.cal_thickness(tr,Energy)
+        elif Element == "Au":
+            u,u1,u2,u3,u4,d= self.Au.get_mu_d(Energy)
+            thickness = self.Au.cal_thickness(tr,Energy)
+        elif Element == "Ka":
+            u,u1,u2,u3,u4,d= self.Kapton.get_mu_d(Energy)
+            thickness = self.Kapton.cal_thickness(tr,Energy)
+        elif Element == "Cu":
+            u,u1,u2,u3,u4,d= self.Cu.get_mu_d(Energy)
+            thickness = self.Cu.cal_thickness(tr,Energy)
+        else:
+            print(f'Unknow element {Element} using Al')
+            u,u1,u2,u3,u4,d= self.Al.get_mu_d(Energy)
+            thickness = self.Al.cal_thickness(tr,Energy)
+        return u,thickness
     def get_cerrnt_atten(self):
         
         energy = self.update_effect_al_thickness()
@@ -350,6 +418,10 @@ class atten():
         self.logger.debug(f'transmission={transmission}, with {name1}:{tr1}, {name2}:{tr2}, {name3}:{tr3}, {name4}:{tr4}')
         Attenuation = (1-transmission)*100
         self.logger.info(f'Current Attenuation = {Attenuation}')
+        try:
+            caput("07a-ES:getAtten",Attenuation)
+        except:
+            pass
         return Attenuation
 
     def check_attn_pos(self,angle,attnum=1):
@@ -380,26 +452,41 @@ class atten():
             self.logger.warning(f'[cal atten{attnum},angle ={angle}] minangle is smaller than 1,{minangle},cal may be wrong') 
         
         return althickness,selectindex,selectinfo
-    def TargetFlux(self,flux):
+    def TargetFlux(self,flux,openallfilter=True):
         old_atten = self.get_cerrnt_atten()
+        Fit_Attenuation = old_atten#update later
         #open all filter
-        self.Target(0)
-        time.sleep(0.3)
-        count,dbpm3 = self.read_flux(dev="dbpm3")
-        count,sample = self.read_flux(dev="sample")
+        
+        if openallfilter:
+            self.Target(0)
+            time.sleep(0.3)
+            count,dbpm3 = self.read_flux(dev="dbpm3")
+            count,sample = self.read_flux(dev="sample")
+        else:
+            count,dbpm3 = self.read_flux(dev="dbpm3")
+            count,sample = self.read_flux(dev="sample")
+            sample = sample /(1-old_atten/100)
+
         if sample < 1e5:
             self.logger.warning('No beam!')
-            self.logger.warning(f'Dbpm3 flux:{dbpm3:.4g} , sample flux = {sample:.4g}')
+            self.logger.warning(f'Dbpm3 flux:{dbpm3:.4g} , sample flux = {sample:.4g}')            
         elif flux > sample:
             self.logger.warning(f'Request flux:{flux:.4g} is higher than max flux{sample:.4g}')
             self.logger.warning('set atten to 0 %')
+            if openallfilter:
+                pass
+            else:
+                self.Target(0)
         else:
-            ratio = flux/sample
-            Fit_Attenuation = self.Target(ratio,False)
-            time.sleep(0.3)
-            count,newsample = self.read_flux(dev="sample")
+            if flux < 1e5:
+                Fit_Attenuation = self.Target(1,False)
+            else:
+                ratio = flux/sample
+                Fit_Attenuation = self.Target(ratio,False)
+                time.sleep(0.3)
+                count,newsample = self.read_flux(dev="sample")
             self.logger.warning(f'final flux:{newsample:.4g},Request flux:{flux:.4g},Full flux {sample:.4g},atten set to {Fit_Attenuation}')
-        return
+        return Fit_Attenuation
         pass
     def quit(self,signum,frame):
 
