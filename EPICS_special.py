@@ -13,7 +13,7 @@ import socket,time,signal,sys,os,copy,subprocess
 # import multiprocessing as mp
 from multiprocessing import Process, Queue, Manager
 from epicsinit import epicsdev
-import logsetup
+import logsetup,requests
 # import epicsfile
 import Config
 import EpicsConfig
@@ -77,6 +77,8 @@ class Beamsize():
         self.SSName = self.Par['EPICS_special']['BeamSize']['SSName']
         self.fakeDistanceName = self.Par['fakedistancename']
         self.ApertureName = self.Par['EPICS_special']['BeamSize']['ApertureName']
+        self.DBPM6kxName = self.Par['EPICS_special']['BeamSize']['DBPM6kxName']
+        self.DBPM6kyName = self.Par['EPICS_special']['BeamSize']['DBPM6kyName']
         
         self.MD3YMotor = self.Par['EPICS_special']['BeamSize']['MD3YMotor']
         self.MD3VerMotor = self.Par['EPICS_special']['BeamSize']['MD3VerMotor']
@@ -90,7 +92,8 @@ class Beamsize():
         self.SSMotor = self.Par['EPICS_special']['BeamSize']['SSMotor']
         self.DetYMotor = self.Par['EPICS_special']['BeamSize']['DetYMotor']
         self.ApertureMotor = self.Par['EPICS_special']['BeamSize']['ApertureMotor']
-        
+        self.DBPM6kxfactor = self.Par['EPICS_special']['BeamSize']['DBPM6kxfactor']
+        self.DBPM6kyfactor = self.Par['EPICS_special']['BeamSize']['DBPM6kyfactor']
         
         self.MinDistance = self.Par['MinDistance']
         
@@ -106,7 +109,9 @@ class Beamsize():
         self.DBPM6HorLists = []
         self.SSLists = []
         self.ApertureLists = []
-        
+
+        self.DBPM6kxLists = []
+        self.DBPM6kyLists = []
         #setup Feedback par
         self.FeedbackDCM = ''
         self.FeedbackHFM = ''
@@ -161,7 +166,8 @@ class Beamsize():
         if self.ApertureUsing :
             self.ApertureLists = self.ca.caget(self.ApertureName,format=int,array=True,debug=False)
             self.logger.debug(f'Update ApertureLists = {self.ApertureLists}')
-            
+        self.DBPM6kxLists =self.ca.caget(self.DBPM6kxName,format=float,array=True,debug=False)
+        self.DBPM6kyLists =self.ca.caget(self.DBPM6kyName,format=float,array=True,debug=False)
         # self.CurrentBeamsize = 0
         self.CurrentDetY = self.ca.caget(self.DetYMotor,format=float,array=False,debug=False)
         self.logger.debug(f'Update CurrentDetY = {self.CurrentDetY}')
@@ -183,6 +189,7 @@ class Beamsize():
         self.Busy = True
         
         self.logger.info(f'Move beam size to {beamsize} with openvoer = {opencover},Targetdistance = {Targetdistance} with moveit = {checkdis}')
+        requests.post(f'http://10.7.1.105/ptzpreset?camid=1&goto_preset={int(beamsize)}')
         current_dis = self.ca.caget(self.fakeDistanceName)
         #07a:Det:Dis.LLM,07a:Det:Dis.HLM
         disLLM = self.ca.caget(f'{self.fakeDistanceName}.LLM')
@@ -407,9 +414,15 @@ class Beamsize():
                             self.logger.warning(f'Error when give {motor} command')
                             self.logger.warning(f'Exception : {e}')
                             pass
+                #update kx ky
+                
+                self.ca.caput(self.DBPM6kxfactor,self.DBPM6kxLists[index])
+                self.ca.caput(self.DBPM6kyfactor,self.DBPM6kyLists[index])
 
             else:
                 self.logger.warning(f'Beam size : {beamsize} ,not in beam list :{self.BeamSizeLists}')
+
+
             self.ca.caput('07a-ES:Beamsize',beamsize)
             self.Busy = False
             self.logger.info(f'End of moving beamsize:{beamsize}')

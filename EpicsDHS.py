@@ -16,7 +16,7 @@ from epicsinit import epicsdev
 import logsetup
 # import epicsfile
 import Config
-import EpicsConfig
+import EpicsConfig,requests
 import Detector
 from Flux07A.AttenServer import atten
 from DetectorCoverV2 import MOXA
@@ -33,6 +33,7 @@ class DCSDHS():
         # else:
         #     self.m = m
         # self.Par = m.dict()
+        
         self.Par = par
 
         # print(f'TYPE:{type(self.Par)}')
@@ -41,7 +42,8 @@ class DCSDHS():
         # print(f'TYPE:{type(self.Par)}')
         
         #set log
-        self.logger = logsetup.getloger2('EPICSDHS',LOG_FILENAME='./log/EpicsLog.txt',level = self.Par['Debuglevel'])
+        self.logger = logsetup.getloger2('EPICSDHS',LOG_FILENAME='./log/EpicsLog.txt',level = self.Par['Debuglevel'],bypassline=False)
+        self.logger.info(f'EPICS DCSDHS PID = {os.getpid()}')
         self.logger.info("init EPICSDHS logging")
         self.logger.info("Logging show level = %s",self.Par['Debuglevel'])
         # self.logger.debug("Par Start=======")
@@ -114,15 +116,16 @@ class DCSDHS():
                 #setup for tcp
                 self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 self.client.settimeout(self.tcptimeout)
-                self.client.connect((self.host, self.port))
                 self.logger.info("try to Connect to %s:%d" % (self.host, self.port))
+                self.client.connect((self.host, self.port))
+                
                 
             except Exception as e:
                 self.client.close()
                 self.logger.debug(f'fail connect to {self.host} {self.port} Error ={e}')
                 if trytime == 0:
                     # self.logger.debug(f'fail connect to {self.host} {self.port}')
-                    self.logger.critical("connection to DCSS fail, I wait 1 sec then try again until sucess...")
+                    self.logger.warning("connection to DCSS fail, I wait 1 sec then try again until sucess...")
                     trytime =1
                 else:
                     self.logger.debug("connection fail wait 1 sec then try again")
@@ -148,9 +151,9 @@ class DCSDHS():
         self.run()
 
     def run(self) :
-        self.logger.debug('Creat sub Process')
+        # self.logger.debug('Creat sub Process')
         self.Par['operationRecord'][:] = []#clear operationRecord
-        self.logger.debug(f'TYPE:{type(self.Par)}')
+        # self.logger.debug(f'TYPE:{type(self.Par)}')
         
         reciver_ = Process(target=self.reciver, args=(self.Par,self.Q,self.client,))
         sender_ = Process(target=self.sender, args=(self.Par,self.Q,self.client,))
@@ -214,6 +217,7 @@ class DCSDHS():
         #exposure_time (double): exposure time (sec) to control shutter command
         #number_of_passes (int): number of moves forward and reverse between start angle and end angle.
         scan_range = float(command[3])
+        # scan_range = 0
         exposure_time = float(command[4])
         start_angle = float(command[5])
         fileindex = int(Par['Detector']['Fileindex'])
@@ -302,17 +306,17 @@ class DCSDHS():
 
             except socket.error:
                 # Something else happened, handle error, exit, etc.
-                self.logger.critical ("Error for socket error")
+                self.logger.warning ("Error for socket error")
                 sendQ.put("exit")
                 # epicsQ.put("exit")
                 DetctorQ.put("exit")
                 break
-            except :
-                self.logger.critical ("Error on socket ")
+            except Exception as e:
+                self.logger.warning ("Error on socket: {e}")
                 
             else:
                 if len(data) == 0:
-                    self.logger.critical ("orderly shutdown on DCSS server end")
+                    self.logger.warning ("orderly shutdown on DCSS server end")
                     sendQ.put("exit")
                     # epicsQ.put("exit")
                     DetctorQ.put("exit")
@@ -368,6 +372,9 @@ class DCSDHS():
 
                                 sendQ.put(('endmove',command[1],command[2],'normal'), block=False)
                                 pass
+                            elif command[1] == 'robotmove':
+                                pass#fake one
+                                sendQ.put(('endmove',command[1],command[2],'normal'), block=False)
                             else:
                                 try:
                                     GUIname, = self.FindEpicsMotorInfo(command[1],'dcssname','GUIname')
@@ -498,6 +505,17 @@ class DCSDHS():
                                 command.pop(0)
                                 DetctorQ.put(tuple(command))
                                 pass
+                            
+                            elif command[1] == "detector_close_cover":
+                                self.logger.warning(f"detector_close_cover operation from dcss : {command}")
+                                command.pop(0)
+                                DetctorQ.put(tuple(command))
+                                pass
+                            elif command[1] == "detector_open_cover":
+                                self.logger.warning(f"detector_open_cover operation from dcss : {command}")
+                                command.pop(0)
+                                DetctorQ.put(tuple(command))
+                                pass
                             else:
                                  self.logger.warning(f"Unkonw operation from dcss : {command}")
                                  unknownFlag = True
@@ -625,139 +643,144 @@ class DCSDHS():
         sendQ = Q['Queue']['sendQ']
         epicsQ = Q['Queue']['epicsQ']
         while True:
-            
-            command = sendQ.get()
-            if isinstance(command,str):
-                if command == "exit" :
-                    self.logger.warning("Send Q get Exit")
-                    break
-                else:
-                    self.logger.info(f"Send direct command to dcss:{command}")
-                    todcss = self.toDCSScommand(command)
-                    tcpclient.sendall(todcss.encode())
-                    
-            elif isinstance(command,tuple) :
-                #command 0:command 1:motorname 2:position 3:type 4:state
-                echo = ""
-                if command[0] == "updatevalue" :
-                    if command[3] == "motor":
-                        #htos_update_motor_position motorname postion status
-                        echo = "htos_update_motor_position " + str(command[1]) + " " +str(command[2]) + " " + str(command[4])
-                    elif command[3]  == "ioncchamber" :
-                        #htos_report_ion_chambers time ch1 counts1 [ch2 counts2 [ch3 counts3 [chN countsN]]]
-                        # self.sendQ.put(('updatevalue',command[3] ,str(count),'ioncchamber',command[1]))
-                        echo = "htos_report_ion_chambers " + str(command[4]) + " " + str(command[1]) + " " + str(command[2])  
-                    elif command[3]  == "operation_update" :
-                        #htos_operation_update operationName operationHandle arguments
-                        echo = "htos_operation_update " + str(command[1]) + " " + str(command[2])
-                    elif command[3] == "operation_completed" :   
+            try:
+                command = sendQ.get()
+                if isinstance(command,str):
+                    if command == "exit" :
+                        self.logger.warning("Send Q get Exit")
+                        break
+                    else:
+                        self.logger.info(f"Send direct command to dcss:{command}")
+                        todcss = self.toDCSScommand(command)
+                        tcpclient.sendall(todcss.encode())
+                        
+                elif isinstance(command,tuple) :
+                    #command 0:command 1:motorname 2:position 3:type 4:state
+                    echo = ""
+                    if command[0] == "updatevalue" :
+                        if command[3] == "motor":
+                            #htos_update_motor_position motorname postion status
+                            echo = "htos_update_motor_position " + str(command[1]) + " " +str(command[2]) + " " + str(command[4])
+                        elif command[3]  == "ioncchamber" :
+                            #htos_report_ion_chambers time ch1 counts1 [ch2 counts2 [ch3 counts3 [chN countsN]]]
+                            # self.sendQ.put(('updatevalue',command[3] ,str(count),'ioncchamber',command[1]))
+                            echo = "htos_report_ion_chambers " + str(command[4]) + " " + str(command[1]) + " " + str(command[2])  
+                        elif command[3]  == "operation_update" :
+                            #htos_operation_update operationName operationHandle arguments
+                            echo = "htos_operation_update " + str(command[1]) + " " + str(command[2])
+                        elif command[3] == "operation_completed" :   
+                            #htos_operation_completed operationName operationHandle status arguments
+                            echo = "htos_operation_completed " + str(command[1]) + " " + str(command[4])+ " " + str(command[2])
+                        elif command[3] == "string" :
+                            #htos_set_string_completed strname status arguments
+                            echo = "htos_set_string_completed " + str(command[1]) + " " + str(command[4]) + " " + str(command[2])
+                            if str(command[1]) == "TPSstate":
+                                print(echo)
+                        elif command[3] == "shutter" :
+                            #form: self.sendQ.put(('updatevalue',dcssname,value,dcsstype))
+                            #to: htos_report_shutter_state shutterName state
+                            if command[2] == 1 :
+                                state = "open"
+                            else:
+                                state = "closed"
+                            echo = "htos_report_shutter_state " + str(command[1]) + " " + state
+                        elif command[3] == "string" :
+                            #htos_set_string_completed strname status arguments
+                            echo = "htos_set_string_completed " + str(command[1]) + " " + str(command[4]) + " " + str(command[2])
+                            # if str(command[1]) == "TPSstate":
+                            #     print(echo)
+                            
+                        else :
+                            self.logger.info (f'unkonw command type:{command[3]}')
+                            
+                    elif command[0] == "startmove" :
+                        #htos_motor_move_started motorName position
+                        echo = "htos_motor_move_started " + str(command[1]) + " " +str(command[2])
+                        self.logger.info(f"{command[1]} startmove to {command[2]} ")
+                        
+                    elif command[0] == "endmove" :
+                        #htos_motor_move_completed motorName position completionStatus
+                        #Normal indicates that the motor finished its commanded move successfully.
+                        #aborted indicates that the motor move was aborted.
+                        #moving indicates that the motor was already moving.
+                        #cw_hw_limit indicates that the motor hit the clockwise hardware limit.
+                        #ccw_hw_limit indicates that the motor hit the counter-clockwise hardware limit.
+                        #both_hw_limits indicates that the motor cable may be disconnected.
+                        #unknown indicates that the motor completed abnormally, but the DHS software or the hardware controller does not know why.
+                        echo = "htos_motor_move_completed " + str(command[1]) + " " +str(command[2]) + " " +str(command[3])
+                        self.logger.info(f"{command[1]} move completed at {command[2]} with {command[3]} ")
+                    elif command[0] == "warning" :
+                        #htos_note Warning XXXX
+                        echo = "htos_note Warning " + str(command[1])
+                    elif command[0] == "htos_note" :
+                        echo = "htos_note " + str(command[1])
+                    elif command[0] == "operdone" :
+                        #command[1] = operationName
+                        #command[2] = operationHandle
                         #htos_operation_completed operationName operationHandle status arguments
-                        echo = "htos_operation_completed " + str(command[1]) + " " + str(command[4])+ " " + str(command[2])
-                    elif command[3] == "string" :
-                        #htos_set_string_completed strname status arguments
-                        echo = "htos_set_string_completed " + str(command[1]) + " " + str(command[4]) + " " + str(command[2])
-                        if str(command[1]) == "TPSstate":
-                            print(echo)
-                    elif command[3] == "shutter" :
-                        #form: self.sendQ.put(('updatevalue',dcssname,value,dcsstype))
-                        #to: htos_report_shutter_state shutterName state
-                        if command[2] == 1 :
-                            state = "open"
+                        # command2=command[1]
+                        # print(command2)
+                        args=""
+                        
+                        argslist = list(command)
+                        if len(argslist) > 3:
+                            argslist = argslist[3:]
+                            for a in argslist:
+                                # print(a)
+                                args = args + " " + a
                         else:
-                            state = "closed"
-                        echo = "htos_report_shutter_state " + str(command[1]) + " " + state
-                    elif command[3] == "string" :
-                        #htos_set_string_completed strname status arguments
-                        echo = "htos_set_string_completed " + str(command[1]) + " " + str(command[4]) + " " + str(command[2])
-                        # if str(command[1]) == "TPSstate":
-                        #     print(echo)
+                            print('no args add')
+                            # args = ""
+                    
+                        echo = "htos_operation_completed " + str(command[1]) + " " + str(command[2])+ " " + "normal" + args
+                        # REMOVE operation id form list
+                        removeitem = None
+                        for item in self.Par['operationRecord']:
+                            #operation command 
+                            # operationName operationHandle [arg1 [arg2 [arg3 [...]]]]
+                            if item[1] == command[2]:
+                                removeitem = item
+                        if removeitem:
+                            self.logger.debug(f'remove {removeitem} from operationRecord')
+                            self.Par['operationRecord'].remove(removeitem)
+                        # self.logger.warning(f"{removeitem=},{command=},{self.Par['operationRecord'][:]=}")
+                    elif command[0] == "operupdate" :
+                        #command[1] = operationName
+                        #command[2] = operationHandle
+                        #htos_operation_update operationName operationHandle arguments
+                        # command2=command[1]
+                        # print(command2)
+                        args=""
                         
-                    else :
-                        self.logger.info (f'unkonw command type:{command[3]}')
-                        
-                elif command[0] == "startmove" :
-                    #htos_motor_move_started motorName position
-                    echo = "htos_motor_move_started " + str(command[1]) + " " +str(command[2])
-                    self.logger.info(f"{command[1]} startmove to {command[2]} ")
+                        argslist = list(command)
+                        if len(argslist) > 3:
+                            argslist = argslist[3:]
+                            for a in argslist:
+                                # print(a)
+                                args = args + " " + a
+                        else:
+                            print('no args add')
+                            # args = ""
                     
-                elif command[0] == "endmove" :
-                    #htos_motor_move_completed motorName position completionStatus
-                    #Normal indicates that the motor finished its commanded move successfully.
-                    #aborted indicates that the motor move was aborted.
-                    #moving indicates that the motor was already moving.
-                    #cw_hw_limit indicates that the motor hit the clockwise hardware limit.
-                    #ccw_hw_limit indicates that the motor hit the counter-clockwise hardware limit.
-                    #both_hw_limits indicates that the motor cable may be disconnected.
-                    #unknown indicates that the motor completed abnormally, but the DHS software or the hardware controller does not know why.
-                    echo = "htos_motor_move_completed " + str(command[1]) + " " +str(command[2]) + " " +str(command[3])
-                    self.logger.info(f"{command[1]} move completed at {command[2]} with {command[3]} ")
-                elif command[0] == "warning" :
-                    #htos_note Warning XXXX
-                    echo = "htos_note Warning " + str(command[1])
-                elif command[0] == "htos_note" :
-                    echo = "htos_note " + str(command[1])
-                elif command[0] == "operdone" :
-                    #command[1] = operationName
-                    #command[2] = operationHandle
-                    #htos_operation_completed operationName operationHandle status arguments
-                    # command2=command[1]
-                    # print(command2)
-                    args=""
-                    
-                    argslist = list(command)
-                    if len(argslist) > 3:
-                        argslist = argslist[3:]
-                        for a in argslist:
-                            # print(a)
-                            args = args + " " + a
+                        echo = "htos_operation_update " + str(command[1]) + " " + str(command[2]) + args
+                        # print('==',echo,'==')
                     else:
-                        print('no args add')
-                        # args = ""
-                   
-                    echo = "htos_operation_completed " + str(command[1]) + " " + str(command[2])+ " " + "normal" + args
-                    # REMOVE operation id form list
-                    removeitem = None
-                    for item in self.Par['operationRecord']:
-                        #operation command 
-                        # operationName operationHandle [arg1 [arg2 [arg3 [...]]]]
-                        if item[1] == command[2]:
-                            removeitem = item
-                    if removeitem:
-                        self.logger.debug(f'remove {removeitem} from operationRecord')
-                        self.Par['operationRecord'].remove(removeitem)
-                    # self.logger.warning(f"{removeitem=},{command=},{self.Par['operationRecord'][:]=}")
-                elif command[0] == "operupdate" :
-                    #command[1] = operationName
-                    #command[2] = operationHandle
-                    #htos_operation_update operationName operationHandle arguments
-                    # command2=command[1]
-                    # print(command2)
-                    args=""
-                    
-                    argslist = list(command)
-                    if len(argslist) > 3:
-                        argslist = argslist[3:]
-                        for a in argslist:
-                            # print(a)
-                            args = args + " " + a
+                        self.logger.info(f'Unknow commad:{command[0]}')
+                    #send to dcss    
+                    if echo == "":
+                        pass
                     else:
-                        print('no args add')
-                        # args = ""
-                   
-                    echo = "htos_operation_update " + str(command[1]) + " " + str(command[2]) + args
-                    # print('==',echo,'==')
+                        todcss = self.toDCSScommand(echo)
+                        #print(f'todcss:{todcss.encode()}')
+                        #print(len(todcss.encode()))
+                        self.logger.debug(f"Send message to dcss : {todcss}")
+                        self.client.sendall(todcss.encode()) 
+                    
                 else:
-                    self.logger.info(f'Unknow commad:{command[0]}')
-                #send to dcss    
-                
-                todcss = self.toDCSScommand(echo)
-                #print(f'todcss:{todcss.encode()}')
-                #print(len(todcss.encode()))
-                self.logger.debug(f"Send message to dcss : {todcss}")
-                self.client.sendall(todcss.encode()) 
-                
-            else:
-                pass
+                    pass
+            except Exception as e:
+                self.logger.error("send process has error {e}")
+
         pass
     def pipecaput(self,PV,value):
         self.logger.warning(f'caput PV={PV},value={value}')
@@ -776,7 +799,7 @@ class DCSDHS():
             # return True
             return 1
         else:
-            self.logger.critical(f"Caput {PV} value {value} Fail={error}")
+            self.logger.error(f"Caput {PV} value {value} Fail={error}")
             # return False
             return 0
 
@@ -861,6 +884,7 @@ class DCSDHS():
 
 
     def quit(self,signum,frame):
+        self.logger.critical(f'EPICS DHS Offline')
         self.Q['Queue']['reciveQ'].put('exit')
         self.Q['Queue']['sendQ'].put('exit')
         self.Q['Queue']['epicsQ'].put('exit')
@@ -868,12 +892,13 @@ class DCSDHS():
         self.Q['Queue']['DetectorQ'].put('exit')
         self.Q['Queue']['attenQ'].put('exit')
         self.client.close()
-        self.logger.debug(f"PID : {os.getpid()} DHS closed, Par= {self.Par}")
+        
+        # self.logger.debug(f"PID : {os.getpid()} DHS closed, Par= {self.Par}")
+        self.logger.debug(f"PID : {os.getpid()} DHS closed")
         # self.logger.info(f'PID : {os.getpid()} DHS closed') 
         # self.logger.critical(f'm pid={self.m._process.ident}')
         # self.m.shutdown()
         active_children = mp.active_children()
-        self.logger.critical(f'active_children={active_children}')
         if len(active_children)>0:
             for item in active_children:
                 self.logger.warning(f'Last try to kill {item.pid}')
@@ -940,13 +965,14 @@ def test():
 
 def quit(signum,frame):
     print("EPICS DHS Main cloesd")
+    ToLineNotify(beamline='TPS07A',msg="EPICS DHS Main cloesd",nosound=False)
     # reciveQ = self.Par['Queue']['reciveQ']
     # sendQ = self.Par['Queue']['sendQ']
     # epicsQ = self.Par['Queue']['epicsQ']
     # reciveQ('exit')
     # sendQ.put("exit")
     # epicsQ.put("exit")
-    
+    # ToLineNotify("Test","beep~",False,stickerPackageId=446,stickerId=2005)
     sys.exit()
     pass
 
@@ -959,28 +985,47 @@ def quit(signum,frame):
 #     p.start()
 #     p.join()
 #     print ("end")
-
+def ToLineNotify(beamline:str=None,msg:str=None,nosound:bool=False,stickerPackageId:int=None,stickerId:int=None,server='http://172.19.7.199:40000/job'):
+    try:
+        jsondata={}
+        jsondata['beamline'] = beamline
+        jsondata['msg'] = msg
+        jsondata['nosound'] = nosound
+        jsondata['stickerPackageId'] = stickerPackageId
+        jsondata['stickerId'] = stickerId
+        response = requests.post(server , json=jsondata)
+        # print(response)
+    except Exception as e:
+        print(e)
+    return response
     
 if __name__ == "__main__":
     # mp.set_forkserver_preload()
     # mp.set_start_method('forkserver')
     # mp.set_start_method('spawn')
     # mp.set_start_method('fork')
-
+    
     signal.signal(signal.SIGINT, quit)
     signal.signal(signal.SIGTERM, quit)
     # logger=logsetup.getloger2('Main')
+    print(f'main PID = {os.getpid()}')
     m = Manager()
     Par = m.dict()
     # EpicsDHS(m)
     # self.logger.critical(f'm pid={self.m._process.ident}')
     EpicsDHS = DCSDHS(Par,m)
-    print ("start")
+    print ("start*****************************")
     p = Process(target=EpicsDHS.initconnection)
 
     p.start()
-    p.join()
-    print ("end")
+    ToLineNotify(beamline='TPS07A',msg="EPICS DHS Started",nosound=True)
+    print('*************************')
+    
+    while p.is_alive():
+        time.sleep(0.1)
+        pass
 
+    print ("end")
+    ToLineNotify(beamline='TPS07A',msg="EPICS DHS Closed",nosound=True)
 
     m.shutdown()

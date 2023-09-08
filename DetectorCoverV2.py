@@ -25,7 +25,7 @@ class MOXA():
         self.Par.update(Config.Par)
         self.Par['Coverstate'] = None
         #set log
-        self.logger = logsetup.getloger2('CoverDHS',LOG_FILENAME='./log/CoverLog.txt',level = self.Par['Debuglevel'])
+        self.logger = logsetup.getloger2('CoverDHS',LOG_FILENAME='./log/CoverLog.txt',level = self.Par['Debuglevel'],bypassline=False)
         self.logger.info("init CoverDHS logging")
         self.logger.info("Logging show level = %s",self.Par['Debuglevel'])
         
@@ -193,7 +193,7 @@ class MOXA():
                 # self.set_do_state(self.DO_OpenCover,0)
                 commandQ.put(('DO_CloseCover',0))
                 commandQ.put(('DO_OpenCover',0))
-                self.logger.warning(f"Timeout! in {timeout} sec")
+                self.logger.critical(f"Detector Cover operation Timeout! in {timeout} sec")
                 stop = True
             
         #done for command
@@ -448,15 +448,15 @@ class MOXA():
         commandQ=self.Q['commandQ']
         stateQ.put('exit')
         commandQ.put('exit')
-        time.sleep(0.5)
+        time.sleep(1)
         self.m.shutdown()
         active_children = mp.active_children()
-        self.logger.critical(f'active_children={active_children}')
+        self.logger.warning(f'active_children={active_children}')
         if len(active_children)>0:
             for item in active_children:
                 self.logger.warning(f'Last try to kill {item.pid}')
                 os.kill(item.pid,signal.SIGKILL)
-        sys.exit()
+        # sys.exit()
         pass
 
 

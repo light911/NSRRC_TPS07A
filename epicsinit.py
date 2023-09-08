@@ -189,12 +189,12 @@ class epicsdev(QThread):
                     # print(self.Par["EPICS"])
                     phase =self.epicslist['07a:md3:CurrentPhase']["old_value"]
                     if  phase== 0 or phase== 2:#center or collect
-                        PV = self.Par['collect']['saveCentringPositionsPV']
+                        sendPV = self.Par['collect']['saveCentringPositionsPV']
                         if self.saveCentringPositionFlag_sample_z:
                             self.saveCentringPositionFlag_sample_z = False
                             self.logger.debug("Save current pos for Center pos (sampleZ stop)")
                             time.sleep(0.1)
-                            self.caput(PV,'__EMPTY__')
+                            self.caput(sendPV,'__EMPTY__')
                             # p = CAProcess(target=self.oldCAPUT, args=(PV,'__EMPTY__',))
                             # p.start()
                             # p.join()
@@ -202,7 +202,7 @@ class epicsdev(QThread):
                             self.saveCentringPositionFlag_cam_horz = False
                             time.sleep(0.1)
                             self.logger.debug("Save current pos for Center pos (cam_horz Stop)")
-                            self.caput(PV,'__EMPTY__')
+                            self.caput(sendPV,'__EMPTY__')
                             # p = CAProcess(target=self.oldCAPUT, args=(PV,'__EMPTY__',))
                             # p.start()
                             # p.join()
@@ -718,7 +718,27 @@ class epicsdev(QThread):
                                 value = command[2]
                                 self.sendQ.put(('endmove',dcssname,value,'normal'))
                             else:
-                                self.caput(PVname,value)
+                                dcssname = command[1]
+                                value = command[2]
+                                #check md3 state
+                                self.waitMD3Ready()
+                                jobok = self.caput(PVname,value)
+                                if jobok:
+                                    pass
+                                else:
+                                    #maybe md3 busy sleep 1 try again?
+                                    self.logger.warning('caput change_mode fail wait 4 sec try again')
+                                    time.sleep(5)
+                                    jobok2 = self.caput(PVname,value)
+                                    if jobok2:
+                                        self.logger.info('change_mode OK on second time')
+                                        pass
+                                    else:
+                                        #some thing worng
+                                        self.logger.warning('caput change_mode fail 2 times')
+                                        self.sendQ.put(('endmove',dcssname,value,'normal'))
+                                        pass
+                                    pass
                             # p = CAProcess(target=self.CAPUT, args=(PVname,float(command[2]),))
                             # p.start()
                             # p.join()
@@ -974,7 +994,7 @@ class epicsdev(QThread):
             else:
                 self.logger.info(f'MD3 is busy:{md3_state}')  
             if (time.time()-t0)>timeout:
-                self.logger.info(f'MD3 is busy:{md3_state} and timeout reach')     
+                self.logger.info(f'MD3 is busy:{md3_state} and timeout reach ({timeout} sec)')     
                 return False
             time.sleep(0.1)
         self.logger.info(f'MD3 is Ready')     
@@ -1034,6 +1054,12 @@ class epicsdev(QThread):
                 self.logger.debug(f'TASK: {job}')
                 #['Auto Centring', '8', '2021-10-07 12:33:29.267', '2021-10-07 12:34:04.733', 'true', 'null', '1']
                 #['Auto Centring' '8' '2021-10-07 12:39:31.811' '2021-10-07 12:39:42.288','null' 'Invalid position: -173375007607934.7200' '-1'] 
+                #['Auto Centring' '8' '2023-04-19 08:54:32.52' '2023-04-19 08:54:36.673' 'null' 'Task was stopped' '0']
+                # Status = caget('07a:md3:Status ')
+                # self.logger.debug(f'Status: {Status}')
+                # Execution of "Auto Centring" was aborted
+                # Centring
+                # Ready
                 if job[0] == 'Auto Centring' and job[6] == "1":
                 # if job[6] == "1":
                     wait = False
@@ -1043,11 +1069,15 @@ class epicsdev(QThread):
                 elif (time.time()-t0) > timeout:
                     wait = False
                     stop = True
+                elif job[0] == 'Auto Centring' and job[5] == "Task was stopped":
+                    wait = False
+                    error = True
             if error:
                 self.logger.warning(f"Error on center :{job[5]}")
                 self.sendQ.put(('operdone','centerLoop',opid,'normal'))
             elif stop:
                 self.logger.info('MD3 Auto Sample Centering timeout in {timeout} sec(center loop)')
+                self.sendQ.put(('operdone','centerLoop',opid,'normal'))
             else:
                 PV = self.Par['collect']['saveCentringPositionsPV']
                 time.sleep(0.1)
@@ -1096,8 +1126,10 @@ class epicsdev(QThread):
         state = ca.put(chid,value, wait=True,timeout=1, callback=None, callback_data=None)
         if state != 1:
             self.logger.critical(f"Caput {PV} value {value} Fail!")
+            return False
         print(f'ca put state={state}')
         time.sleep(0.1)
+        return True
     def oldCAPUT(self,PV,value):   
         
         self.logger.warning(f'caput PV={PV},value={value}')
@@ -1226,7 +1258,10 @@ class epicsdev(QThread):
     def handleCommand(self,value):
         # decode command
         command = str(value).split()
-        if command[0] == "thx":
+
+        if len(command) == 0:    
+            pass
+        elif command[0] == "thx":
             #after exe command, other program may send thx for ack,also used for recived new command
             pass
         elif command[0] == "DONE" or command[0] == "ERR":

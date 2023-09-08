@@ -255,10 +255,17 @@ class Eiger2X16M(Detector):
         #just for easy put beam size here
         beamsize = command[2]
         opid =command[1]
+        if len(command)>=4:
+            #want to move distance too
+            distance = float(command[3])
+            beamsizeP = Thread(target=self.MoveBeamsize.target,args=(float(beamsize),distance,False,True),name='MoveBeamSize')
+        else:
+            distance = None
+            beamsizeP = Thread(target=self.MoveBeamsize.target,args=(float(beamsize),150,False,False),name='MoveBeamSize')
         #arg1 = beamsize , Targetdistance, opencover,checkdis
         #set checkdis to true will make change distance to Targetdistance
         # beamsizeP = Process(target=self.MoveBeamsize.target,args=(float(beamsize),150,False,False),name='MoveBeamSize')
-        beamsizeP = Thread(target=self.MoveBeamsize.target,args=(float(beamsize),150,False,False),name='MoveBeamSize')
+        # beamsizeP = Thread(target=self.MoveBeamsize.target,args=(float(beamsize),150,False,False),name='MoveBeamSize')
         beamsizeP.start()
         beamsizeP.join()
         self.logger.warning(f'proc {command}')
@@ -361,6 +368,23 @@ class Eiger2X16M(Detector):
         print(response.text)
 
         pass
+    def detector_close_cover(self,command):
+        operationHandle = command[1]
+        closecoverP = Process(target=self.cover.askforAction,args=('close',),name='dcssoperation_close_cover')
+        closecoverP.start()
+        self.checkandretryCoverProcess(closecoverP,'close')
+        toDcsscommand = f"htos_operation_completed {command[0]} {operationHandle} normal"
+        self.logger.info(f'send command to dcss: {toDcsscommand}')
+        self.sendQ.put(toDcsscommand)
+        pass
+    def detector_open_cover(self,command):
+        operationHandle = command[1]
+        self.MoveBeamsize.opencover(True)
+        self.MoveBeamsize.wait_opencover(True)
+        toDcsscommand = f"htos_operation_completed {command[0]} {operationHandle} normal"
+        self.logger.info(f'send command to dcss: {toDcsscommand}')
+        self.sendQ.put(toDcsscommand)
+        pass
     def detector_collect_shutterless(self,command):
     #    ('detector_collect_shutterless', '1.24', '1', 'test_1', '/data/blctl/test', 'blctl', 'gonio_phi', '0.1', '0.000009', '1.0', '10', '750.000060', '0.976226127404', '0.000231', '50.000000', '0', '0', 'PRIVATEA03F6ADA6F19A8DA1DEE6BFC325F4DCE', '1', '10', '50.000000', '0.0')
     #['stoh_start_operation', 'detector_collect_shutterless', '1.2', '0', 'test_0', '/data/blctl/test', 'blctl', 'gonio_phi', '0.1', '0.000000', '1.0', '1', '750.000080', '0.976226127404', '0.000071', '50.000000', '0', '0', 'PRIVATEA03F6ADA6F19A8DA1DEE6BFC325F4DCE', '3', '1', '50.000000', '0.0']
@@ -396,7 +420,8 @@ class Eiger2X16M(Detector):
         self.exposureTime = float(command[7])
         self.oscillationStart = float(command[8])
         
-        self.detosc =  float(command[9])
+        self.detosc =  float(command[9])  
+        # self.detosc =  0
         self.TotalFrames = int(command[10]) #1
         self.distance = float(command[11])
         self.wavelength = float(command[12])
@@ -416,7 +441,8 @@ class Eiger2X16M(Detector):
         # htos_note changing_detector_mode
         toDcsscommand = ('htos_note','changing_detector_mode')
         self.sendQ.put(toDcsscommand)
-        _oscillationTime,_filename = self.basesetup()
+        #beam size and distance has moved by dcss
+        _oscillationTime,_filename = self.basesetup(movebeasize=False)
         _filename = _filename + '.h5'
         
         
@@ -476,7 +502,7 @@ class Eiger2X16M(Detector):
         
         
         LastTaskInfoPV = self.Par['collect']['LastTaskInfoPV']
-        PV = self.Par['collect']['start_oscillationPV']
+        PVcollect = self.Par['collect']['start_oscillationPV']
         NumberOfFramesPV = self.Par['collect']['NumberOfFramesPV']
         
         value = [fileindex,start_angle,scan_range,exposure_time,number_of_passes]
@@ -488,13 +514,13 @@ class Eiger2X16M(Detector):
         
         MD3state = self.waitMD3Ready()
         if MD3state:
-            state = caput(PV,value)
+            state = caput(PVcollect,value)
         else:
             state = -1
         
 
         if state != 1:
-            self.logger.critical(f"Caput {PV} value {value} Fail!")
+            self.logger.critical(f"Caput {PVcollect} value {value} Fail!")
         time.sleep(0.5)
         Task = caget(LastTaskInfoPV)
         # print(Task)
@@ -514,9 +540,16 @@ class Eiger2X16M(Detector):
         self.logger.warning(f"MD3 Expouse Scan Done,take {runtime},with PV put state={state},Result ID = {Task[6]}")
         # self.logger.warning(f"fileindex:{fileindex},nimages:{nimages},Par:{Par}")
         # closecoverP = Process(target=self.cover.CloseCover,name='mutiPosCollect_close_cover')
-        closecoverP = Process(target=self.cover.askforAction,args=('close',),name='mutiPosCollect_close_cover')
-        closecoverP.start()
-        # toDcsscommand = f"htos_set_string_completed detector_status normal Wating For Download Image "
+
+        #notify dcss we collect done,later we will download file,but dcss can to something
+        toDcsscommand = f"htos_operation_completed {command[0]} {self.operationHandle} normal"
+        self.logger.info(f'send command to dcss: {toDcsscommand}')
+        self.sendQ.put(toDcsscommand)
+
+        #now not close cover in end of collect, control by bluice2
+        # closecoverP = Process(target=self.cover.askforAction,args=('close',),name='mutiPosCollect_close_cover')
+        # closecoverP.start()
+        
         toDcsscommand = 'htos_set_string_completed system_status normal {Wating For Download Image} black #d0d000'
         self.sendQ.put(toDcsscommand)
         currentfile = self.det.fileWriterFiles()
@@ -542,8 +575,9 @@ class Eiger2X16M(Detector):
                     check = True
         self.logger.info(f'All data in detector is downloaded: file count :{currentfile}')
         
-        self.logger.info(f'Check cover is cloesd,current code is {closecoverP.exitcode}')
-        self.checkandretryCoverProcess(closecoverP,'close')
+        #now not close cover in end of collect, control by bluice2
+        # self.logger.info(f'Check cover is cloesd,current code is {closecoverP.exitcode}')
+        # self.checkandretryCoverProcess(closecoverP,'close')
 
         # closecoverP.join(5)
         # self.logger.warning(f'closecoverP process {closecoverP.is_alive()=},{closecoverP.pid=},{closecoverP.sentinel=},{closecoverP.exitcode=}')
@@ -563,9 +597,8 @@ class Eiger2X16M(Detector):
         #     #     self.logger.warning(f'OK for close Cover!!')
 
         # htos_set_string_completed
-        toDcsscommand = f"htos_operation_completed {command[0]} {self.operationHandle} normal"
-        self.logger.info(f'send command to dcss: {toDcsscommand}')
-        self.sendQ.put(toDcsscommand)
+        
+
         #for update bluiceUI
         # toDcsscommand = f"htos_operation_completed detector_stop {self.operationHandle} normal"
         # toDcsscommand = f"htos_set_string_completed detector_status Ready normal"
@@ -679,7 +712,7 @@ class Eiger2X16M(Detector):
         closecoverP = Process(target=self.cover.askforAction,args=('close',),name='abort_close_cover')
         closecoverP.start()
     
-    def basesetup(self,raster=False,roi=False,beamwithdis=False):
+    def basesetup(self,raster=False,roi=False,beamwithdis=False,movebeasize=True):
         t0 = time.time()
 
         
@@ -696,7 +729,7 @@ class Eiger2X16M(Detector):
         
         #move cryjet in
         askCryojetIn(self.Par['robot']['host'],self.Par['robot']['commandprot'])
-        
+
         # old open cover, now move to beamsize
         # opcoverP = Process(target=self.cover.OpenCover,name='open_cover')
         # opcoverP.start()
@@ -710,27 +743,37 @@ class Eiger2X16M(Detector):
             self.sendQ.put(('updatevalue','currentBeamsize',str(self.beamsize),'string','normal'))
             framerate = 1 / self.exposureTime 
         else:
+            #normal shutterless collect
             #check frame rate?
             # framerate = self.TotalFrames / self.exposureTime
             # beamsizeP = CAProcess(target=self.MoveBeamsize.target,args=(float(self.beamsize),self.distance ,True,False),name='MoveBeamSize')
             # beamsizeP = Process(target=self.MoveBeamsize.target,args=(float(self.beamsize),self.distance ,True,False),name='MoveBeamSize')
             # beamsizeP = Thread(target=self.MoveBeamsize.target,args=(float(self.beamsize),self.distance ,True,False),name='MoveBeamSize')
             # beamsizeP.start()
-            self.MoveBeamsize.target(float(self.beamsize),self.distance ,True,False)
             framerate = 1 / self.exposureTime
-            self.sendQ.put(('endmove','beamSize',str(self.beamsize),'normal'), block=False)
-            self.sendQ.put(('updatevalue','currentBeamsize',str(self.beamsize),'string','normal'))
-            
+            if movebeasize:
+                self.MoveBeamsize.target(float(self.beamsize),self.distance ,True,False)
+                self.sendQ.put(('endmove','beamSize',str(self.beamsize),'normal'), block=False)
+                self.sendQ.put(('updatevalue','currentBeamsize',str(self.beamsize),'string','normal'))
+            else:
+                #but we still need open cover
+                self.MoveBeamsize.opencover(True)
+                pass
+
+        self.logger.debug(f'setting Detector')    
         Filename = self.filename + "_" + str(self.fileindex).zfill(4)
         TotalTime = self.TotalFrames * self.exposureTime
+        write_headerP = Thread(target=self.write_header,args=(raster,Filename,),name='write_header')
+        write_headerP.start()
         # framerate = 75 #debug 
         #detector mode
         # roi = True
+        self.logger.debug(f'ask setting ROI and threshold')    
         if roi:
             if self.det.detectorConfig('roi_mode')['value'] == "disabled":
                 self.logger.debug(f'set detector roi_mode from disabled to 4M')
                 self.det.setDetectorConfig('roi_mode','4M')
-            
+            framerate = 500 #debug #force to no using 2nd energy
             if framerate > 280:
                 self.logger.debug(f'framerate =  {framerate},disable two threshold')
                 if self.det.detectorConfig('threshold/difference/mode')['value'] == "enabled":
@@ -747,7 +790,7 @@ class Eiger2X16M(Detector):
                     self.det.setDetectorConfig('threshold/difference/mode','enabled')
             
         else:
-            # framerate = 75 #force to no using 2nd energy
+            framerate = 75 #force to no using 2nd energy
             if self.det.detectorConfig('roi_mode')['value'] == "4M":
                 self.logger.debug(f'set detector roi_mode from 4M to disabled')
                 self.det.setDetectorConfig('roi_mode','disabled')
@@ -768,7 +811,9 @@ class Eiger2X16M(Detector):
                     self.det.setDetectorConfig('threshold/difference/mode','enabled')
             # self.det.setDetectorConfig('threshold/2/mode','enabled')
             # self.det.setDetectorConfig('threshold/difference/mode','enabled')
-        
+        self.logger.debug(f'done for setting ROI and threshold')    
+        self.logger.debug(f'ask setting some basic info to detector')    
+
         self.x_pixels_in_detector= int(self.det.detectorConfig('x_pixels_in_detector')['value'])
         self.y_pixels_in_detector= int(self.det.detectorConfig('y_pixels_in_detector')['value'])
         # detOmega = self.oscillationRange / self.TotalFrames
@@ -794,70 +839,74 @@ class Eiger2X16M(Detector):
         self.det.setDetectorConfig('chi_increment',chi)
         self.det.setDetectorConfig('phi_start',phi)
         self.det.setDetectorConfig('phi_increment',0)
-        
-        #get user info
-        #user blctl not in ladp database
-        if self.userName=='blctl':
-            uidNumber = getpwnam(self.userName)[2]
-            gidNumber = getpwnam(self.userName)[3]
-        else:
-            uidNumber,gidNumber,passwd = self.ladp.getuserinfo(self.userName)
+        self.logger.debug(f'done for setting some basic info to detector')    
 
-        Ebeamcurrent = caget(self.Par['collect']['EbeamPV'])
-        gap = caget(self.Par['collect']['gapPV'])
-        dbpm1flux = caget(self.Par['collect']['DBPM1PV'])
-        dbpm2flux = caget(self.Par['collect']['DBPM2PV'])
-        dbpm3flux = caget(self.Par['collect']['DBPM3PV'])
-        dbpm5flux = caget(self.Par['collect']['DBPM5PV'])
-        dbpm6flux = caget(self.Par['collect']['DBPM6PV'])
-        sampleflux = caget(self.Par['collect']['samplefluxPV'])
-        kappa = caget(self.Par['collect']['kappaPV'])
-        #tps 07a only
-        self.dbpm1.update()
-        self.dbpm2.update()
-        self.dbpm3.update()
-        self.dbpm5.update()
-        self.dbpm6.update()
+        # self.logger.debug(f'ask for asking beamline info')
+        # #get user info
+        # #user blctl not in ladp database
+        # if self.userName=='blctl':
+        #     uidNumber = getpwnam(self.userName)[2]
+        #     gidNumber = getpwnam(self.userName)[3]
+        # else:
+        #     uidNumber,gidNumber,passwd = self.ladp.getuserinfo(self.userName)
+
+        # Ebeamcurrent = caget(self.Par['collect']['EbeamPV'])
+        # gap = caget(self.Par['collect']['gapPV'])
+        # dbpm1flux = caget(self.Par['collect']['DBPM1PV'])
+        # dbpm2flux = caget(self.Par['collect']['DBPM2PV'])
+        # dbpm3flux = caget(self.Par['collect']['DBPM3PV'])
+        # dbpm5flux = caget(self.Par['collect']['DBPM5PV'])
+        # dbpm6flux = caget(self.Par['collect']['DBPM6PV'])
+        # sampleflux = caget(self.Par['collect']['samplefluxPV'])
+        # kappa = caget(self.Par['collect']['kappaPV'])
+        # #tps 07a only
+        # self.dbpm1.update()
+        # self.dbpm2.update()
+        # self.dbpm3.update()
+        # self.dbpm5.update()
+        # self.dbpm6.update()
         
         
         
         
-        header_appendix ={}
-        header_appendix['user'] = self.userName
-        header_appendix['directory'] = self.directory
-        header_appendix['runIndex'] = self.runIndex
-        header_appendix['beamsize'] = self.beamsize
-        header_appendix['atten'] = self.atten
-        header_appendix['fileindex'] = self.fileindex
-        header_appendix['filename'] = Filename
-        # header_appendix['uid'] = getpwnam(self.userName)[2]
-        # header_appendix['gid'] = getpwnam(self.userName)[3]
-        header_appendix['uid'] = uidNumber
-        header_appendix['gid'] = gidNumber
-        header_appendix['Ebeamcurrent'] = Ebeamcurrent
-        header_appendix['gap'] = gap
-        header_appendix['dbpm1flux'] = dbpm1flux
-        header_appendix['dbpm2flux'] = dbpm2flux
-        header_appendix['dbpm3flux'] = dbpm3flux
-        header_appendix['dbpm5flux'] = dbpm5flux
-        header_appendix['dbpm6flux'] = dbpm6flux
-        header_appendix['sampleflux'] = sampleflux
-        header_appendix['kappa'] = kappa
-        for name,value in self.dbpm1.getneedvalue():
-            header_appendix[name] = value
-        for name,value in self.dbpm2.getneedvalue():
-            header_appendix[name] = value
-        for name,value in self.dbpm3.getneedvalue():
-            header_appendix[name] = value
-        for name,value in self.dbpm5.getneedvalue():
-            header_appendix[name] = value
-        for name,value in self.dbpm6.getneedvalue():
-            header_appendix[name] = value
+        # header_appendix ={}
+        # header_appendix['user'] = self.userName
+        # header_appendix['directory'] = self.directory
+        # header_appendix['runIndex'] = self.runIndex
+        # header_appendix['beamsize'] = self.beamsize
+        # header_appendix['atten'] = self.atten
+        # header_appendix['fileindex'] = self.fileindex
+        # header_appendix['filename'] = Filename
+        # # header_appendix['uid'] = getpwnam(self.userName)[2]
+        # # header_appendix['gid'] = getpwnam(self.userName)[3]
+        # header_appendix['uid'] = uidNumber
+        # header_appendix['gid'] = gidNumber
+        # header_appendix['Ebeamcurrent'] = Ebeamcurrent
+        # header_appendix['gap'] = gap
+        # header_appendix['dbpm1flux'] = dbpm1flux
+        # header_appendix['dbpm2flux'] = dbpm2flux
+        # header_appendix['dbpm3flux'] = dbpm3flux
+        # header_appendix['dbpm5flux'] = dbpm5flux
+        # header_appendix['dbpm6flux'] = dbpm6flux
+        # header_appendix['sampleflux'] = sampleflux
+        # header_appendix['kappa'] = kappa
+        # for name,value in self.dbpm1.getneedvalue():
+        #     header_appendix[name] = value
+        # for name,value in self.dbpm2.getneedvalue():
+        #     header_appendix[name] = value
+        # for name,value in self.dbpm3.getneedvalue():
+        #     header_appendix[name] = value
+        # for name,value in self.dbpm5.getneedvalue():
+        #     header_appendix[name] = value
+        # for name,value in self.dbpm6.getneedvalue():
+        #     header_appendix[name] = value
+        # self.logger.debug(f'done for asking beamline info')
+        self.logger.debug(f'ask for setting trigger_mode/count time')
         if raster:
-            header_appendix['raster_X']=self.rasterinfo['x']
-            header_appendix['raster_Y']=self.rasterinfo['y']
-            header_appendix['grid_width']=self.rasterinfo['gridsizex']
-            header_appendix['grid_height']=self.rasterinfo['gridsizey']
+            # header_appendix['raster_X']=self.rasterinfo['x']
+            # header_appendix['raster_Y']=self.rasterinfo['y']
+            # header_appendix['grid_width']=self.rasterinfo['gridsizex']
+            # header_appendix['grid_height']=self.rasterinfo['gridsizey']
             
             # self.det.setDetectorConfig('trigger_mode','exte')##temp
             self.det.setDetectorConfig('trigger_mode','exts')##temp
@@ -876,9 +925,9 @@ class Eiger2X16M(Detector):
             # self.det.setDetectorConfig('count_time',self.exposureTime-0.0000001) 
             self.det.setDetectorConfig('count_time',self.exposureTime) 
             self.det.setDetectorConfig('frame_time',self.exposureTime)
-        
-        text = json.dumps(header_appendix)
-        self.det.setStreamConfig('header_appendix',text)
+        self.logger.debug(f'done for setting trigger_mode/count time')
+        # text = json.dumps(header_appendix)
+        # self.det.setStreamConfig('header_appendix',text)
         
         # if self.runIndex == 0:
         #     self.det.setFileWriterConfig('nimages_per_file',0)
@@ -888,9 +937,11 @@ class Eiger2X16M(Detector):
         
         # print('Detector Energy',self.Par['EPICS']['Energy']['VAL']*1000)
         Energy = float(caget(self.Par['collect']['EnergyPV']))*1000
+        self.logger.debug(f'ask photon_energy')
         ans = self.det.detectorConfig('photon_energy')
         detEn= float(ans['value'])
-        print(f'Current Energy:{Energy}, Current Detector setting energy={detEn}')
+        self.logger.debug(f'Current detector energy={detEn}')
+        # print(f'Current Energy:{Energy}, Current Detector setting energy={detEn}')
         if (abs(Energy-detEn)>10):#change if more than 10v
             self.det.setDetectorConfig('photon_energy',Energy)
             self.logger.info(f'Detector origin energy={detEn},now set to {Energy}')
@@ -915,8 +966,10 @@ class Eiger2X16M(Detector):
         self.logger.info(f'update to MD3 NumberOfFramesPV')
         NumberOfFramesPV = self.Par['collect']['NumberOfFramesPV']
         caput(NumberOfFramesPV,self.TotalFrames)
-        
+        write_headerP.join()
+        self.logger.info(f'arm detector')
         self.det.sendDetectorCommand('arm')
+        self.logger.info(f'done for arm detector')
         # self.det.sendDetectorCommand('trigger')
         
         #check cryjet in?
@@ -978,6 +1031,77 @@ class Eiger2X16M(Detector):
         self.logger.info(f'setup time = {t1-t0},Detector energy={Energy}')
         return TotalTime,Filename
     
+    def write_header(self,raster,Filename):
+        self.logger.debug(f'ask for asking beamline info')
+        #get user info
+        #user blctl not in ladp database
+        if self.userName=='blctl':
+            uidNumber = getpwnam(self.userName)[2]
+            gidNumber = getpwnam(self.userName)[3]
+        else:
+            uidNumber,gidNumber,passwd = self.ladp.getuserinfo(self.userName)
+
+        Ebeamcurrent = caget(self.Par['collect']['EbeamPV'])
+        gap = caget(self.Par['collect']['gapPV'])
+        dbpm1flux = caget(self.Par['collect']['DBPM1PV'])
+        dbpm2flux = caget(self.Par['collect']['DBPM2PV'])
+        dbpm3flux = caget(self.Par['collect']['DBPM3PV'])
+        dbpm5flux = caget(self.Par['collect']['DBPM5PV'])
+        dbpm6flux = caget(self.Par['collect']['DBPM6PV'])
+        sampleflux = caget(self.Par['collect']['samplefluxPV'])
+        kappa = caget(self.Par['collect']['kappaPV'])
+        #tps 07a only
+        self.dbpm1.update()
+        self.dbpm2.update()
+        self.dbpm3.update()
+        self.dbpm5.update()
+        self.dbpm6.update()
+        
+        
+        
+        
+        header_appendix ={}
+        header_appendix['user'] = self.userName
+        header_appendix['directory'] = self.directory
+        header_appendix['runIndex'] = self.runIndex
+        header_appendix['beamsize'] = self.beamsize
+        header_appendix['atten'] = self.atten
+        header_appendix['fileindex'] = self.fileindex
+        header_appendix['filename'] = Filename
+        # header_appendix['uid'] = getpwnam(self.userName)[2]
+        # header_appendix['gid'] = getpwnam(self.userName)[3]
+        header_appendix['uid'] = uidNumber
+        header_appendix['gid'] = gidNumber
+        header_appendix['Ebeamcurrent'] = Ebeamcurrent
+        header_appendix['gap'] = gap
+        header_appendix['dbpm1flux'] = dbpm1flux
+        header_appendix['dbpm2flux'] = dbpm2flux
+        header_appendix['dbpm3flux'] = dbpm3flux
+        header_appendix['dbpm5flux'] = dbpm5flux
+        header_appendix['dbpm6flux'] = dbpm6flux
+        header_appendix['sampleflux'] = sampleflux
+        header_appendix['kappa'] = kappa
+        for name,value in self.dbpm1.getneedvalue():
+            header_appendix[name] = value
+        for name,value in self.dbpm2.getneedvalue():
+            header_appendix[name] = value
+        for name,value in self.dbpm3.getneedvalue():
+            header_appendix[name] = value
+        for name,value in self.dbpm5.getneedvalue():
+            header_appendix[name] = value
+        for name,value in self.dbpm6.getneedvalue():
+            header_appendix[name] = value
+        pass
+        if raster:
+            header_appendix['raster_X']=self.rasterinfo['x']
+            header_appendix['raster_Y']=self.rasterinfo['y']
+            header_appendix['grid_width']=self.rasterinfo['gridsizex']
+            header_appendix['grid_height']=self.rasterinfo['gridsizey']
+        else:
+            pass
+        text = json.dumps(header_appendix)
+        self.det.setStreamConfig('header_appendix',text)
+        self.logger.debug(f'done for asking beamline info')
     def logDetInfo(self):
         
     
@@ -1004,13 +1128,17 @@ class Eiger2X16M(Detector):
     def waitMD3Ready(self,timeout=20):
         t0 = time.time()
         check = True
+        init = True
         while check:
             # md3_state = caget('07a:md3:Status ',as_string=True)
             md3_state = caget('07a:md3:State ',as_string=True)
             if md3_state== 'Ready' or md3_state== 'READY':
                 check = False
             else:
-                self.logger.info(f'MD3 is busy:{md3_state}')  
+                if init:
+                    self.logger.debug(f'MD3 is busy:{md3_state}')
+                    init = False
+                # self.logger.info(f'MD3 is busy:{md3_state}')  
             if (time.time()-t0)>timeout:
                 self.logger.info(f'MD3 is busy:{md3_state} and timeout reach')     
                 return False

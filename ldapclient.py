@@ -14,8 +14,8 @@ class ladpcleint():
         signal.signal(signal.SIGTERM, self.quit)
         self.ldapserver = 'ldap://10.7.1.1'
         #load config
+        self.m = Manager()
         if Par == None:
-            self.m = Manager()
             self.Par = self.m.dict()
             self.Par.update(Config.Par)
         else:
@@ -74,12 +74,13 @@ class ladpcleint():
 
     def quit(self,signum,frame):
 
-        self.logger.debug(f"PID : {os.getpid()} DHS closed, Par= {self.Par} TYPE:{type(self.Par)}")
+        # self.logger.debug(f"PID : {os.getpid()} DHS closed, Par= {self.Par} TYPE:{type(self.Par)}")
+        self.logger.debug(f"PID : {os.getpid()} DHS closed")
         # self.logger.info(f'PID : {os.getpid()} DHS closed') 
-        self.logger.critical(f'm pid={self.m._process.ident}')
+        self.logger.warning(f'm pid={self.m._process.ident}')
         self.m.shutdown()
         active_children = mp.active_children()
-        self.logger.critical(f'active_children={active_children}')
+        self.logger.warning(f'active_children={active_children}')
         if len(active_children)>0:
             for item in active_children:
                 self.logger.warning(f'Last try to kill {item.pid}')

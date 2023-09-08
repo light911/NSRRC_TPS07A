@@ -10,9 +10,15 @@ https://stackoverflow.com/questions/384076/how-can-i-color-python-logging-output
 import logging,time
 from logging import handlers #this is need for tun in term
 import coloredlogs
-import psycopg
+
 # from datetime import datetime
 import datetime
+import requests
+try:
+    import psycopg
+    __dbbypass = False
+except:
+    __dbbypass =True
 
 def getloger(logname='Main',LOG_FILENAME='log.txt',level = 'INFO'):
     logger=logging.getLogger(logname)
@@ -50,7 +56,7 @@ def getloger(logname='Main',LOG_FILENAME='log.txt',level = 'INFO'):
 
 
 
-def getloger2(logname='Main',LOG_FILENAME='./log/log.txt',level = 'INFO',bypassdb=False):
+def getloger2(logname='Main',LOG_FILENAME='./log/log.txt',level = 'INFO',bypassdb=False,Beamline:str='TPS07A',lineserver='http://172.19.7.199:40000/job',bypassline=True):
     logger=logging.getLogger(logname)
     #fotmatterstr = '%(asctime)s - %(name)s - %(levelname)s -%(funcName)s - %(message)s'
     fotmatterstr = " %(asctime)s - %(name)s - %(levelname)s -%(funcName)s - %(message)s (%(filename)s:%(lineno)d)"
@@ -81,7 +87,7 @@ def getloger2(logname='Main',LOG_FILENAME='./log/log.txt',level = 'INFO',bypassd
     logger.addHandler(filehandler)
     logger.addHandler(ch)
 
-    if bypassdb:
+    if bypassdb or __dbbypass:
         pass
     else:
         try:
@@ -95,7 +101,11 @@ def getloger2(logname='Main',LOG_FILENAME='./log/log.txt',level = 'INFO',bypassd
             #print(logdb)
         except:
             pass
-
+    if bypassline:
+        pass
+    else:
+        logline = LineNotifyHandler(beamline=Beamline,server=lineserver)
+        logger.addHandler(logline)
     
     
     # coloredlogs.install(fmt=fotmatterstr,level=logging.INFO,logger=logger)
@@ -215,7 +225,61 @@ class LogDBHandler(logging.Handler):
             print(f'{e}')
             print('CRITICAL DB ERROR! Logging to database not possible!')
 
+class LineNotifyHandler(logging.Handler):
+    '''
+    Customized logging handler that puts logs to the LineNotify.
+    '''
+    def __init__(self, beamline:str='TPS07A',server='http://172.19.7.199:40000/job'):
+        logging.Handler.__init__(self)
+        self.beamline = beamline
+        self.server = server
+        print(f'Active LineNotify on {beamline}, {server}  ')
+    def emit(self, record):
+        # Set current time
+        
+        # tm = datetime.datetime.fromtimestamp(record.created).strftime("%Y-%m-%d %H:%M:%S.%f")
 
+        # Clear the log message so it can be put to db via sql (escape quotes)
+        self.log_msg = f'{record.msg}'
+        # CRITICAL = 50
+        # FATAL = CRITICAL
+        # ERROR = 40
+        # WARNING = 30
+        # WARN = WARNING
+        # INFO = 20
+        # DEBUG = 10
+        # NOTSET = 0
+        level = record.levelname
+        
+        if len(self.log_msg)>200:
+            self.log_msg = self.log_msg[:200]
+        self.log_msg = self.log_msg.strip()
+        # self.log_msg = self.log_msg.replace('\x00','')
+        # self.log_msg = self.log_msg.replace('\'','\'\'')
+        try:
+            if level == 'CRITICAL' or level == 'FATAL':
+                #set sound to True
+                self.ToLineNotify(beamline=self.beamline,msg=self.log_msg,nosound = False)
+                print('Send To Line')
+            elif level == 'ERROR':
+                self.ToLineNotify(beamline=self.beamline,msg=self.log_msg,nosound = True)
+            else:
+                # print(level)
+                pass
+        except Exception as e:
+            print(f'Line notify error {e}')
+        
+    
+    def ToLineNotify(self,beamline:str=None,msg:str=None,nosound:bool=False,stickerPackageId:int=None,stickerId:int=None):
+        jsondata={}
+        jsondata['beamline'] = beamline
+        jsondata['msg'] = msg
+        jsondata['nosound'] = nosound
+        jsondata['stickerPackageId'] = stickerPackageId
+        jsondata['stickerId'] = stickerId
+        response = requests.post(self.server , json=jsondata)
+        # print(response)
+        return response
     
 if __name__ == "__main__":
     # fh,ch=logsetup()

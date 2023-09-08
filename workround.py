@@ -34,6 +34,7 @@ class myepics():
             self.logger = logsetup.getloger2('myepics',LOG_FILENAME='./log/workround.txt',level = self.Par['Debuglevel'])
         else:
             self.logger = logger
+        
         pass
     def cainfo(self,PV):
         t0=time.time()
@@ -167,7 +168,7 @@ class myepics():
             return data
             
         else:
-            self.logger.critical(f"caget {PV} fail, take time {time.time()-t0}")
+            self.logger.warning(f"caget {PV} fail, take time {time.time()-t0}")
             # return None
             return None
 
@@ -222,7 +223,7 @@ class workroundmd3moving():
     def __init__(self,Q = None,logger=None) -> None:
         self.Par = Config.Par
         if not logger:
-            self.logger = logsetup.getloger2('fixmd3movig',LOG_FILENAME='./log/fixmd3movig.txt',level = self.Par['Debuglevel'])
+            self.logger = logsetup.getloger2('fixmd3moving',LOG_FILENAME='./log/fixmd3moving.txt',level = self.Par['Debuglevel'],bypassline=False)
         else:
             self.logger = logger
         pass
@@ -238,6 +239,7 @@ class workroundmd3moving():
             self.Q = Q['Queue']['workroundQ']
         else:
             self.Q = Queue()
+        self.logger.info('workround DHS start')
         pass
         self.logger.warning(f'init done for workroundmd3moving')
     def run(self,checktime = 3):
@@ -246,6 +248,8 @@ class workroundmd3moving():
         slitstop = self.ca.caget('07a:Slits3:XOpening.DMOV',int,False,False)#1 for stop
         slittimer = time.time()
         time.sleep(checktime)
+        counter = 0
+        Exception_counter = 0
         while True:
             # todo exit code
             #workround md3 motor
@@ -257,25 +261,56 @@ class workroundmd3moving():
             # print(value)
             # print(state)
             diff = []
-            for x,y in zip(targetvalue,currentvalue):
-                diff.append(x-y)
-            # print(diff)
+            
+            try:
+                for x,y in zip(targetvalue,currentvalue):
+                    diff.append(x-y)
+                # print(diff)
 
-            for i,item in enumerate(zip(state,oldstate)):
-                if item[0] == 'MOVING' and item[1] =='MOVING':
-                    #compare with last time
-                    diffwithold = abs(oldvalue[i]-currentvalue[i])
-                    if diffwithold < self.difth[i]:
-                        self.logger.debug(f"MD3 {self.mon[i]} state is {item}, but diffenert with old vlaue is {diffwithold},maybe not moving?check Tartget value")
-                        diffwithtarget = abs(targetvalue[i]-currentvalue[i])
-                        
-                        if diffwithtarget > self.difth[i]:
-                            self.logger.warning(f'MD3 {self.mon[i]}:{targetvalue[i]=},{currentvalue[i]=},{diffwithtarget=}>{self.difth[i]}, {diffwithold=},state={item}goto target')
-                            self.ca.caput(self.TruePosname[i],targetvalue[i])
-                        else:
-                            self.logger.debug(f'{targetvalue[i]=},{currentvalue[i]=},{diffwithtarget=}<{self.difth[i]} not goto target')
-            oldvalue = currentvalue
-            oldstate = state
+                for i,item in enumerate(zip(state,oldstate)):
+                    if item[0] == 'MOVING' and item[1] =='MOVING':
+                        #compare with last time
+                        diffwithold = abs(oldvalue[i]-currentvalue[i])
+                        if diffwithold < self.difth[i]:
+                            self.logger.debug(f"MD3 {self.mon[i]} state is {item}, but diffenert with old vlaue is {diffwithold},maybe not moving?check Tartget value")
+                            diffwithtarget = abs(targetvalue[i]-currentvalue[i])
+                            
+                            if diffwithtarget > self.difth[i]:
+                                if caget('07a:md3:Status') == 'Scanning':
+                                    pass
+                                elif caget('07a:md3:Status') == 'Setting Transfer phase':
+                                    if counter == 0:
+                                        self.logger.warning(f'Try to fix MD3 {self.mon[i]} problem,but now in Setting Transfer phase we do not move at frist try')
+                                        counter += 1
+                                    elif counter < 5:
+                                        counter += 1
+                                        pass
+                                    else:
+                                        self.logger.error(f'In Setting Transfer phase too long, we try abort it')
+                                        counter = 0
+                                        self.ca.caput('07a:md3:abort','__EMPTY__')
+
+                                    pass
+                                else:
+                                    # counter += 1
+                                    self.logger.warning(f'MD3 {self.mon[i]}:{targetvalue[i]=},{currentvalue[i]=},{diffwithtarget=}>{self.difth[i]}, {diffwithold=},state={item}goto target')
+                                    self.logger.error(f'Try to fix MD3 {self.mon[i]} problem')
+                                    self.ca.caput(self.TruePosname[i],targetvalue[i])
+                            else:
+                                counter = 0
+                                self.logger.debug(f'{targetvalue[i]=},{currentvalue[i]=},{diffwithtarget=}<{self.difth[i]} not goto target')
+                oldvalue = currentvalue
+                oldstate = state
+                Exception_counter = 0
+            except Exception as e:
+                Exception_counter += 1
+                if Exception_counter ==5:
+                    self.logger.critical(f'MD3 workaround program has error,and happen 5 time:{e}')
+                    pass
+                else:
+                    self.logger.warning(f'MD3 workaround program has error:{e}')
+                #when md3 has problem
+                #'NoneType' object is not iterable
             #work round 07a:Slits3:XOpening moving problem
             if self.ca.caget('07a:Slits3:XOpening.DMOV',int,False,False) == 1:
                 #stop restart timer 
@@ -289,9 +324,10 @@ class workroundmd3moving():
                     #check Diffenert in VAL and RBV
                     if abs(self.ca.caget('07a:Slits3:XOpening.VAL',float,False,False) - self.ca.caget('07a:Slits3:XOpening.RBV',float,False,False)) < 0.001:                       
                         #in position check moving again
-                        self.logger.warning('slit in postion but still moving, We will try to STOP 07a:Slits3:XPlus and 07a:Slits3:XMinus')
+                        self.logger.error('slit3 in postion but still moving, We will try to STOP 07a:Slits3:XPlus and 07a:Slits3:XMinus')
                         self.ca.caput('07a:Slits3:XPlus.STOP',1)
                         self.ca.caput('07a:Slits3:XMinus.STOP',1)
+                
                     else:
                         self.logger.info(f'slits not in postion,we will not do any thing')
             
