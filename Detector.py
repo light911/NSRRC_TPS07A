@@ -968,6 +968,8 @@ class Eiger2X16M(Detector):
         # self.logger.warning(f'TYPE:{type(self.Par)}')
         
         #update to md3
+        #wait md3 ready
+        self.waitMD3Ready()
         self.logger.info(f'update to MD3 NumberOfFramesPV')
         NumberOfFramesPV = self.Par['collect']['NumberOfFramesPV']
         caput(NumberOfFramesPV,self.TotalFrames)
