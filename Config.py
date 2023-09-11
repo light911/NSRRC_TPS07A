@@ -59,6 +59,7 @@ Par={
                'chiPV':'07a:md3:ChiPosition',
                'phiPV':'07a:md3:PhiPosition',
                'kappaPV':'07a:md3:KappaPosition',
+               'md3modePV':'07a:md3:CurrentPhase',
                },
     'EPICS_special':{'BeamSize':{'BeamSizeName':'07a-ES:Table:Beamsize',
                                  'MD3YName':'07a-ES:Table:MD3Y',

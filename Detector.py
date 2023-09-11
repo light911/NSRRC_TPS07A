@@ -677,7 +677,12 @@ class Eiger2X16M(Detector):
         #  sscanf(commandBuffer.textInBuffe
         # self.logger.info(f'Default action for {command[0]}:{command[1:]}')
         self.logger.info(f'command: {command[1:]}')
-        
+        #move md3 phase inadvance
+        md3phase = float(caget(self.Par['collect']['md3modePV']))
+        if md3phase != 2: 
+            caput(self.Par['collect']['md3modePV'],2)
+            pass
+
         # htos_note changing_detector_mode
         toDcsscommand = ('htos_note','changing_detector_mode')
         self.sendQ.put(toDcsscommand)
