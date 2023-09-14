@@ -5,6 +5,7 @@ Created on Mon May  3 14:26:34 2021
 
 @author: blctl
 """
+import queue
 from multiprocessing import Process, Queue, Manager
 from threading import Thread
 import multiprocessing as mp
@@ -510,10 +511,12 @@ class Eiger2X16M(Detector):
         toDcsscommand = 'htos_set_string_completed system_status normal {Wait for MD3 Scaning} black #d0d000'
         self.sendQ.put(toDcsscommand)
         timeStart=time.time()
-        caput(NumberOfFramesPV,1)# control by detector
+        
         
         MD3state = self.waitMD3Ready()
+        caput(NumberOfFramesPV,1)# control by detector
         if MD3state:
+            
             state = caput(PVcollect,value)
         else:
             state = -1
@@ -681,6 +684,7 @@ class Eiger2X16M(Detector):
         md3phase = float(caget(self.Par['collect']['md3modePV']))
         if md3phase != 2: 
             caput(self.Par['collect']['md3modePV'],2)
+            time.sleep(0.1)
             pass
 
         # htos_note changing_detector_mode
@@ -768,7 +772,8 @@ class Eiger2X16M(Detector):
         self.logger.debug(f'setting Detector')    
         Filename = self.filename + "_" + str(self.fileindex).zfill(4)
         TotalTime = self.TotalFrames * self.exposureTime
-        write_headerP = Thread(target=self.write_header,args=(raster,Filename,),name='write_header')
+        que = queue.Queue()
+        write_headerP = Thread(target=self.write_header,args=(raster,Filename,que,),name='write_header')
         write_headerP.start()
         # framerate = 75 #debug 
         #detector mode
@@ -820,26 +825,38 @@ class Eiger2X16M(Detector):
         self.logger.debug(f'ask setting some basic info to detector')    
 
         self.x_pixels_in_detector= int(self.det.detectorConfig('x_pixels_in_detector')['value'])
+        # self.logger.warning(f'ask setting some basic info to detector_1') 
         self.y_pixels_in_detector= int(self.det.detectorConfig('y_pixels_in_detector')['value'])
         # detOmega = self.oscillationRange / self.TotalFrames
+        # self.logger.warning(f'ask setting some basic info to detector_2') 
         dethor = float(caget(self.Par['collect']['dethorPV']))
+        # self.logger.warning(f'ask setting some basic info to detector_3') 
         detver = float(caget(self.Par['collect']['detverPV']))
+        # self.logger.warning(f'ask setting some basic info to detector_4') 
         beamx = int(self.x_pixels_in_detector/2 - dethor/self.x_pixel_size/1e3)
+        
         beamy = int(self.y_pixels_in_detector/2 + detver/self.y_pixel_size/1e3)
         # self.logger.debug(f'beam x center =  {self.x_pixels_in_detector/2},dethor at {}dethor')
-        
+        # self.logger.warning(f'ask setting some basic info to detector_5') 
         
         self.det.setDetectorConfig('beam_center_x',beamx)
+        # self.logger.warning(f'ask setting some basic info to detector_6') 
         self.det.setDetectorConfig('beam_center_y',beamy)
+        # self.logger.warning(f'ask setting some basic info to detector_7') 
+        
         self.det.setDetectorConfig('detector_distance',self.distance/1000)
+        # self.logger.warning(f'ask setting some basic info to detector_8') 
         self.det.setDetectorConfig('omega_start',self.oscillationStart)
+        # self.logger.warning(f'ask setting some basic info to detector_9') 
         self.det.setDetectorConfig('omega_increment',self.detosc)
+        # self.logger.warning(f'ask setting some basic info to detector_10') 
         try:
             chi = float(caget(self.Par['collect']['chiPV']))
             phi = float(caget(self.Par['collect']['phiPV']))
         except:
             chi = 0
             phi = 0
+        # self.logger.warning(f'ask setting some basic info to detector_11') 
         self.det.setDetectorConfig('chi_start',0)
         self.det.setDetectorConfig('chi_increment',chi)
         self.det.setDetectorConfig('phi_start',phi)
@@ -969,11 +986,14 @@ class Eiger2X16M(Detector):
         
         #update to md3
         #wait md3 ready
-        self.waitMD3Ready()
+        self.waitMD3Ready(30)
         self.logger.info(f'update to MD3 NumberOfFramesPV')
         NumberOfFramesPV = self.Par['collect']['NumberOfFramesPV']
         caput(NumberOfFramesPV,self.TotalFrames)
         write_headerP.join()
+        text = que.get()
+        self.det.setStreamConfig('header_appendix',text)
+
         self.logger.info(f'arm detector')
         self.det.sendDetectorCommand('arm')
         self.logger.info(f'done for arm detector')
@@ -1038,7 +1058,7 @@ class Eiger2X16M(Detector):
         self.logger.info(f'setup time = {t1-t0},Detector energy={Energy}')
         return TotalTime,Filename
     
-    def write_header(self,raster,Filename):
+    def write_header(self,raster,Filename,que:queue.Queue):
         self.logger.debug(f'ask for asking beamline info')
         #get user info
         #user blctl not in ladp database
@@ -1107,7 +1127,8 @@ class Eiger2X16M(Detector):
         else:
             pass
         text = json.dumps(header_appendix)
-        self.det.setStreamConfig('header_appendix',text)
+        que.put(text)
+        # self.det.setStreamConfig('header_appendix',text)
         self.logger.debug(f'done for asking beamline info')
     def logDetInfo(self):
         
