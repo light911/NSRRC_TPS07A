@@ -490,12 +490,12 @@ class atten():
         pass
     def quit(self,signum,frame):
 
-        self.logger.debug(f"PID : {os.getpid()} DHS closed, Par= {self.Par} TYPE:{type(self.Par)}")
+        self.logger.debug(f"Attenserver Offline PID : {os.getpid()} DHS closed")
         # self.logger.info(f'PID : {os.getpid()} DHS closed') 
-        self.logger.critical(f'm pid={self.m._process.ident}')
-        self.m.shutdown()
+        # self.logger.warning(f'm pid={self.m._process.ident}')
+        # self.m.shutdown()
         active_children = mp.active_children()
-        self.logger.critical(f'active_children={active_children}')
+        self.logger.warning(f'active_children={active_children}')
         if len(active_children)>0:
             for item in active_children:
                 self.logger.warning(f'Last try to kill {item.pid}')
