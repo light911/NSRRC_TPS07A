@@ -225,7 +225,13 @@ class Beamsize():
                     # movinglist[self.ApertureMotor] = self.ApertureLists[index]
                     # md3movinglist[self.ApertureMotor] = self.ApertureLists[index]
                     #just move to pos
-                    self.ca.caput(self.ApertureMotor,self.ApertureLists[index],int)
+                    # need wait md3 ready
+
+                    apertureok = self.ca.caput(self.ApertureMotor,self.ApertureLists[index],int)
+                    if apertureok == None:
+                        apertureok = False
+                    else:
+                        apertureok = True
 
                 if self.Slit4VerOPUsing :
                     movinglist[self.Slit4VerOPMotor] = self.Slit4VerOPLists[index]
@@ -421,8 +427,19 @@ class Beamsize():
 
             else:
                 self.logger.warning(f'Beam size : {beamsize} ,not in beam list :{self.BeamSizeLists}')
-
-
+            checkAperture = True
+            while checkAperture:
+                if apertureok:
+                    checkAperture = False
+                    pass
+                else:
+                    #TRY TO PUT AGAIN
+                    time.sleep(0.2)
+                    apertureok = self.ca.caput(self.ApertureMotor,self.ApertureLists[index],int)
+                    if apertureok == None:
+                        apertureok = False
+                    else:
+                        apertureok = True
             self.ca.caput('07a-ES:Beamsize',beamsize)
             self.Busy = False
             self.logger.info(f'End of moving beamsize:{beamsize}')
