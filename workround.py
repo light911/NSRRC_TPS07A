@@ -286,9 +286,13 @@ class workroundmd3moving():
                                         counter += 1
                                         pass
                                     else:
-                                        self.logger.error(f'In Setting Transfer phase too long, we try abort it')
+                                        #checktime * 5 =15 sec
+                                        self.logger.error(f'In Setting Transfer phase too long, we try abort it,andset it again')
                                         counter = 0
                                         self.ca.caput('07a:md3:abort','__EMPTY__')
+                                        time.sleep(1)
+                                        self.ca.caput('07a:md3:CurrentPhase',3)
+
 
                                     pass
                                 else:
@@ -305,7 +309,7 @@ class workroundmd3moving():
             except Exception as e:
                 Exception_counter += 1
                 if Exception_counter ==5:
-                    self.logger.critical(f'MD3 workaround program has error,and happen 5 time:{e}')
+                    self.logger.critical(f'MD3 workaround program has error,and happen 5 time:{e},maybe MD3 server is down')
                     pass
                 else:
                     self.logger.warning(f'MD3 workaround program has error:{e}')
