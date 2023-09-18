@@ -1144,7 +1144,10 @@ class epicsdev(QThread):
         command = ['caput',str(PV),str(value)]
         ans = subprocess.run(command,capture_output=True)
         result = ans.stdout.decode('utf-8')
-        error = ans.stderr.decode('utf-8')       
+        try:
+            error = ans.stderr.decode('utf-8')       
+        except:
+            error = ans.stderr
         self.logger.debug(f'{ans}')
         if error == '':
             print(f'caput PV={PV},value={value} OK!')
