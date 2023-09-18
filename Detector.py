@@ -374,7 +374,10 @@ class Eiger2X16M(Detector):
         closecoverP = Process(target=self.cover.askforAction,args=('close',),name='dcssoperation_close_cover')
         closecoverP.start()
         self.checkandretryCoverProcess(closecoverP,'close')
-        toDcsscommand = f"htos_operation_completed {command[0]} {operationHandle} normal"
+        # toDcsscommand = f"htos_operation_completed {command[0]} {operationHandle} normal"
+        # self.logger.info(f'send command to dcss: {toDcsscommand}')
+        # self.sendQ.put(toDcsscommand)
+        toDcsscommand = ('operdone',command[0],self.operationHandle)
         self.logger.info(f'send command to dcss: {toDcsscommand}')
         self.sendQ.put(toDcsscommand)
         pass
@@ -382,7 +385,10 @@ class Eiger2X16M(Detector):
         operationHandle = command[1]
         self.MoveBeamsize.opencover(True)
         self.MoveBeamsize.wait_opencover(True)
-        toDcsscommand = f"htos_operation_completed {command[0]} {operationHandle} normal"
+        # toDcsscommand = f"htos_operation_completed {command[0]} {operationHandle} normal"
+        
+        # self.sendQ.put(toDcsscommand)
+        toDcsscommand = ('operdone',command[0],self.operationHandle)
         self.logger.info(f'send command to dcss: {toDcsscommand}')
         self.sendQ.put(toDcsscommand)
         pass
@@ -544,8 +550,12 @@ class Eiger2X16M(Detector):
         # self.logger.warning(f"fileindex:{fileindex},nimages:{nimages},Par:{Par}")
         # closecoverP = Process(target=self.cover.CloseCover,name='mutiPosCollect_close_cover')
 
-        #notify dcss we collect done,later we will download file,but dcss can to something
-        toDcsscommand = f"htos_operation_completed {command[0]} {self.operationHandle} normal"
+        # #notify dcss we collect done,later we will download file,but dcss can to something
+        # toDcsscommand = f"htos_operation_completed {command[0]} {self.operationHandle} normal"
+        # self.logger.info(f'send command to dcss: {toDcsscommand}')
+        # self.sendQ.put(toDcsscommand)
+
+        toDcsscommand = ('operdone',command[0],self.operationHandle)
         self.logger.info(f'send command to dcss: {toDcsscommand}')
         self.sendQ.put(toDcsscommand)
 
@@ -610,6 +620,7 @@ class Eiger2X16M(Detector):
         self.sendQ.put(toDcsscommand)
 
         toDcsscommand = ('operdone',command[0],self.operationHandle)
+        self.logger.info(f'send command to dcss: {toDcsscommand}')
         self.sendQ.put(toDcsscommand)
 
     def detector_ratser_setup(self,command):
@@ -693,10 +704,12 @@ class Eiger2X16M(Detector):
         _oscillationTime,_filename = self.basesetup(raster=True,roi=self.roi,beamwithdis=True)
         _filename = _filename + '.h5'
 
-        toDcsscommand = f"htos_operation_completed {command[0]} {self.operationHandle} normal"
+        # toDcsscommand = f"htos_operation_completed {command[0]} {self.operationHandle} normal"
+        # self.logger.info(f'send command to dcss: {toDcsscommand}')
+        # self.sendQ.put(toDcsscommand)
+        toDcsscommand = ('operdone',command[0],self.operationHandle)
         self.logger.info(f'send command to dcss: {toDcsscommand}')
         self.sendQ.put(toDcsscommand)
-                
 
         
     def stoh_abort_all(self,command):    
@@ -774,6 +787,8 @@ class Eiger2X16M(Detector):
         TotalTime = self.TotalFrames * self.exposureTime
         que = queue.Queue()
         write_headerP = Thread(target=self.write_header,args=(raster,Filename,que,),name='write_header')
+        # que = Queue()
+        # write_headerP = Process(target=self.write_header,args=(raster,Filename,que,),name='write_header')
         write_headerP.start()
         # framerate = 75 #debug 
         #detector mode
