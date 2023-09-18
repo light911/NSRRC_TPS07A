@@ -31,7 +31,7 @@ class myepics():
 
         self.Par = Config.Par
         if not logger:
-            self.logger = logsetup.getloger2('myepics',LOG_FILENAME='./log/workround.txt',level = self.Par['Debuglevel'])
+            self.logger = logsetup.getloger2('myepics',LOG_FILENAME='./log/workround.txt',level = self.Par['Debuglevel'],bypassline=False)
         else:
             self.logger = logger
         

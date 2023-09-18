@@ -40,7 +40,7 @@ class epicsdev(QThread):
         #     debuglevel = "INFO"
         
         
-        self.logger = logsetup.getloger2('EPICSdev',LOG_FILENAME='./log/epicsdevlog.txt',level = self.Par['Debuglevel'])
+        self.logger = logsetup.getloger2('EPICSdev',LOG_FILENAME='./log/epicsdevlog.txt',level = self.Par['Debuglevel'],bypassline=False)
         self.logger.info("init EPICS logging")
                
         

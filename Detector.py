@@ -13,7 +13,8 @@ import multiprocessing as mp
 import logsetup,time,subprocess
 from Eiger.DEiger2Client import DEigerClient
 # from epics import caput,CAProcess,caget
-from epics import caput,caget
+from epics import caput,caget,ca
+import epics
 from workround import myepics
 import json
 from pwd import getpwnam
@@ -44,7 +45,7 @@ class Detector():
         # self.sendQ = Queue()
         # self.CommandQ = Queue()
         
-        self.logger = logsetup.getloger2('Detector',LOG_FILENAME='./log/Detectorlog.txt',level = self.Par['Debuglevel'])
+        self.logger = logsetup.getloger2('Detector',LOG_FILENAME='./log/Detectorlog.txt',level = self.Par['Debuglevel'],bypassline=False)
         self.logger.info("init Detector logging")
         
         self.detectorip = self.Par['Detector']['ip']
@@ -267,9 +268,11 @@ class Eiger2X16M(Detector):
         #set checkdis to true will make change distance to Targetdistance
         # beamsizeP = Process(target=self.MoveBeamsize.target,args=(float(beamsize),150,False,False),name='MoveBeamSize')
         # beamsizeP = Thread(target=self.MoveBeamsize.target,args=(float(beamsize),150,False,False),name='MoveBeamSize')
+        self.logger.debug(f'Start process for{command}') #proc ('changeBeamSize', '1.3853', '100.000000', '399.999160') 
         beamsizeP.start()
         beamsizeP.join()
-        self.logger.warning(f'proc {command}')
+        self.logger.debug(f'End process for{command}') #proc ('changeBeamSize', '1.3853', '100.000000', '399.999160') 
+        #self.logger.warning(f'proc {command}') #proc ('changeBeamSize', '1.3853', '100.000000', '399.999160') 
         toDcsscommand = ('operdone',) + tuple(command)
         self.sendQ.put(toDcsscommand,timeout=1)
         #update beam size in dcss
@@ -417,7 +420,7 @@ class Eiger2X16M(Detector):
     #                  [lindex $args 0] \
     #                  $totalFrames \
     #                 $beam_size $attn]
-
+        t0 = time.time()
         self.operationHandle = command[1]
         self.runIndex = int(command[2])
         self.filename = command[3]
@@ -449,18 +452,30 @@ class Eiger2X16M(Detector):
         toDcsscommand = ('htos_note','changing_detector_mode')
         self.sendQ.put(toDcsscommand)
         #beam size and distance has moved by dcss
-        _oscillationTime,_filename = self.basesetup(movebeasize=False)
-        _filename = _filename + '.h5'
+        # _oscillationTime,_filename = self.basesetup(movebeasize=False)
+        # raster=False,roi=False,beamwithdis=False,movebeasize=True
+        args=(False,False,False,False,)
+        detectorsetupP = Process(target=self.basesetup,args=args,name='Detector_Setup')
+        detectorsetupP.start()
+        _oscillationTime = self.TotalFrames * self.exposureTime
+        Filename = self.filename + "_" + str(self.fileindex).zfill(4)
+        _filename = Filename + '.h5'
+        self.checkandretryDetectorSetupProcess(detectorsetupP,args)
         
         
+        self.logger.debug('start to updatefilestring check')
+        monP = Process(target=self.updatefilestring,name='Monfile')
+        monP.start()
         toDcsscommand = ('operupdate',command[0],self.operationHandle,'start_oscillation','shutter',str(_oscillationTime),_filename)
         self.sendQ.put(toDcsscommand)
         toDcsscommand = ('operdone',command[0],self.operationHandle)
         self.sendQ.put(toDcsscommand)
+        self.logger.warning(f'detector_collect_shutterless take {time.time()-t0} sec')
         # command = ('operdone',) + command
         # self.sendQ.put(command)
     def mutiPosCollect(self,command):
         # ans =  [runIndex,filename,directory,userName,axisName,exposureTime,oscillationStart,detosc,TotalFrames,distance,wavelength,detectoroffX,detectoroffY,sessionId,fileindex,unknow,beamsize,atten]
+        t0=time.time()
         self.operationHandle = command[1]
         self.runIndex = command[2]
         self.filename = command[3]
@@ -489,8 +504,25 @@ class Eiger2X16M(Detector):
         self.sendQ.put(toDcsscommand)
         self.abort =False
         self.roi=False
-        _oscillationTime,_filename = self.basesetup(raster=False,roi=self.roi,beamwithdis=True)
-        _filename = _filename + '.h5'
+        # _oscillationTime,_filename = self.basesetup(raster=False,roi=self.roi,beamwithdis=True)
+        # _filename = _filename + '.h5'
+
+        # _oscillationTime,_filename = self.basesetup(movebeasize=False)
+        # raster=False,roi=False,beamwithdis=False,movebeasize=True
+        args=(False,self.roi,True,True,)
+        detectorsetupP = Process(target=self.basesetup,args=args,name='Detector_Setup')
+        detectorsetupP.start()
+        _oscillationTime = self.TotalFrames * self.exposureTime
+        Filename = self.filename + "_" + str(self.fileindex).zfill(4)
+        _filename = Filename + '.h5'
+        self.checkandretryDetectorSetupProcess(detectorsetupP,argstimeout=120)#need to move beam size take longer time
+        
+        
+        self.logger.debug('start to updatefilestring check')
+        monP = Process(target=self.updatefilestring,name='Monfile')
+        monP.start()
+        self.logger.warning(f'mutiPosCollect detector setup take {time.time()-t0} sec')
+
         self.logger.warning(f"Setup for MD3 scan")
         #tri md3
         #List of scan parameter values, comma separated: Int,double,double,double,intframe_number (int):
@@ -651,6 +683,7 @@ class Eiger2X16M(Detector):
     #                 $beam_size $attn]
     # return [runIndex,filename,directory,userName,axisName,exposureTime,oscillationStart,detosc,TotalFrames,distance,wavelength
     # ,detectoroffX,detectoroffY,sessionId,fileindex,unknow,beamsize,atten,roi,numofX,numofY,uid,gid,gridsizex,gridsizey]
+        t0=time.time()
         self.operationHandle = command[1]
         self.runIndex = command[2]
         self.filename = command[3]
@@ -701,16 +734,27 @@ class Eiger2X16M(Detector):
         # htos_note changing_detector_mode
         toDcsscommand = ('htos_note','changing_detector_mode')
         self.sendQ.put(toDcsscommand)
-        _oscillationTime,_filename = self.basesetup(raster=True,roi=self.roi,beamwithdis=True)
-        _filename = _filename + '.h5'
 
-        # toDcsscommand = f"htos_operation_completed {command[0]} {self.operationHandle} normal"
-        # self.logger.info(f'send command to dcss: {toDcsscommand}')
-        # self.sendQ.put(toDcsscommand)
+        # _oscillationTime,_filename = self.basesetup(raster=True,roi=self.roi,beamwithdis=True)
+        # _filename = _filename + '.h5'
+        # raster=False,roi=False,beamwithdis=False,movebeasize=True
+        args=(True,self.roi,True,True,)
+        detectorsetupP = Process(target=self.basesetup,args=args,name='Detector_Setup')
+        detectorsetupP.start()
+        # _oscillationTime = self.TotalFrames * self.exposureTime
+        # Filename = self.filename + "_" + str(self.fileindex).zfill(4)
+        # _filename = Filename + '.h5'
+        self.checkandretryDetectorSetupProcess(detectorsetupP,args,timeout=120)#need to move beam size take longer time
+        
+        
+        self.logger.debug('start to updatefilestring check')
+        monP = Process(target=self.updatefilestring,name='Monfile')
+        monP.start()
+
         toDcsscommand = ('operdone',command[0],self.operationHandle)
         self.logger.info(f'send command to dcss: {toDcsscommand}')
         self.sendQ.put(toDcsscommand)
-
+        self.logger.warning(f'detector_ratser_setup take {time.time()-t0} sec')
         
     def stoh_abort_all(self,command):    
         # if self.cover.show_current_state=="Closed":
@@ -736,10 +780,7 @@ class Eiger2X16M(Detector):
     
     def basesetup(self,raster=False,roi=False,beamwithdis=False,movebeasize=True):
         t0 = time.time()
-
-        
-
-        
+        ca.clear_cache()
         self.logger.debug(f'TotalFrames =  {self.TotalFrames},exposureTime = {self.exposureTime} ')
         self.logger.debug(f'oscillationStart =  {self.oscillationStart},framewidth = {self.detosc}')
         self.logger.debug(f'directory =  {self.directory},filename = {self.filename},fileindex={self.fileindex}')
@@ -1067,14 +1108,31 @@ class Eiger2X16M(Detector):
                     
 
         t1 = time.time()
-        self.logger.debug('start to updatefilestring check')
-        monP = Process(target=self.updatefilestring,name='Monfile')
-        monP.start()
+        # we wait baseset can be a process, so take it outide here
+        # self.logger.debug('start to updatefilestring check')
+        # monP = Process(target=self.updatefilestring,name='Monfile')
+        # monP.start()
         self.logger.info(f'setup time = {t1-t0},Detector energy={Energy}')
         return TotalTime,Filename
     
     def write_header(self,raster,Filename,que:queue.Queue):
         self.logger.debug(f'ask for asking beamline info')
+
+        #handle ecpis on mutiprocess problem
+        """
+        Clears global pyepics state and fixes the CA context
+        such that forked subprocesses created with multiprocessing
+        can safely use pyepics.
+        """
+        ca.clear_cache()
+        # # Clear global pyepics state variables
+        # ca._cache.clear()
+
+        # # The old context is copied directly from the old process
+        # # in systems with proper fork() implementations
+        # ca.detach_context()
+        # ca.create_context()
+
         #get user info
         #user blctl not in ladp database
         if self.userName=='blctl':
@@ -1213,7 +1271,7 @@ class Eiger2X16M(Detector):
         coverprocess.join(5)
         self.logger.warning(f'{action} coverP process {coverprocess.is_alive()=},{coverprocess.pid=},{coverprocess.sentinel=},{coverprocess.exitcode=}')
         if coverprocess.exitcode== None:
-            self.logger.warning(f'closecover P has problem kill it!')
+            self.logger.critical(f'closecover P has problem kill it!')
             coverprocess.kill()
             #try to close again
             self.logger.warning(f'Try to close it again!')
@@ -1222,6 +1280,21 @@ class Eiger2X16M(Detector):
             self.checkandretryCoverProcess(closecoverP,action)
         else:
             self.logger.warning(f'OK for {action} Cover!!')
+        pass
+    def checkandretryDetectorSetupProcess(self,detectorprocess:Process,args,timeout =10):
+        
+        detectorprocess.join(timeout)
+        self.logger.warning(f'Setup detector process {detectorprocess.is_alive()=},{detectorprocess.pid=},{detectorprocess.sentinel=},{detectorprocess.exitcode=}')
+        if detectorprocess.exitcode== None:
+            self.logger.critical(f'detector process has problem kill it!')
+            detectorprocess.kill()
+            #try to close again
+            self.logger.warning(f'Try to close it again!')
+            detectorP = Process(target=self.basesetup,args=args,name='Detector_Setup')
+            detectorP.start()
+            self.checkandretryCoverProcess(detectorP,args,timeout)
+        else:
+            self.logger.info(f'OK for detector setup')
         pass
     def recheckandretryProcess(self,beamsizeP,raster,beamwithdis):
         beamsizeP.join(60)

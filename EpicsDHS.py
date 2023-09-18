@@ -779,7 +779,7 @@ class DCSDHS():
                 else:
                     pass
             except Exception as e:
-                self.logger.error("send process has error {e}")
+                self.logger.error(f"send process has error {e}")
 
         pass
     def pipecaput(self,PV,value):
