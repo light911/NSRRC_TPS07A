@@ -25,7 +25,8 @@ from ldapclient import ladpcleint
 import math,requests,socket
 from workround import myepics
 import traceback,sys
-from myeigerclient import EigerClient
+from myeigerclient import EigerClient,setDetectorConfig,setMonitorConfig,sendDetectorCommand,detectorConfig,setFileWriterConfig
+import concurrent.futures
 
 class Detector():
     def __init__(self,Par,Q,coverdhs=None) :
@@ -177,7 +178,8 @@ class Eiger2X16M(Detector):
         self.det.setStreamConfig('mode','enabled')
         self.det.setFileWriterConfig('mode','enabled')
         self.det.setFileWriterConfig('nimages_per_file',int(self.Par['Detector']['nimages_per_file']))
-        
+        self.det.setDetectorConfig('chi_increment',0)
+        self.det.setDetectorConfig('phi_increment',0)
         self.x_pixels_in_detector= int(self.det.detectorConfig('x_pixels_in_detector')['value'])
         self.y_pixels_in_detector= int(self.det.detectorConfig('y_pixels_in_detector')['value'])
         self.x_pixel_size= float(self.det.detectorConfig('x_pixel_size')['value'])
@@ -805,7 +807,7 @@ class Eiger2X16M(Detector):
         closecoverP = Process(target=self.cover.askforAction,args=('close',),name='abort_close_cover')
         closecoverP.start()
     
-    def basesetup(self,raster=False,roi=False,beamwithdis=False,movebeasize=True,detconn=None):
+    def basesetup_old(self,raster=False,roi=False,beamwithdis=False,movebeasize=True,detconn=None):
         try:
             t0 = time.time()
             # ca.clear_cache()
@@ -920,9 +922,7 @@ class Eiger2X16M(Detector):
             self.logger.debug(f'done for setting ROI and threshold')    
             self.logger.debug(f'ask setting some basic info to detector')    
             
-            #has been ask in header but ROI maybe change it
-            self.x_pixels_in_detector= int(det.detectorConfig('x_pixels_in_detector')['value'])
-            self.y_pixels_in_detector= int(det.detectorConfig('y_pixels_in_detector')['value'])
+            
             # detOmega = self.oscillationRange / self.TotalFrames
             
             dethor = float(self.ca.caget(self.Par['collect']['dethorPV']))
@@ -1168,7 +1168,179 @@ class Eiger2X16M(Detector):
             self.logger.warning(f'Setup detector has error {errMsg}')
             sys.exit(-1)#for mutiprocess
             
-    
+    def basesetup(self,raster=False,roi=False,beamwithdis=False,movebeasize=True,detconn=None):
+        #mutithread version
+        try:
+            t0 = time.time()
+            det = EigerClient(self.detectorip,self.detectorport)
+            self.logger.debug(f'TotalFrames =  {self.TotalFrames},exposureTime = {self.exposureTime} ')
+            self.logger.debug(f'oscillationStart =  {self.oscillationStart},framewidth = {self.detosc}')
+            self.logger.debug(f'directory =  {self.directory},filename = {self.filename},fileindex={self.fileindex}')
+            self.logger.debug(f'distance =  {self.distance},wavelength = {self.wavelength},detectoroffX={self.detectoroffX},detectoroffY={self.detectoroffY},beamsize={self.beamsize},atten={self.atten}')
+            self.logger.debug(f'Unknow =  {self.unknow}')
+            framerate = 1 / self.exposureTime 
+
+            self.logger.debug(f'setting Detector')
+            Filename = self.filename + "_" + str(self.fileindex).zfill(4)
+            TotalTime = self.TotalFrames * self.exposureTime
+            que = queue.Queue()
+            write_headerP = Thread(target=self.write_header,args=(raster,Filename,que,),name='write_header')
+            
+            write_headerP.start()
+
+            #somthing not easy to asynchronously
+            self.logger.debug(f'ask setting ROI and frist threshold')
+            if roi:
+                if det.detectorConfig('roi_mode')['value'] == "disabled":
+                    self.logger.debug(f'set detector roi_mode from disabled to 4M')
+                    det.setDetectorConfig('roi_mode','4M')
+                framerate = 500 #debug #force to no using 2nd energy
+                if framerate > 280:
+                    self.logger.debug(f'framerate =  {framerate},disable two threshold')
+                    if det.detectorConfig('threshold/difference/mode')['value'] == "enabled":
+                        self.logger.debug(f'update detector threshold/difference/ to disabled')
+                        det.setDetectorConfig('threshold/difference/mode','disabled')
+                    if det.detectorConfig('threshold/2/mode')['value'] == "enabled":
+                        self.logger.debug(f'update detector threshold/2/mode to disabled')
+                        det.setDetectorConfig('threshold/2/mode','disabled')
+                else:
+                    self.logger.debug(f'framerate =  {framerate},enable two threshold')
+                    if det.detectorConfig('threshold/2/mode')['value'] == "disabled":
+                        det.setDetectorConfig('threshold/2/mode','enabled')
+                    if det.detectorConfig('threshold/difference/mode')['value'] == "disabled":    
+                        det.setDetectorConfig('threshold/difference/mode','enabled')
+                
+            else:
+                framerate = 75 #force to no using 2nd energy
+                if det.detectorConfig('roi_mode')['value'] == "4M":
+                    self.logger.debug(f'set detector roi_mode from 4M to disabled')
+                    det.setDetectorConfig('roi_mode','disabled')
+                
+                if framerate > 70:
+                    self.logger.debug(f'framerate =  {framerate},disable two threshold')
+                    if det.detectorConfig('threshold/difference/mode')['value'] == "enabled":
+                        self.logger.debug(f'update detector threshold/difference/ to disabled')
+                        det.setDetectorConfig('threshold/difference/mode','disabled')
+                    if det.detectorConfig('threshold/2/mode')['value'] == "enabled":
+                        self.logger.debug(f'update detector threshold/2/mode to disabled')
+                        det.setDetectorConfig('threshold/2/mode','disabled')
+                else:
+                    self.logger.debug(f'framerate =  {framerate},enable two threshold')
+                    if det.detectorConfig('threshold/2/mode')['value'] == "disabled":
+                        det.setDetectorConfig('threshold/2/mode','enabled')
+                    if det.detectorConfig('threshold/difference/mode')['value'] == "disabled":    
+                        det.setDetectorConfig('threshold/difference/mode','enabled')
+            self.logger.debug(f'done for setting ROI and threshold')    
+            self.logger.debug(f'ask for setting trigger_mode/count time')
+            if raster:               
+                # self.det.setDetectorConfig('trigger_mode','exte')##temp
+                det.setDetectorConfig('trigger_mode','exts')##temp
+                det.setDetectorConfig('nimages',int(self.rasterinfo['y']))
+                det.setDetectorConfig('ntrigger',int(self.rasterinfo['x']))
+                det.setDetectorConfig('count_time',self.exposureTime) 
+                det.setDetectorConfig('frame_time',self.exposureTime)
+            else:
+                det.setDetectorConfig('trigger_mode','exts')##temp
+                det.setDetectorConfig('nimages',self.TotalFrames)
+                det.setDetectorConfig('ntrigger',1)
+                det.setDetectorConfig('count_time',self.exposureTime) 
+                det.setDetectorConfig('frame_time',self.exposureTime)
+            self.logger.debug(f'done for setting trigger_mode/count time')
+
+            Energy = float(self.ca.caget(self.Par['collect']['EnergyPV']))*1000
+            self.logger.debug(f'ask photon_energy')
+            ans = det.detectorConfig('photon_energy')
+            detEn= float(ans['value'])
+            self.logger.debug(f'Current detector energy={detEn}')
+            # print(f'Current Energy:{Energy}, Current Detector setting energy={detEn}')
+            if (abs(Energy-detEn)>10):#change if more than 10v
+                det.setDetectorConfig('photon_energy',Energy)
+                self.logger.info(f'Detector origin energy={detEn},now set to {Energy}')
+
+            #has been ask in header but ROI maybe change it
+            self.x_pixels_in_detector= int(det.detectorConfig('x_pixels_in_detector')['value'])
+            self.y_pixels_in_detector= int(det.detectorConfig('y_pixels_in_detector')['value'])
+            dethor = float(self.ca.caget(self.Par['collect']['dethorPV']))
+            detver = float(self.ca.caget(self.Par['collect']['detverPV']))
+            beamx = int(self.x_pixels_in_detector/2 - dethor/self.x_pixel_size/1e3)
+            beamy = int(self.y_pixels_in_detector/2 + detver/self.y_pixel_size/1e3)
+            try:
+                chi = float(self.ca.caget(self.Par['collect']['chiPV']))
+                phi = float(self.ca.caget(self.Par['collect']['phiPV']))
+            except:
+                chi = 0
+                phi = 0
+
+            self.logger.debug(f'ask setting some basic info to detector')
+            #something can be set frist
+            # however seem not DCU can't do it parallel,setting matbe not 
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+            # with concurrent.futures.ProcessPoolExecutor() as executor:
+                futures = []
+                tstart = time.time()
+                
+                futures.append(executor.submit(setDetectorConfig, 'beam_center_x',beamx,self.detectorip,self.detectorport))
+                futures.append(executor.submit(setDetectorConfig, 'beam_center_y',beamy,self.detectorip,self.detectorport))
+                futures.append(executor.submit(setDetectorConfig, 'detector_distance',self.distance/1000,self.detectorip,self.detectorport))
+                futures.append(executor.submit(setDetectorConfig, 'omega_start',self.oscillationStart,self.detectorip,self.detectorport))
+                futures.append(executor.submit(setDetectorConfig, 'omega_increment',self.detosc,self.detectorip,self.detectorport))
+                futures.append(executor.submit(setDetectorConfig, 'chi_start',chi,self.detectorip,self.detectorport))
+                # futures.append(executor.submit(setDetectorConfig, 'chi_increment',0,self.detectorip,self.detectorport))
+                futures.append(executor.submit(setDetectorConfig, 'phi_start',phi,self.detectorip,self.detectorport))
+                # futures.append(executor.submit(setDetectorConfig, 'phi_increment',0,self.detectorip,self.detectorport))
+                futures.append(executor.submit(setMonitorConfig, 'mode',"enabled",self.detectorip,self.detectorport))
+                futures.append(executor.submit(setFileWriterConfig, 'mode',"enabled",self.detectorip,self.detectorport))
+
+                for future in concurrent.futures.as_completed(futures):            
+                    pass
+                    # print(time.time()-tstart,future.result())
+            self.logger.debug(f'done for setting some basic info to detector now = {time.time()-t0}') 
+                
+            
+            self.logger.debug(f'Filename =  {Filename}')
+            det.setFileWriterConfig('name_pattern',Filename)
+            self.Par['Detector']['Filename'] = Filename
+            self.Par['Detector']['Fileindex'] = self.fileindex
+            self.Par['Detector']['nimages'] = self.TotalFrames
+           
+            
+            #update to md3
+            #wait md3 ready
+            self.waitMD3Ready(30)
+            self.logger.info(f'update to MD3 NumberOfFramesPV {self.TotalFrames}')
+            NumberOfFramesPV = self.Par['collect']['NumberOfFramesPV']
+            # caput(NumberOfFramesPV,self.TotalFrames)
+            self.ca.caput(NumberOfFramesPV,self.TotalFrames)
+            write_headerP.join()
+            text = que.get()
+            det.setStreamConfig('header_appendix',text)
+
+            self.logger.info(f'arm detector')
+            det.sendDetectorCommand('arm')
+            self.logger.info(f'done for arm detector')
+            # self.det.sendDetectorCommand('trigger')
+            
+            #check cryjet in?
+
+            self.logDetInfo(det)
+            t1 = time.time()
+            # we wait baseset can be a process, so take it outide here
+            # self.logger.debug('start to updatefilestring check')
+            # monP = Process(target=self.updatefilestring,name='Monfile')
+            # monP.start()
+            self.logger.info(f'setup time = {t1-t0},Detector energy={Energy}')
+            return TotalTime,Filename
+        except Exception as e:
+            error_class = e.__class__.__name__ #取得錯誤類型
+            detail = e.args[0] #取得詳細內容
+            cl, exc, tb = sys.exc_info() #取得Call Stack
+            lastCallStack = traceback.extract_tb(tb)[-1] #取得Call Stack的最後一筆資料
+            fileName = lastCallStack[0] #取得發生的檔案名稱
+            lineNum = lastCallStack[1] #取得發生的行號
+            funcName = lastCallStack[2] #取得發生的函數名稱
+            errMsg = "File \"{}\", line {}, in {}: [{}] {}".format(fileName, lineNum, funcName, error_class, detail)
+            self.logger.warning(f'Setup detector has error {errMsg}')
+            sys.exit(-1)#for mutiprocess
     def setup_beamsize_cover_distance(self,raster=False,roi=False,beamwithdis=False,movebeasize=True):
         #move cryjet in
         askCryojetIn(self.Par['robot']['host'],self.Par['robot']['commandprot'])
@@ -1205,7 +1377,7 @@ class Eiger2X16M(Detector):
     def write_header(self,raster,Filename,que:queue.Queue):
         self.logger.debug(f'ask for asking beamline info')
 
-        #handle ecpis on mutiprocess problem
+        #handle ecpis on mutiprocess problem,but not work
         """
         Clears global pyepics state and fixes the CA context
         such that forked subprocesses created with multiprocessing
@@ -1291,29 +1463,50 @@ class Eiger2X16M(Detector):
         # self.det.setStreamConfig('header_appendix',text)
         self.logger.debug(f'done for asking beamline info')
     def logDetInfo(self,det:DEigerClient=None):
+        t0 = time.time()
         if det == None:
             det = self.det
-    
         commands = ["count_time","frame_time",'detector_distance','nimages','ntrigger',
-                'number_of_excluded_pixels','photon_energy','roi_mode',
+                'photon_energy','roi_mode',
                 'threshold_energy','threshold/1/energy',
                 'threshold/1/mode','threshold/2/energy','threshold/2/mode',
                 'threshold/difference/mode','trigger_mode','wavelength',
                 'beam_center_x','beam_center_y','auto_summation',
                 'bit_depth_image','bit_depth_readout','compression',
                 'omega_start','omega_increment','virtual_pixel_correction_applied']
-        for command in commands:
-            # unit = ""
-            # url = "http://{}:{}/detector/api/1.8.0/config/{}".format(ip, port,command)
-            # ans = requests.get(url)
-            # darray = ans.json()["value"]
-            ans = det.detectorConfig(command)
-            value = ans['value']
-            try:
-                unit = ans['unit']
-            except :
-                unit =""
-            self.logger.debug(f'{command} = {value} {unit}') 
+        # detectorConfig number_of_excluded_pixels take 0.11530303955078125
+        #take too long we remove it
+        #ProcessPoolExecutor take 0.2sec mote to start
+        with concurrent.futures.ThreadPoolExecutor() as executor:           
+        # with concurrent.futures.ProcessPoolExecutor() as executor:
+            futures = []
+            for item in commands:
+                # futures.append(executor.submit(det.detectorConfig,item))
+                futures.append(executor.submit(detectorConfig,item,self.detectorip,self.detectorport))
+            for future in concurrent.futures.as_completed(futures):                  
+                index = futures.index(future)
+                value = future.result()['value']
+                try:
+                    unit = future.result()['unit']
+                except :
+                    unit =""
+                self.logger.debug(f'{commands[index]} = {value} {unit} take {time.time()-t0} sec ') 
+        # for command in commands:
+        #     ans = det.detectorConfig(command)
+        #     value = ans[# for command in commands:
+        #     ans = det.detectorConfig(command)
+        #     value = ans['value']
+        #     try:
+        #         unit = ans['unit']
+        #     except :
+        #         unit =""
+        #     self.logger.debug(f'{command} = {value} {unit}') ]
+        #     try:
+        #         unit = ans['unit']
+        #     except :
+        #         unit =""
+        #     self.logger.debug(f'{command} = {value} {unit}') 
+        print(f'Get logDetInfo take time = {time.time()-t0} sec')
     def waitMD3Ready(self,timeout=20):
         t0 = time.time()
         check = True
@@ -1323,6 +1516,8 @@ class Eiger2X16M(Detector):
             md3_state = self.ca.caget('07a:md3:State',format = str)
             # print(md3_state)
             if md3_state== 'Ready' or md3_state== 'READY' or md3_state== 'READY\n':
+                self.logger.info(f'MD3 is Ready')
+                return True 
                 check = False
             else:
                 if init:
@@ -1333,8 +1528,6 @@ class Eiger2X16M(Detector):
                 self.logger.info(f'MD3 is busy:{md3_state} and timeout reach')     
                 return False
             time.sleep(0.2)
-        self.logger.info(f'MD3 is Ready')     
-        return True    
     def pipecaput(self,PV,value):
         self.logger.warning(f'caput PV={PV},value={value}')
         if type(value) is list:
