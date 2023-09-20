@@ -112,9 +112,12 @@ class myepics():
             # return False
             return None
 
-    def caget(self,PV,format='Auto',array=False,debug=True):
+    def caget(self,PV,format='Auto',array=False,debug=False):
         t0 = time.time()
-        command = ['caget','-stF_']
+        if format == int or format == float:
+            command = ['caget','-ntF_']
+        else:
+            command = ['caget','-stF_']
 
         if type(PV) is list:
             for item in PV:

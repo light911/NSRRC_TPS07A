@@ -872,6 +872,7 @@ class epicsdev(QThread):
                     # time.sleep(0.5)
                     # # p = CAProcess(target=self.oldCAPUT , args=(PVname,value,))
                     # # p.start()
+                    self.waitMD3Ready()
                     a1 = self.caput('07a:md3:ScanExposureTime',ScanExposureTime)
                     a2 = self.caput('07a:md3:ScanRange',ScanRange)
                     a3 = self.caput('07a:md3:ScanStartAngle',ScanStartAngle)

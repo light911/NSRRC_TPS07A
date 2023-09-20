@@ -193,7 +193,7 @@ class MOXA():
                 # self.set_do_state(self.DO_OpenCover,0)
                 commandQ.put(('DO_CloseCover',0))
                 commandQ.put(('DO_OpenCover',0))
-                self.logger.critical(f"Detector Cover operation Timeout! in {timeout} sec")
+                self.logger.critical(f"Detector Cover operation Timeout! in {timeout} sec, {action=},{Coverstate=}")
                 stop = True
             
         #done for command

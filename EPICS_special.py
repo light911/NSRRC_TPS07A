@@ -283,6 +283,9 @@ class Beamsize():
                     pass
                 elif detMove < 0 and not MoveTogether:
                     #MD3Y move forward, move MD3Y Frist
+                    #update kx ky
+                    self.ca.caput(self.DBPM6kxfactor,self.DBPM6kxLists[index])
+                    self.ca.caput(self.DBPM6kyfactor,self.DBPM6kyLists[index])
                     self.logger.info(f'Moving MD3Y Frist! pervent collision') 
                     self.logger.debug(f'Set {self.MD3YMotor} move to {movinglist[self.MD3YMotor]}') 
                     t1 = time.time()
@@ -320,6 +323,9 @@ class Beamsize():
                     self.logger.info(f'Moving All MOTOR Done,take {runtime}sec') 
                 elif detMove >0 and not MoveTogether:
                     #MD3Y move back, move DetY Frist
+                    #update kx ky
+                    self.ca.caput(self.DBPM6kxfactor,self.DBPM6kxLists[index])
+                    self.ca.caput(self.DBPM6kyfactor,self.DBPM6kyLists[index])
                     self.logger.info(f'Moving DetY Frist! pervent collision') 
                     self.logger.debug(f'Set {self.DetYMotor} move to {movinglist[self.DetYMotor]}') 
                     t1 = time.time()
@@ -358,6 +364,9 @@ class Beamsize():
                     pass
                 elif MoveTogether and detMove != 0:
                     self.logger.info(f'Moving All MOTOR at the same time') 
+                    #update kx ky
+                    self.ca.caput(self.DBPM6kxfactor,self.DBPM6kxLists[index])
+                    self.ca.caput(self.DBPM6kyfactor,self.DBPM6kyLists[index])
                     self.opencover(opencover)
                     # movejob = movinglist
                     movinglist[self.DetYMotor] = targetDetY
@@ -420,10 +429,10 @@ class Beamsize():
                             self.logger.warning(f'Error when give {motor} command')
                             self.logger.warning(f'Exception : {e}')
                             pass
-                #update kx ky
+                # #update kx ky
                 
-                self.ca.caput(self.DBPM6kxfactor,self.DBPM6kxLists[index])
-                self.ca.caput(self.DBPM6kyfactor,self.DBPM6kyLists[index])
+                # self.ca.caput(self.DBPM6kxfactor,self.DBPM6kxLists[index])
+                # self.ca.caput(self.DBPM6kyfactor,self.DBPM6kyLists[index])
 
             else:
                 self.logger.warning(f'Beam size : {beamsize} ,not in beam list :{self.BeamSizeLists}')
