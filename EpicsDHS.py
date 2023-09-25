@@ -189,8 +189,9 @@ class DCSDHS():
         check = True
         while check:
             # md3_state = caget('07a:md3:Status ',as_string=True)
-            md3_state = caget('07a:md3:State ',as_string=True)
-            if md3_state== 'Ready' or md3_state== 'READY':
+            # md3_state = caget('07a:md3:State ',as_string=True)
+            md3_state = self.ca.caget('07a:md3:State',format = str)
+            if md3_state== 'Ready' or md3_state== 'READY'or md3_state== 'READY\n':
                 check = False
             else:
                 self.logger.info(f'MD3 is busy:{md3_state}')  
