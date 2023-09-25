@@ -748,7 +748,14 @@ class epicsdev(QThread):
                                 value = int(float(command[2]))
                             else:
                                 value = command[2]
-                            self.caput(PVname,value)
+                            ok = self.caput(PVname,value)
+                            if ok:
+                                pass
+                            else:
+                                #wait md3 ready?
+                                self.waitMD3Ready(timeout=10)
+                                self.caput(PVname,value)
+
                             # p = CAProcess(target=self.oldCAPUT, args=(PVname,float(command[2]),))
                             # p.start()
                             # p.join()
