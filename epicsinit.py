@@ -20,7 +20,7 @@ from PyQt5.QtCore import QObject,QThread,pyqtSignal,pyqtSlot,QMutex,QMutexLocker
 import subprocess
 from DetectorCoverV2 import MOXA
 #from PyQt5.QtCore import pyqtSignal
-
+from workround import myepics
 
 class epicsdev(QThread):
     # EpicsValueChange=pyqtSignal(str,str,str)
@@ -72,6 +72,7 @@ class epicsdev(QThread):
         self.tempcommand=[]
         self.saveCentringPositionFlag_sample_z = False
         self.saveCentringPositionFlag_cam_horz = False
+        self.ca = myepics(self.logger)
         if not coverdhs:
             self.cover = MOXA()
         else:
@@ -193,21 +194,30 @@ class epicsdev(QThread):
                         if self.saveCentringPositionFlag_sample_z:
                             self.saveCentringPositionFlag_sample_z = False
                             self.logger.debug("Save current pos for Center pos (sampleZ stop)")
-                            time.sleep(0.1)
+                            
                             self.caput(sendPV,'__EMPTY__')
+                            time.sleep(0.1)
                             # p = CAProcess(target=self.oldCAPUT, args=(PV,'__EMPTY__',))
                             # p.start()
                             # p.join()
                         elif self.saveCentringPositionFlag_cam_horz:
                             self.saveCentringPositionFlag_cam_horz = False
-                            time.sleep(0.1)
+                            
                             self.logger.debug("Save current pos for Center pos (cam_horz Stop)")
                             self.caput(sendPV,'__EMPTY__')
+                            time.sleep(0.1)
                             # p = CAProcess(target=self.oldCAPUT, args=(PV,'__EMPTY__',))
                             # p.start()
                             # p.join()
                         else:
                             pass
+                    pos = self.epicsmotors[guiname]['PVID'].get('RBV')
+                    self.sendQ.put(('endmove',dcssname,pos,'normal'), block=False)
+            elif guiname == "CentringTableFocus" or guiname == "SampleY" or guiname == "SampleX":
+                if value == 1:
+                    #move done
+                    #delay report move done
+                    time.sleep(0.1)
                     pos = self.epicsmotors[guiname]['PVID'].get('RBV')
                     self.sendQ.put(('endmove',dcssname,pos,'normal'), block=False)
             else:
@@ -619,15 +629,15 @@ class epicsdev(QThread):
                                 #Enable energy to gap(07a:IU22:cvtE2Gap_able)
                                 newenergy = TargetPos
                                 C_energy = PVID.RBV
-                                N_gap = float(caget(self.Par['Energy']['cvtE2Gapname']))#old gap output
-                                C_gap = float(caget(self.Par['Energy']['gapname']))#current gap
+                                N_gap = float(self.ca.caget(self.Par['Energy']['cvtE2Gapname'],format=float))#old gap output
+                                C_gap = float(self.ca.caget(self.Par['Energy']['gapname'],format=float))#current gap
                                 if abs(C_gap - N_gap) > self.Par['minchangeGAP'] or abs(C_energy - newenergy) > self.Par['minEVchangeGAP']:
                                     self.logger.debug(f"det detGap {abs(C_gap - N_gap)} is higher than {self.Par['minchangeGAP']},or {abs(C_energy - newenergy)} > {self.Par['minEVchangeGAP']} change gap setting")
                                     #Enalble = 0
-                                    gapmotorablemove = caget("SR-ID-IU22-07:gapAllowNewSet")#0 is can't move
-                                    ring_state = caget("TPS:OPStatus") 
+                                    gapmotorablemove = self.ca.caget("SR-ID-IU22-07:gapAllowNewSet",format=int)#0 is can't move
+                                    ring_state = self.ca.caget("TPS:OPStatus",format=int) 
                                     self.logger.warning(f"{ring_state=}")
-                                    if caget("TPS:OPStatus") == 0:
+                                    if self.ca.caget("TPS:OPStatus",format=int) == 0:
                                         self.logger.warning(f"ring closed")
                                     else:
                                         self.caput(self.Par['Energy']['evtogap'],0)
@@ -828,9 +838,11 @@ class epicsdev(QThread):
                     # print(type(value),len(value),value)
                     # self.CAPUT(PVname,temp)
                 
-                    p = CAProcess(target=self.oldCAPUT , args=(PVname,value,))
-                    p.start()
-                    p.join()        
+                    # p = Process(target=self.oldCAPUT , args=(PVname,value,))
+                    # p = Process(target=self.caputarray , args=(PVname,value,))
+                    # p.start()
+                    # p.join()        
+                    self.caputarray(PVname,value)
                     
                 elif command[0] == "startRasterScan":
                     # ['startRasterScan', '7.6', '0.05', '-0.2', '2', '5', '0', '269.999792', '0.5', '0', '']
@@ -940,12 +952,14 @@ class epicsdev(QThread):
                     
                     
                              
-                    p = CAProcess(target=self.oldCAPUT , args=(PVname,value,))
-                    p.start()
-                    p.join()        
+                    # p = CAProcess(target=self.oldCAPUT , args=(PVname,value,))
+                    # p = Process(target=self.caputarray , args=(PVname,value,))
+                    # p.start()
+                    # p.join()        
+                    self.caputarray(PVname,value)
                 elif command[0] == "centerLoop" :
                     opid= command[1]
-                    pcenter = CAProcess(target=self.centerLoop , args=(opid,))
+                    pcenter = Process(target=self.centerLoop , args=(opid,))
                     pcenter.start()
 
                 elif command[0] == "stoh_abort_all" :
@@ -973,13 +987,13 @@ class epicsdev(QThread):
                             if dcsstype == 'shutter':
                                 pass
                             elif dcsstype == 'change_mode':
-                                pos = caget(dev)
+                                pos = self.ca.caget(dev,format=float)
                                 self.sendQ.put(('endmove',dcssname,pos,'normal'), block=False)
                             elif dcsstype == 'log' or dcsstype == 'opertation':
                                 pass
                             
                             else:
-                                pos = caget(dev)
+                                pos = self.ca.caget(dev,format=float)
                                 if dcssname == 'zoom_scale_x' or dcssname == 'zoom_scale_y':
                                     pos =pos *1000
                                 
@@ -996,8 +1010,9 @@ class epicsdev(QThread):
         check = True
         while check:
             # md3_state = caget('07a:md3:Status ',as_string=True)
-            md3_state = caget('07a:md3:State ',as_string=True)
-            if md3_state== 'Ready' or md3_state== 'READY':
+            # md3_state = caget('07a:md3:State ',as_string=True)
+            md3_state = self.ca.caget('07a:md3:State',format = str)
+            if md3_state== 'Ready' or md3_state== 'READY' or md3_state== 'READY\n':
                 check = False
             else:
                 self.logger.info(f'MD3 is busy:{md3_state}')  
@@ -1013,24 +1028,24 @@ class epicsdev(QThread):
         t0 = time.time()
         stop = False
         error =False
-        phase = caget('07a:md3:CurrentPhase')
+        phase = self.ca.caget('07a:md3:CurrentPhase',format=int)
         # phase = 0
         if  phase== 0:#center            
             self.logger.info('Start MD3 Auto Sample Centering')
-            caput('07a:md3:startAutoSampleCentring',"CRYSTAL_CENTRING")
+            self.caput('07a:md3:startAutoSampleCentring',"CRYSTAL_CENTRING")
             # caput('07a:md3:startAutoSampleCentring',"NEEDLE_CENTRING_ONLY")
             
         else:
             self.logger.info('move to center mode before Auto center')
             PVname, = self.FindEpicsListInfo('centerLoop','GUIname','PVname')
-            caput('07a:md3:CurrentPhase',0)
+            self.caput('07a:md3:CurrentPhase',0)
             time.sleep(0.5)
             wait = True
             PVname, = self.FindEpicsListInfo('LastTaskInfo','GUIname','PVname')
             while wait:
                 time.sleep(0.1)
                 # job = caget('07a:md3:LastTaskInfo')
-                job = caget(PVname)
+                job = self.ca.caget(PVname)
                 self.logger.debug(f'TASK: {job}')
                 if job[0] == 'Set Centring Phase' and job[6] == "1":
                 # if job[6] == "1":
@@ -1048,7 +1063,7 @@ class epicsdev(QThread):
             self.logger.info('Start MD3 Auto Sample Centering')
             PVname, = self.FindEpicsListInfo('centerLoop','GUIname','PVname')
             # caput('07a:md3:startAutoSampleCentring',"CRYSTAL_CENTRING")
-            caput(PVname,"CRYSTAL_CENTRING")
+            self.caput(PVname,"CRYSTAL_CENTRING")
         #Check center job done
         
         if stop:
@@ -1058,7 +1073,7 @@ class epicsdev(QThread):
             wait = True
             while wait:
                 time.sleep(0.1)
-                job = caget('07a:md3:LastTaskInfo')
+                job = self.ca.caget('07a:md3:LastTaskInfo')
                 self.logger.debug(f'TASK: {job}')
                 #['Auto Centring', '8', '2021-10-07 12:33:29.267', '2021-10-07 12:34:04.733', 'true', 'null', '1']
                 #['Auto Centring' '8' '2021-10-07 12:39:31.811' '2021-10-07 12:39:42.288','null' 'Invalid position: -173375007607934.7200' '-1'] 
