@@ -231,6 +231,7 @@ class workroundmd3moving():
             self.logger = logger
         pass
         self.mon = ['07a:md3:Omega','07a:md3:CentringX','07a:md3:CentringY','07a:md3:AlignmentY']
+        # self.mon = ['07a:md3:Omega','07a:md3:CentringX','07a:md3:CentringY']
         self.difth = [1e-2,1e-4,1e-4,1e-4]
         self.stateanme = []
         self.TruePosname = []
@@ -245,13 +246,16 @@ class workroundmd3moving():
         self.logger.info('workround DHS start')
         pass
         self.logger.warning(f'init done for workroundmd3moving')
-    def run(self,checktime = 3):
+    def run(self,checktime = 0.1):
         oldvalue = self.ca.caget(self.TruePosname,float)
         oldstate = self.ca.caget(self.stateanme,str,debug = False)
         slitstop = self.ca.caget('07a:Slits3:XOpening.DMOV',int,False,False)#1 for stop
         slittimer = time.time()
         time.sleep(checktime)
         counter = 0
+        counterlist=[]
+        for item in  self.mon:
+            counterlist.append(0)
         Exception_counter = 0
         while True:
             # todo exit code
@@ -272,40 +276,33 @@ class workroundmd3moving():
 
                 for i,item in enumerate(zip(state,oldstate)):
                     if item[0] == 'MOVING' and item[1] =='MOVING':
-                        #compare with last time
-                        diffwithold = abs(oldvalue[i]-currentvalue[i])
-                        if diffwithold < self.difth[i]:
-                            self.logger.debug(f"MD3 {self.mon[i]} state is {item}, but diffenert with old vlaue is {diffwithold},maybe not moving?check Tartget value")
-                            diffwithtarget = abs(targetvalue[i]-currentvalue[i])
-                            
-                            if diffwithtarget > self.difth[i]:
-                                if caget('07a:md3:Status') == 'Scanning':
-                                    pass
-                                elif caget('07a:md3:Status') == 'Setting Transfer phase':
-                                    if counter == 0:
-                                        self.logger.warning(f'Try to fix MD3 {self.mon[i]} problem,but now in Setting Transfer phase we do not move at frist try')
-                                        counter += 1
-                                    elif counter < 5:
-                                        counter += 1
+                        #compare with last time it is still moving
+                        counterlist[i] = counterlist[i] + 1
+
+                        # if MOVING state too long,0.1sec * 50 = 5sec
+                        if counterlist[i] >= 50:
+                            # if MOVING state too long,0.1sec * 50 = 5sec
+                            pass
+                            diffwithold = abs(oldvalue[i]-currentvalue[i])
+                            if diffwithold < self.difth[i]:
+                                self.logger.debug(f"MD3 {self.mon[i]} state is {item}, but diffenert with old vlaue is {diffwithold},maybe not moving?check Tartget value")
+                                diffwithtarget = abs(targetvalue[i]-currentvalue[i])
+                                
+                                if diffwithtarget > self.difth[i]:
+                                    if caget('07a:md3:Status') == 'Scanning':
+                                        pass
                                         pass
                                     else:
-                                        #checktime * 5 =15 sec
-                                        self.logger.error(f'In Setting Transfer phase too long, we try abort it,andset it again')
-                                        counter = 0
-                                        self.ca.caput('07a:md3:abort','__EMPTY__')
-                                        time.sleep(1)
-                                        self.ca.caput('07a:md3:CurrentPhase',3)
-
-
-                                    pass
+                                        # counter += 1
+                                        self.logger.warning(f'MD3 {self.mon[i]}:{targetvalue[i]=},{currentvalue[i]=},{diffwithtarget=}>{self.difth[i]}, {diffwithold=},state={item}goto target')
+                                        self.logger.error(f'Try to fix MD3 {self.mon[i]} problem')
+                                        self.ca.caput(self.TruePosname[i],targetvalue[i])
                                 else:
-                                    # counter += 1
-                                    self.logger.warning(f'MD3 {self.mon[i]}:{targetvalue[i]=},{currentvalue[i]=},{diffwithtarget=}>{self.difth[i]}, {diffwithold=},state={item}goto target')
-                                    self.logger.error(f'Try to fix MD3 {self.mon[i]} problem')
-                                    self.ca.caput(self.TruePosname[i],targetvalue[i])
-                            else:
-                                counter = 0
-                                self.logger.debug(f'{targetvalue[i]=},{currentvalue[i]=},{diffwithtarget=}<{self.difth[i]} not goto target')
+                                    self.logger.debug(f'{targetvalue[i]=},{currentvalue[i]=},{diffwithtarget=}<{self.difth[i]} not goto target')
+                    else:
+                        pass
+                        counterlist[i] = 0
+                        #Motor chagne state, reset counter
                 oldvalue = currentvalue
                 oldstate = state
                 Exception_counter = 0
@@ -318,6 +315,7 @@ class workroundmd3moving():
                     self.logger.warning(f'MD3 workaround program has error:{e}')
                 #when md3 has problem
                 #'NoneType' object is not iterable
+            
             #work round 07a:Slits3:XOpening moving problem
             if self.ca.caget('07a:Slits3:XOpening.DMOV',int,False,False) == 1:
                 #stop restart timer 
@@ -337,6 +335,28 @@ class workroundmd3moving():
                 
                     else:
                         self.logger.info(f'slits not in postion,we will not do any thing')
+            
+            
+            # here for if Tranfer mode too long
+            if caget('07a:md3:Status') == 'Setting Transfer phase':
+                if counter == 0:
+                    TransfermodeTimer = time.time()
+                    # self.logger.warning(f'Try to fix MD3 {self.mon[i]} problem,but now in Setting Transfer phase we do not move at frist try')
+                    counter += 1
+                else:
+                    
+                    Transfermoderuntime = time.time() - TransfermodeTimer
+                    #If Transfermode take longer than 25 sec
+                    if Transfermoderuntime > 25:
+                        self.logger.error(f'In Setting Transfer phase too long(25sec), we try abort it,and set it again')
+                        #reset counter
+                        counter = 0
+                        self.ca.caput('07a:md3:abort','__EMPTY__')
+                        time.sleep(1)
+                        self.ca.caput('07a:md3:CurrentPhase',3)
+            else:
+                #not in Tranfer mode
+                counter = 0
             
             time.sleep(checktime)
             
