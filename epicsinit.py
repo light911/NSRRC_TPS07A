@@ -345,8 +345,17 @@ class epicsdev(QThread):
                 self.sendQ.put(('updatevalue',dcssname,value,"motor","normal"))
             else:
                 self.sendQ.put(('endmove',dcssname,value,'normal'))
-        elif dcsstype == "quickmotor" :   
-            self.sendQ.put(('endmove',dcssname,value,'normal'))
+        elif dcsstype == "quickmotor" :
+            if guiname == "camera_zoom":
+                #delay report , make sure zoom_scale_y zoom_scale_x report frist
+                delaytime = 0.1
+                command = ('endmove',dcssname,value,'normal')
+                report = Process(target=self.delaysendQcommand , args=(delaytime,command,))
+                report.start()
+                # self.sendQ.put(('endmove',dcssname,value,'normal'))
+            else:
+            # time.sleep(0.1)   
+                self.sendQ.put(('endmove',dcssname,value,'normal'))
         elif dcsstype == 'log':
             
             if value[6] == "1":
@@ -702,6 +711,8 @@ class epicsdev(QThread):
                                     self.logger.warning(f"{command} has paused sicne MD3 busy")
                                 else:
                                     # send command to move
+                                    # check if motor moving
+                                    # PVID.DMOV
                                     if command[1] == 'sample_z':
                                         self.saveCentringPositionFlag_sample_z = True
                                     elif command[1] == 'cam_horz':
@@ -769,7 +780,10 @@ class epicsdev(QThread):
                             # p = CAProcess(target=self.oldCAPUT, args=(PVname,float(command[2]),))
                             # p.start()
                             # p.join()
-                            self.sendQ.put(('endmove',command[1],command[2],'normal'))#bug??
+                            # not need update here 
+                            # will update in -onValueChange- PV value changed: camera_zoom=
+                            # time.sleep(0.1)
+                            # self.sendQ.put(('endmove',command[1],command[2],'normal'))#bug??
                     elif dcsstype == "bypass":
                         # self.sendQ.put(("startmove",command[1],command[2],"Normal"))
                         self.sendQ.put(('endmove',command[1],command[2],'normal'))
@@ -1304,7 +1318,9 @@ class epicsdev(QThread):
         else:
             self.logger.warning(f'Unknow command from other program:{value},after decode {command}')
         pass
-        
+    def delaysendQcommand(self,delaytime,command):
+        time.sleep(delaytime)
+        self.sendQ.put(command)
     def quit(self,signum,frame):
         ca.finalize_libca()
         self.logger.debug(f"PID : {os.getpid()} EPICS initDHS closed, Par= {self.Par} TYPE:{type(self.Par)}")
