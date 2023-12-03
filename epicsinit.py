@@ -717,9 +717,16 @@ class epicsdev(QThread):
                                         self.saveCentringPositionFlag_sample_z = True
                                     elif command[1] == 'cam_horz':
                                         self.saveCentringPositionFlag_cam_horz = True
-                                    self.sendQ.put(("startmove",command[1],command[2],"Normal"))
-                                    state = PVID.move(TargetPos)
-                                    self.logger.debug(f"Motor ={command[1]} moving state = {state}")
+                                    # check if motor is moving
+                                    self.logger.debug(f"check Motor ={command[1]} DMOV = {PVID.DMOV}")
+                                    if str(PVID.DMOV) == "0":
+                                        #moing
+                                        self.logger.warning(f"{command} has bypass sicne motor is moving")
+                                        pass
+                                    else:
+                                        self.sendQ.put(("startmove",command[1],command[2],"Normal"))
+                                        state = PVID.move(TargetPos)
+                                        self.logger.debug(f"Motor ={command[1]} moving state = {state}")
                         else:
                             LLM = PVID.LLM
                             HLM = PVID.HLM

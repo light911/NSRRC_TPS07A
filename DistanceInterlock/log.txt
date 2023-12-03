@@ -1,0 +1,1771 @@
+2021-04-13 18:24:05,602 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:05,618 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:05,633 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:05,657 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:05,664 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:05,672 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:05,680 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:05,696 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:05,703 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:05,719 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:05,727 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:05,750 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:05,766 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:05,781 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:05,789 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:05,805 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:05,812 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:05,844 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:05,851 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:05,929 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:05,937 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:06,015 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:06,023 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:06,031 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:06,038 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:06,054 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:06,062 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:06,085 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:06,093 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:06,100 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:06,108 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:06,124 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:06,132 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:06,139 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:06,147 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:06,194 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:06,202 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:06,217 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:06,225 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:06,256 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:06,264 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:06,287 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:06,295 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:06,326 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:06,334 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:06,342 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:06,350 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:06,357 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:06,365 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:06,427 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:06,435 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:06,443 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:06,451 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:06,459 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:06,466 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:06,474 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:06,482 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:06,513 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:06,521 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:06,544 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:06,552 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:06,583 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:06,591 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:06,599 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:06,614 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:06,622 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:06,638 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:06,646 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:06,653 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:06,692 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:06,708 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:06,731 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:06,739 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:06,770 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:06,778 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:06,832 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:06,840 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:06,864 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:06,879 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:06,887 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:06,895 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:06,988 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:06,996 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:07,019 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:07,027 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:07,050 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:07,058 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:07,128 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:07,144 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:07,159 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:07,167 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:07,191 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:07,198 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:07,253 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:07,268 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:07,307 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:07,315 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:07,331 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:07,338 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:07,362 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:07,370 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:07,385 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:07,393 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:07,401 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:07,409 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:07,448 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:07,455 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:07,463 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:07,471 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:07,494 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:07,502 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:07,619 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:07,627 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:07,635 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:07,642 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:07,673 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:07,697 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:07,712 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:07,720 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:07,736 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:07,744 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:07,767 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:07,774 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:07,798 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:07,806 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:07,829 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:07,837 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:07,845 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:07,852 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:07,860 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:07,868 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:07,892 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:07,915 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:07,922 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:07,930 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:07,938 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:07,946 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:08,031 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:08,039 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:08,063 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:08,070 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:08,117 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:08,125 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:08,148 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:08,156 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:08,187 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:08,203 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:08,210 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:08,218 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:08,234 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:08,242 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:08,257 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:08,265 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:08,273 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:08,288 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:08,320 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:08,327 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:08,366 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:08,382 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:08,452 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:08,460 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:08,467 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:08,475 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:08,491 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:08,499 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:08,530 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:08,553 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:08,561 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:08,569 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:08,616 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:08,631 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:08,655 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:08,662 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:08,686 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:08,693 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:08,725 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:08,740 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:08,748 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:08,756 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:08,802 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:08,810 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:08,833 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:08,841 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:08,857 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:08,865 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:08,872 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:08,880 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:08,904 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:08,911 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:08,927 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:08,935 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:08,943 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:08,950 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:08,982 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:08,989 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:09,013 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:09,028 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:09,044 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:09,052 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:09,067 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:09,129 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:09,161 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:09,169 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:09,200 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:09,207 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:09,215 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:09,223 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:09,286 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:09,301 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:09,309 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:09,324 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:09,371 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:09,387 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:09,394 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:09,433 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:09,496 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:09,503 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:09,511 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:09,519 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:09,527 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:09,534 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:09,542 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:09,558 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:09,566 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:09,574 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:09,589 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:09,597 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:09,628 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:09,636 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:09,644 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:09,659 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:09,675 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:09,682 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:09,690 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:09,714 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:09,721 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:09,745 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:09,760 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:09,776 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:09,784 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:09,791 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:09,807 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:09,823 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:09,838 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:09,846 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:09,862 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:09,869 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:09,885 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:09,893 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:09,900 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:09,908 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:09,916 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:09,940 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:09,947 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:09,955 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:09,986 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:10,033 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:10,041 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:10,048 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:10,056 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:10,064 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:10,072 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:10,080 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:10,087 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:10,095 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:10,119 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:10,126 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:10,134 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:10,173 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:10,181 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:10,196 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:10,204 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:10,220 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:10,228 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:10,235 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:10,259 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:10,274 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:10,329 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:10,337 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:10,344 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:10,360 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:10,375 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:10,399 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:10,406 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:10,415 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:10,422 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:10,438 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:10,500 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:10,508 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:10,547 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:10,562 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:10,578 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:10,586 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:10,594 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:10,601 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:10,617 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:10,633 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:10,648 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:10,656 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:10,664 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:10,679 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:10,687 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:10,695 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:10,718 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:10,757 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:10,773 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:10,788 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:10,796 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:10,804 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:10,819 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:10,851 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:10,858 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:10,890 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:10,897 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:10,913 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:10,936 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:10,952 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:10,983 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:10,999 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:11,014 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:11,022 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:11,045 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:11,053 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:11,061 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:11,123 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:11,154 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:11,170 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:11,178 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:11,209 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:11,232 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:11,256 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:11,263 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:11,279 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:11,287 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:11,294 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:11,302 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:11,310 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:11,318 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:11,372 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:11,380 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:11,396 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:11,404 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:11,411 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:11,419 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:11,427 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:11,435 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:11,458 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:11,466 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:11,497 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:11,505 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:11,513 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:11,544 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:11,638 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:11,645 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:11,661 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:11,684 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:11,692 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:11,699 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:11,754 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:11,770 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:11,785 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:11,793 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:11,832 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:11,840 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:11,855 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:11,894 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:11,910 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:11,918 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:11,925 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:11,941 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:11,964 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:11,972 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:11,988 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:11,996 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:12,011 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:12,050 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:12,066 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:12,081 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:12,089 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:12,105 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:12,112 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:12,120 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:12,128 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:12,136 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:12,167 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:12,174 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:12,182 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:12,190 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:12,245 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:12,253 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:12,260 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:12,291 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:12,299 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:12,323 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:12,354 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:12,377 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:12,401 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:12,408 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:12,424 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:12,432 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:12,455 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:12,463 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:12,471 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:12,478 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:12,486 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:12,510 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:12,525 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:12,533 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:12,588 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:12,603 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:12,611 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:12,627 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:12,650 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:12,665 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:12,681 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:12,697 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:12,720 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:12,728 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:12,798 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:12,806 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:12,837 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:12,860 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:12,907 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:12,915 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:12,923 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:12,938 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:12,961 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:12,969 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:12,993 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:13,000 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:13,055 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:13,063 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:13,078 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:13,094 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:13,156 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:13,172 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:13,179 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:13,187 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:13,203 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:13,210 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:13,249 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:13,280 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:13,288 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:13,296 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:13,304 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:13,312 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:13,327 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:13,335 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:13,358 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:13,366 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:13,382 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:13,389 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:13,405 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:13,413 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:13,436 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:13,460 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:13,467 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:13,475 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:13,483 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:13,491 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:13,506 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:13,545 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:13,553 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:13,592 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:13,623 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:13,631 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:13,639 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:13,654 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:13,686 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:13,709 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:13,732 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:13,756 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:13,763 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:13,771 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:13,787 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:13,794 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:13,810 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:13,826 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:13,857 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:13,865 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:13,888 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:13,896 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:13,958 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:13,966 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:13,997 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:14,005 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:14,044 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:14,051 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:14,106 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:14,114 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:14,137 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:14,153 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:14,160 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:14,168 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:14,176 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:14,191 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:14,199 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:14,207 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:14,215 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:14,231 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:14,238 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:14,246 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:14,254 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:14,262 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:14,269 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:14,285 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:14,301 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:14,308 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:14,332 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:14,340 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:14,347 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:14,355 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:14,394 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:14,402 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:14,410 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:14,433 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:14,449 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:14,472 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:14,480 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:14,487 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:14,495 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:14,503 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:14,519 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:14,526 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:14,573 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:14,604 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:14,620 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:14,628 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:14,651 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:14,659 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:14,682 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:14,690 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:14,698 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:14,706 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:14,713 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:14,721 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:14,752 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:14,776 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:14,846 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:14,861 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:14,885 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:14,893 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:14,900 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:14,908 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:14,955 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:14,963 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:14,986 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:15,009 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:15,033 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:15,048 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:15,072 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:15,080 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:15,103 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:15,111 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:15,173 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:15,181 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:15,188 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:15,204 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:15,227 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:15,251 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:15,305 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:15,313 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:15,337 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:15,344 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:15,375 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:15,383 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:15,406 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:15,414 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:15,469 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:15,477 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:15,492 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:15,500 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:15,539 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:15,555 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:15,578 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:15,585 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:15,594 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:15,601 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:15,609 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:15,617 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:15,671 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:15,679 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:15,695 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:15,710 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:15,726 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:15,734 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:15,804 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:15,811 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:15,819 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:15,827 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:15,842 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:15,850 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:15,889 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:15,905 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:15,913 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:15,936 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:15,944 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:15,952 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:15,959 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:15,967 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:15,975 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:16,006 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:16,022 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:16,029 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:16,053 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:16,061 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:16,068 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:16,084 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:16,146 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:16,162 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:16,185 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:16,193 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:16,201 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:16,208 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:16,263 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:16,271 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:16,278 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:16,286 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:16,294 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:16,318 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:16,325 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:16,349 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:16,442 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:16,458 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:16,466 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:16,473 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:16,481 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:16,489 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:16,504 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:16,520 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:16,528 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:16,536 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:16,543 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:16,551 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:16,582 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:16,590 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:16,606 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:16,613 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:16,621 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:16,629 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:16,652 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:16,660 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:16,676 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:16,683 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:16,707 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:16,723 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:16,769 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:16,785 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3779159
+2021-04-13 18:24:28,057 - EPICS - INFO -__init__ - init EPICS logging
+2021-04-13 18:24:28,350 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.99786 
+2021-04-13 18:24:35,886 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:MD3:Y.DMOV=0 
+2021-04-13 18:24:35,887 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3786262
+2021-04-13 18:24:35,888 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:MD3:Y.VAL=30.0 
+2021-04-13 18:24:35,911 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.99492 
+2021-04-13 18:24:35,919 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.99124 
+2021-04-13 18:24:35,927 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.98658 
+2021-04-13 18:24:35,934 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.98014 
+2021-04-13 18:24:35,942 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.97012 
+2021-04-13 18:24:35,950 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.9564 
+2021-04-13 18:24:35,958 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.93806 
+2021-04-13 18:24:35,966 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.91572 
+2021-04-13 18:24:35,973 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.8896599999999 
+2021-04-13 18:24:35,981 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.86104 
+2021-04-13 18:24:35,989 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.8311199999999 
+2021-04-13 18:24:35,997 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.79988 
+2021-04-13 18:24:36,004 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.76634 
+2021-04-13 18:24:36,012 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.7301199999999 
+2021-04-13 18:24:36,020 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.6925 
+2021-04-13 18:24:36,028 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.65406 
+2021-04-13 18:24:36,036 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.6151 
+2021-04-13 18:24:36,043 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.57562 
+2021-04-13 18:24:36,051 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.53644 
+2021-04-13 18:24:36,059 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.4973 
+2021-04-13 18:24:36,067 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.45816 
+2021-04-13 18:24:36,075 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.41914 
+2021-04-13 18:24:36,082 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.38032 
+2021-04-13 18:24:36,090 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.3412999999999 
+2021-04-13 18:24:36,098 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.30212 
+2021-04-13 18:24:36,106 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.2629 
+2021-04-13 18:24:36,114 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.22412 
+2021-04-13 18:24:36,121 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.18504 
+2021-04-13 18:24:36,129 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.14568 
+2021-04-13 18:24:36,137 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.1062999999999 
+2021-04-13 18:24:36,145 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.06666 
+2021-04-13 18:24:36,152 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.02728 
+2021-04-13 18:24:36,160 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.98894 
+2021-04-13 18:24:36,168 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.9510399999999 
+2021-04-13 18:24:36,176 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.91178 
+2021-04-13 18:24:36,184 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.87194 
+2021-04-13 18:24:36,191 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.8323 
+2021-04-13 18:24:36,199 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.79364 
+2021-04-13 18:24:36,207 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.7547599999999 
+2021-04-13 18:24:36,215 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.71548 
+2021-04-13 18:24:36,223 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.67572 
+2021-04-13 18:24:36,230 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.63682 
+2021-04-13 18:24:36,238 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.59782 
+2021-04-13 18:24:36,246 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.55836 
+2021-04-13 18:24:36,254 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.51954 
+2021-04-13 18:24:36,261 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.4807999999999 
+2021-04-13 18:24:36,269 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.44168 
+2021-04-13 18:24:36,277 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.40212 
+2021-04-13 18:24:36,285 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.36298 
+2021-04-13 18:24:36,293 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.3240999999999 
+2021-04-13 18:24:36,300 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.28496 
+2021-04-13 18:24:36,308 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.24538 
+2021-04-13 18:24:36,316 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.20628 
+2021-04-13 18:24:36,324 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.1675799999999 
+2021-04-13 18:24:36,332 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.12882 
+2021-04-13 18:24:36,339 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.0893599999999 
+2021-04-13 18:24:36,347 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.04994 
+2021-04-13 18:24:36,355 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.01086 
+2021-04-13 18:24:36,363 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.9720599999999 
+2021-04-13 18:24:36,370 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.93288 
+2021-04-13 18:24:36,378 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.89374 
+2021-04-13 18:24:36,386 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.85464 
+2021-04-13 18:24:36,394 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.81562 
+2021-04-13 18:24:36,402 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.7766399999999 
+2021-04-13 18:24:36,409 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.73788 
+2021-04-13 18:24:36,417 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.6990599999999 
+2021-04-13 18:24:36,425 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.66028 
+2021-04-13 18:24:36,433 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.62142 
+2021-04-13 18:24:36,441 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.58246 
+2021-04-13 18:24:36,448 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.5434 
+2021-04-13 18:24:36,456 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.5042599999999 
+2021-04-13 18:24:36,464 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.46506 
+2021-04-13 18:24:36,472 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.4261399999999 
+2021-04-13 18:24:36,479 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.38716 
+2021-04-13 18:24:36,487 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.34818 
+2021-04-13 18:24:36,495 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.3091999999999 
+2021-04-13 18:24:36,503 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.2700199999999 
+2021-04-13 18:24:36,511 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.23104 
+2021-04-13 18:24:36,519 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.1922 
+2021-04-13 18:24:36,526 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.15328 
+2021-04-13 18:24:36,534 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.11438 
+2021-04-13 18:24:36,542 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.0751799999999 
+2021-04-13 18:24:36,550 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.0360999999999 
+2021-04-13 18:24:36,558 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.9969 
+2021-04-13 18:24:36,565 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.95778 
+2021-04-13 18:24:36,573 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.91894 
+2021-04-13 18:24:36,581 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.88022 
+2021-04-13 18:24:36,588 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.8412999999999 
+2021-04-13 18:24:36,596 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.80214 
+2021-04-13 18:24:36,604 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.7628199999999 
+2021-04-13 18:24:36,612 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.72368 
+2021-04-13 18:24:36,620 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.68466 
+2021-04-13 18:24:36,628 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.64546 
+2021-04-13 18:24:36,635 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.60636 
+2021-04-13 18:24:36,643 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.56758 
+2021-04-13 18:24:36,651 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.52886 
+2021-04-13 18:24:36,659 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.48986 
+2021-04-13 18:24:36,667 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.4508 
+2021-04-13 18:24:36,674 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.41172 
+2021-04-13 18:24:36,682 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.3727799999999 
+2021-04-13 18:24:36,690 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.33366 
+2021-04-13 18:24:36,698 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.29418 
+2021-04-13 18:24:36,705 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.2551599999999 
+2021-04-13 18:24:36,713 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.21668 
+2021-04-13 18:24:36,721 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.17894 
+2021-04-13 18:24:36,729 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.14076 
+2021-04-13 18:24:36,736 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.0998999999999 
+2021-04-13 18:24:36,744 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.05486 
+2021-04-13 18:24:36,752 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.0049399999999 
+2021-04-13 18:24:36,760 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.97156 
+2021-04-13 18:24:36,768 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.9440599999999 
+2021-04-13 18:24:36,775 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.9084399999999 
+2021-04-13 18:24:36,783 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.86702 
+2021-04-13 18:24:36,791 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.82372 
+2021-04-13 18:24:36,799 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.78464 
+2021-04-13 18:24:36,807 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.74718 
+2021-04-13 18:24:36,815 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.7084 
+2021-04-13 18:24:36,822 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.6670399999999 
+2021-04-13 18:24:36,830 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.62806 
+2021-04-13 18:24:36,838 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.59172 
+2021-04-13 18:24:36,845 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.5520799999999 
+2021-04-13 18:24:36,854 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.51162 
+2021-04-13 18:24:36,861 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.473 
+2021-04-13 18:24:36,869 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.4345 
+2021-04-13 18:24:36,877 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.39548 
+2021-04-13 18:24:36,885 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.3553999999999 
+2021-04-13 18:24:36,892 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.31704 
+2021-04-13 18:24:36,900 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.27922 
+2021-04-13 18:24:36,908 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.2395399999999 
+2021-04-13 18:24:36,916 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.19962 
+2021-04-13 18:24:36,924 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.16108 
+2021-04-13 18:24:36,931 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.12212 
+2021-04-13 18:24:36,939 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.08278 
+2021-04-13 18:24:36,947 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.043 
+2021-04-13 18:24:36,955 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.00424 
+2021-04-13 18:24:36,962 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.96656 
+2021-04-13 18:24:36,970 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.9273999999999 
+2021-04-13 18:24:36,978 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.88796 
+2021-04-13 18:24:36,986 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.84906 
+2021-04-13 18:24:36,994 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.8099599999999 
+2021-04-13 18:24:37,001 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.7709 
+2021-04-13 18:24:37,009 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.73172 
+2021-04-13 18:24:37,017 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.69264 
+2021-04-13 18:24:37,025 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.65342 
+2021-04-13 18:24:37,032 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.6141 
+2021-04-13 18:24:37,040 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.57516 
+2021-04-13 18:24:37,048 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.53648 
+2021-04-13 18:24:37,056 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.49776 
+2021-04-13 18:24:37,064 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.45852 
+2021-04-13 18:24:37,071 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.4191 
+2021-04-13 18:24:37,079 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.37992 
+2021-04-13 18:24:37,087 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.34086 
+2021-04-13 18:24:37,095 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.30182 
+2021-04-13 18:24:37,103 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.2628599999999 
+2021-04-13 18:24:37,110 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.22362 
+2021-04-13 18:24:37,118 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.1845599999999 
+2021-04-13 18:24:37,126 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.1456 
+2021-04-13 18:24:37,134 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.10656 
+2021-04-13 18:24:37,141 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.06736 
+2021-04-13 18:24:37,149 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.028 
+2021-04-13 18:24:37,157 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.98946 
+2021-04-13 18:24:37,165 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.95084 
+2021-04-13 18:24:37,173 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.9116 
+2021-04-13 18:24:37,180 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.87218 
+2021-04-13 18:24:37,188 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.83292 
+2021-04-13 18:24:37,196 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.7939799999999 
+2021-04-13 18:24:37,204 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.75524 
+2021-04-13 18:24:37,212 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.71672 
+2021-04-13 18:24:37,219 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.67802 
+2021-04-13 18:24:37,227 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.63914 
+2021-04-13 18:24:37,235 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.59998 
+2021-04-13 18:24:37,243 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.5607 
+2021-04-13 18:24:37,251 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.52162 
+2021-04-13 18:24:37,258 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.4825999999999 
+2021-04-13 18:24:37,266 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.4434 
+2021-04-13 18:24:37,274 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.40428 
+2021-04-13 18:24:37,281 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.36564 
+2021-04-13 18:24:37,289 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.32704 
+2021-04-13 18:24:37,297 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.28804 
+2021-04-13 18:24:37,305 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.2488 
+2021-04-13 18:24:37,313 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.2096 
+2021-04-13 18:24:37,321 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.1706399999999 
+2021-04-13 18:24:37,328 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.1315 
+2021-04-13 18:24:37,336 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.0924 
+2021-04-13 18:24:37,344 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.05342 
+2021-04-13 18:24:37,352 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.0144399999999 
+2021-04-13 18:24:37,360 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.97506 
+2021-04-13 18:24:37,367 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.9358 
+2021-04-13 18:24:37,375 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.8969999999999 
+2021-04-13 18:24:37,383 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.85826 
+2021-04-13 18:24:37,391 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.81918 
+2021-04-13 18:24:37,398 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.7798 
+2021-04-13 18:24:37,406 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.7405 
+2021-04-13 18:24:37,414 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.70154 
+2021-04-13 18:24:37,422 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.6625799999999 
+2021-04-13 18:24:37,430 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.62334 
+2021-04-13 18:24:37,437 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.5842799999999 
+2021-04-13 18:24:37,445 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.54536 
+2021-04-13 18:24:37,453 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.5063799999999 
+2021-04-13 18:24:37,461 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.46704 
+2021-04-13 18:24:37,469 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.4277 
+2021-04-13 18:24:37,476 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.38864 
+2021-04-13 18:24:37,484 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.34978 
+2021-04-13 18:24:37,492 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.3106 
+2021-04-13 18:24:37,499 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.27144 
+2021-04-13 18:24:37,507 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.2324 
+2021-04-13 18:24:37,515 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.19396 
+2021-04-13 18:24:37,523 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.15594 
+2021-04-13 18:24:37,531 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.11684 
+2021-04-13 18:24:37,538 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.07562 
+2021-04-13 18:24:37,546 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.0325 
+2021-04-13 18:24:37,554 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.98952 
+2021-04-13 18:24:37,562 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.95622 
+2021-04-13 18:24:37,570 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.92182 
+2021-04-13 18:24:37,577 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.8827 
+2021-04-13 18:24:37,585 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.8419 
+2021-04-13 18:24:37,593 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.80176 
+2021-04-13 18:24:37,601 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.7638 
+2021-04-13 18:24:37,609 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.7252599999999 
+2021-04-13 18:24:37,616 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.68534 
+2021-04-13 18:24:37,624 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.64568 
+2021-04-13 18:24:37,632 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.608 
+2021-04-13 18:24:37,640 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.56922 
+2021-04-13 18:24:37,647 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.5293399999999 
+2021-04-13 18:24:37,655 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.49038 
+2021-04-13 18:24:37,663 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.4519799999999 
+2021-04-13 18:24:37,671 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.41352 
+2021-04-13 18:24:37,679 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.37382 
+2021-04-13 18:24:37,686 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.33454 
+2021-04-13 18:24:37,694 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.2963 
+2021-04-13 18:24:37,702 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.25718 
+2021-04-13 18:24:37,710 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.21762 
+2021-04-13 18:24:37,718 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.17874 
+2021-04-13 18:24:37,725 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.1398399999999 
+2021-04-13 18:24:37,733 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.10084 
+2021-04-13 18:24:37,741 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.0612199999999 
+2021-04-13 18:24:37,749 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.02204 
+2021-04-13 18:24:37,757 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.98342 
+2021-04-13 18:24:37,764 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.9447 
+2021-04-13 18:24:37,772 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.90576 
+2021-04-13 18:24:37,780 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.86658 
+2021-04-13 18:24:37,788 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.82736 
+2021-04-13 18:24:37,795 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.788 
+2021-04-13 18:24:37,803 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.74866 
+2021-04-13 18:24:37,811 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.7096799999999 
+2021-04-13 18:24:37,819 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.67016 
+2021-04-13 18:24:37,827 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.63058 
+2021-04-13 18:24:37,834 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.59156 
+2021-04-13 18:24:37,842 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.5527999999999 
+2021-04-13 18:24:37,850 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.51406 
+2021-04-13 18:24:37,858 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.47488 
+2021-04-13 18:24:37,865 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.4354999999999 
+2021-04-13 18:24:37,873 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.3962 
+2021-04-13 18:24:37,881 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.35682 
+2021-04-13 18:24:37,889 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.3178399999999 
+2021-04-13 18:24:37,897 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.28084 
+2021-04-13 18:24:37,905 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.24622 
+2021-04-13 18:24:37,912 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.21422 
+2021-04-13 18:24:37,920 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.18448 
+2021-04-13 18:24:37,928 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.15678 
+2021-04-13 18:24:37,936 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.13186 
+2021-04-13 18:24:37,943 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.10938 
+2021-04-13 18:24:37,951 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.08894 
+2021-04-13 18:24:37,959 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.07062 
+2021-04-13 18:24:37,967 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.05462 
+2021-04-13 18:24:37,975 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.04116 
+2021-04-13 18:24:37,982 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.0307399999999 
+2021-04-13 18:24:37,990 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.0222 
+2021-04-13 18:24:37,998 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.0166399999999 
+2021-04-13 18:24:38,006 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.0135399999999 
+2021-04-13 18:24:38,013 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.01248 
+2021-04-13 18:24:38,045 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.00866 
+2021-04-13 18:24:38,052 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.00456 
+2021-04-13 18:24:38,060 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.002 
+2021-04-13 18:24:38,099 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.00094 
+2021-04-13 18:24:43,138 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:MD3:Y.DMOV=1 
+2021-04-13 18:24:43,139 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3786262
+2021-04-13 18:26:23,081 - EPICS - INFO -__init__ - init EPICS logging
+2021-04-13 18:26:23,250 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:md3:BeamstopX.DMOV=1 
+2021-04-13 18:26:23,309 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.00044 
+2021-04-13 18:26:30,653 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:MD3:Y.DMOV=0 
+2021-04-13 18:26:30,654 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3803171 ('ChangeMD3Y', 0),{}
+2021-04-13 18:26:30,655 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:MD3:Y.VAL=20.0 
+2021-04-13 18:26:30,679 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.0035399999999 
+2021-04-13 18:26:30,687 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.0087599999999 
+2021-04-13 18:26:30,695 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.016 
+2021-04-13 18:26:30,703 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.0248799999999 
+2021-04-13 18:26:30,711 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.0358 
+2021-04-13 18:26:30,718 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.04986 
+2021-04-13 18:26:30,726 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.0671199999999 
+2021-04-13 18:26:30,734 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.0873 
+2021-04-13 18:26:30,742 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.1102999999999 
+2021-04-13 18:26:30,749 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.1360199999999 
+2021-04-13 18:26:30,757 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.1637999999999 
+2021-04-13 18:26:30,765 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.1939 
+2021-04-13 18:26:30,773 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.2265 
+2021-04-13 18:26:30,781 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.2617399999999 
+2021-04-13 18:26:30,788 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.2995 
+2021-04-13 18:26:30,796 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.3383 
+2021-04-13 18:26:30,804 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.37712 
+2021-04-13 18:26:30,812 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.41622 
+2021-04-13 18:26:30,820 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.45546 
+2021-04-13 18:26:30,827 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.4947999999999 
+2021-04-13 18:26:30,835 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.5341999999999 
+2021-04-13 18:26:30,843 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.5730599999999 
+2021-04-13 18:26:30,851 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.6116999999999 
+2021-04-13 18:26:30,859 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.65048 
+2021-04-13 18:26:30,866 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.68954 
+2021-04-13 18:26:30,874 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.72888 
+2021-04-13 18:26:30,882 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.76802 
+2021-04-13 18:26:30,890 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.8070799999999 
+2021-04-13 18:26:30,897 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.8464 
+2021-04-13 18:26:30,905 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.8858 
+2021-04-13 18:26:30,913 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.92572 
+2021-04-13 18:26:30,921 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.96534 
+2021-04-13 18:26:30,929 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.0038599999999 
+2021-04-13 18:26:30,936 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.04238 
+2021-04-13 18:26:30,944 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.08136 
+2021-04-13 18:26:30,952 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.12078 
+2021-04-13 18:26:30,960 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.16016 
+2021-04-13 18:26:30,968 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.19948 
+2021-04-13 18:26:30,975 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.23888 
+2021-04-13 18:26:30,983 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.2783 
+2021-04-13 18:26:30,991 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.31732 
+2021-04-13 18:26:30,999 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.35622 
+2021-04-13 18:26:31,006 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.39576 
+2021-04-13 18:26:31,014 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.4354599999999 
+2021-04-13 18:26:31,022 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.47448 
+2021-04-13 18:26:31,030 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.51328 
+2021-04-13 18:26:31,038 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.5522199999999 
+2021-04-13 18:26:31,045 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.59118 
+2021-04-13 18:26:31,053 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.63018 
+2021-04-13 18:26:31,061 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.66914 
+2021-04-13 18:26:31,069 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.7080599999999 
+2021-04-13 18:26:31,076 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.747 
+2021-04-13 18:26:31,084 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.78582 
+2021-04-13 18:26:31,092 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.8246399999999 
+2021-04-13 18:26:31,100 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.86398 
+2021-04-13 18:26:31,108 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.9048399999999 
+2021-04-13 18:26:31,116 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.94664 
+2021-04-13 18:26:31,123 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.9852 
+2021-04-13 18:26:31,131 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.0182199999999 
+2021-04-13 18:26:31,139 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.05382 
+2021-04-13 18:26:31,147 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.0936399999999 
+2021-04-13 18:26:31,155 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.13564 
+2021-04-13 18:26:31,162 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.17698 
+2021-04-13 18:26:31,170 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.2147 
+2021-04-13 18:26:31,178 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.25262 
+2021-04-13 18:26:31,186 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.29256 
+2021-04-13 18:26:31,194 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.33176 
+2021-04-13 18:26:31,201 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.3699399999999 
+2021-04-13 18:26:31,209 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.40886 
+2021-04-13 18:26:31,217 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.4481599999999 
+2021-04-13 18:26:31,225 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.48758 
+2021-04-13 18:26:31,232 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.52648 
+2021-04-13 18:26:31,240 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.5655399999999 
+2021-04-13 18:26:31,248 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.6050799999999 
+2021-04-13 18:26:31,256 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.64392 
+2021-04-13 18:26:31,264 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.68268 
+2021-04-13 18:26:31,271 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.72198 
+2021-04-13 18:26:31,279 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.76126 
+2021-04-13 18:26:31,287 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.80038 
+2021-04-13 18:26:31,295 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.83952 
+2021-04-13 18:26:31,303 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.87896 
+2021-04-13 18:26:31,310 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.91832 
+2021-04-13 18:26:31,318 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.95688 
+2021-04-13 18:26:31,326 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.99574 
+2021-04-13 18:26:31,334 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.03528 
+2021-04-13 18:26:31,342 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.0747 
+2021-04-13 18:26:31,349 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.11372 
+2021-04-13 18:26:31,357 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.15252 
+2021-04-13 18:26:31,365 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.1917 
+2021-04-13 18:26:31,373 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.23102 
+2021-04-13 18:26:31,381 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.27018 
+2021-04-13 18:26:31,388 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.30948 
+2021-04-13 18:26:31,396 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.3489 
+2021-04-13 18:26:31,404 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.38802 
+2021-04-13 18:26:31,412 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.4266799999999 
+2021-04-13 18:26:31,420 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.46546 
+2021-04-13 18:26:31,427 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.50456 
+2021-04-13 18:26:31,435 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.5437999999999 
+2021-04-13 18:26:31,443 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.5828799999999 
+2021-04-13 18:26:31,451 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.622 
+2021-04-13 18:26:31,458 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.66134 
+2021-04-13 18:26:31,466 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.70094 
+2021-04-13 18:26:31,474 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.7400799999999 
+2021-04-13 18:26:31,482 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.77852 
+2021-04-13 18:26:31,490 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.81704 
+2021-04-13 18:26:31,497 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.85572 
+2021-04-13 18:26:31,505 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.8944 
+2021-04-13 18:26:31,513 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.93362 
+2021-04-13 18:26:31,520 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.9730999999999 
+2021-04-13 18:26:31,528 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.01236 
+2021-04-13 18:26:31,536 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.0506 
+2021-04-13 18:26:31,544 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.08922 
+2021-04-13 18:26:31,552 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.12826 
+2021-04-13 18:26:31,559 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.1675 
+2021-04-13 18:26:31,567 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.2062999999999 
+2021-04-13 18:26:31,575 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.2451199999999 
+2021-04-13 18:26:31,583 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.28404 
+2021-04-13 18:26:31,591 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.32326 
+2021-04-13 18:26:31,599 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.36208 
+2021-04-13 18:26:31,606 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.4008 
+2021-04-13 18:26:31,614 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.43986 
+2021-04-13 18:26:31,622 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.4793 
+2021-04-13 18:26:31,630 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.51868 
+2021-04-13 18:26:31,638 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.55754 
+2021-04-13 18:26:31,645 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.5963399999999 
+2021-04-13 18:26:31,653 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.63532 
+2021-04-13 18:26:31,661 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.6741999999999 
+2021-04-13 18:26:31,669 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.71352 
+2021-04-13 18:26:31,676 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.75272 
+2021-04-13 18:26:31,684 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.79188 
+2021-04-13 18:26:31,692 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.83104 
+2021-04-13 18:26:31,700 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.8700799999999 
+2021-04-13 18:26:31,708 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.90942 
+2021-04-13 18:26:31,715 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.9492799999999 
+2021-04-13 18:26:31,723 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.9887 
+2021-04-13 18:26:31,731 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.0270399999999 
+2021-04-13 18:26:31,739 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.0656 
+2021-04-13 18:26:31,747 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.1045799999999 
+2021-04-13 18:26:31,755 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.14384 
+2021-04-13 18:26:31,762 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.1829399999999 
+2021-04-13 18:26:31,770 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.22196 
+2021-04-13 18:26:31,778 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.26114 
+2021-04-13 18:26:31,786 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.3006 
+2021-04-13 18:26:31,793 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.3396399999999 
+2021-04-13 18:26:31,801 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.37838 
+2021-04-13 18:26:31,809 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.41742 
+2021-04-13 18:26:31,817 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.4564 
+2021-04-13 18:26:31,825 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.4952 
+2021-04-13 18:26:31,832 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.5343399999999 
+2021-04-13 18:26:31,840 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.5734199999999 
+2021-04-13 18:26:31,848 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.61232 
+2021-04-13 18:26:31,856 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.65118 
+2021-04-13 18:26:31,864 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.69004 
+2021-04-13 18:26:31,871 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.72866 
+2021-04-13 18:26:31,879 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.7671799999999 
+2021-04-13 18:26:31,887 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.8058199999999 
+2021-04-13 18:26:31,895 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.84494 
+2021-04-13 18:26:31,903 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.8855599999999 
+2021-04-13 18:26:31,910 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.92894 
+2021-04-13 18:26:31,918 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.97354 
+2021-04-13 18:26:31,926 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.00524 
+2021-04-13 18:26:31,934 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.03558 
+2021-04-13 18:26:31,941 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.07326 
+2021-04-13 18:26:31,949 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.11572 
+2021-04-13 18:26:31,957 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.15894 
+2021-04-13 18:26:31,965 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.19898 
+2021-04-13 18:26:31,973 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.2351199999999 
+2021-04-13 18:26:31,980 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.2741 
+2021-04-13 18:26:31,988 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.31466 
+2021-04-13 18:26:31,996 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.35342 
+2021-04-13 18:26:32,004 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.39066 
+2021-04-13 18:26:32,012 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.4308 
+2021-04-13 18:26:32,019 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.4711199999999 
+2021-04-13 18:26:32,027 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.5094 
+2021-04-13 18:26:32,035 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.5483399999999 
+2021-04-13 18:26:32,043 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.5876999999999 
+2021-04-13 18:26:32,051 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.62712 
+2021-04-13 18:26:32,058 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.6654 
+2021-04-13 18:26:32,066 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.70372 
+2021-04-13 18:26:32,074 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.74366 
+2021-04-13 18:26:32,082 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.78328 
+2021-04-13 18:26:32,090 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.82188 
+2021-04-13 18:26:32,097 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.86114 
+2021-04-13 18:26:32,105 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.90072 
+2021-04-13 18:26:32,113 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.94006 
+2021-04-13 18:26:32,121 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.97848 
+2021-04-13 18:26:32,128 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.0171399999999 
+2021-04-13 18:26:32,136 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.057 
+2021-04-13 18:26:32,144 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.0961599999999 
+2021-04-13 18:26:32,152 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.13492 
+2021-04-13 18:26:32,159 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.174 
+2021-04-13 18:26:32,167 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.2133 
+2021-04-13 18:26:32,175 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.25238 
+2021-04-13 18:26:32,183 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.2909999999999 
+2021-04-13 18:26:32,191 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.33012 
+2021-04-13 18:26:32,199 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.3695 
+2021-04-13 18:26:32,206 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.40834 
+2021-04-13 18:26:32,214 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.44704 
+2021-04-13 18:26:32,222 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.48592 
+2021-04-13 18:26:32,230 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.52508 
+2021-04-13 18:26:32,238 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.5642 
+2021-04-13 18:26:32,245 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.603 
+2021-04-13 18:26:32,253 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.64212 
+2021-04-13 18:26:32,261 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.68124 
+2021-04-13 18:26:32,269 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.72018 
+2021-04-13 18:26:32,277 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.7592 
+2021-04-13 18:26:32,284 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.79806 
+2021-04-13 18:26:32,292 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.8369 
+2021-04-13 18:26:32,300 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.87568 
+2021-04-13 18:26:32,308 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.9143399999999 
+2021-04-13 18:26:32,316 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.95344 
+2021-04-13 18:26:32,323 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.9924599999999 
+2021-04-13 18:26:32,331 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.03122 
+2021-04-13 18:26:32,339 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.0699999999999 
+2021-04-13 18:26:32,347 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.10908 
+2021-04-13 18:26:32,354 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.14838 
+2021-04-13 18:26:32,362 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.18742 
+2021-04-13 18:26:32,370 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.22628 
+2021-04-13 18:26:32,378 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.26524 
+2021-04-13 18:26:32,386 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.3043 
+2021-04-13 18:26:32,393 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.3435 
+2021-04-13 18:26:32,401 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.38258 
+2021-04-13 18:26:32,409 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.42148 
+2021-04-13 18:26:32,417 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.46062 
+2021-04-13 18:26:32,425 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.50006 
+2021-04-13 18:26:32,433 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.53936 
+2021-04-13 18:26:32,440 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.57818 
+2021-04-13 18:26:32,448 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.61712 
+2021-04-13 18:26:32,456 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.6561399999999 
+2021-04-13 18:26:32,463 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.69534 
+2021-04-13 18:26:32,471 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.73474 
+2021-04-13 18:26:32,479 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.77378 
+2021-04-13 18:26:32,487 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.81296 
+2021-04-13 18:26:32,495 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.85208 
+2021-04-13 18:26:32,503 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.89104 
+2021-04-13 18:26:32,510 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.93054 
+2021-04-13 18:26:32,518 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.97068 
+2021-04-13 18:26:32,526 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.00982 
+2021-04-13 18:26:32,534 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.0477999999999 
+2021-04-13 18:26:32,541 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.08636 
+2021-04-13 18:26:32,549 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.1256999999999 
+2021-04-13 18:26:32,557 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.16514 
+2021-04-13 18:26:32,565 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.20408 
+2021-04-13 18:26:32,572 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.24302 
+2021-04-13 18:26:32,580 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.28224 
+2021-04-13 18:26:32,588 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.3217 
+2021-04-13 18:26:32,596 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.36064 
+2021-04-13 18:26:32,604 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.39964 
+2021-04-13 18:26:32,612 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.43878 
+2021-04-13 18:26:32,619 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.4775999999999 
+2021-04-13 18:26:32,627 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.5163 
+2021-04-13 18:26:32,635 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.55534 
+2021-04-13 18:26:32,643 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.5948 
+2021-04-13 18:26:32,651 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.6341 
+2021-04-13 18:26:32,658 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.67288 
+2021-04-13 18:26:32,666 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.71002 
+2021-04-13 18:26:32,674 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.7445 
+2021-04-13 18:26:32,682 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.7762799999999 
+2021-04-13 18:26:32,689 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.8058 
+2021-04-13 18:26:32,697 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.83326 
+2021-04-13 18:26:32,705 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.85888 
+2021-04-13 18:26:32,713 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.8827 
+2021-04-13 18:26:32,721 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.9063 
+2021-04-13 18:26:32,728 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.9336999999999 
+2021-04-13 18:26:32,736 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.96318 
+2021-04-13 18:26:32,744 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.97538 
+2021-04-13 18:26:32,752 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.9843999999999 
+2021-04-13 18:26:32,760 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.99032 
+2021-04-13 18:26:32,768 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.9954799999999 
+2021-04-13 18:26:32,775 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.9979599999999 
+2021-04-13 18:26:32,791 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.9967399999999 
+2021-04-13 18:26:32,915 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.9978199999999 
+2021-04-13 18:26:32,946 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:MD3:Y.DMOV=1 
+2021-04-13 18:26:32,947 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3803171 ('ChangeMD3Y', 1),{}
+2021-04-13 18:27:21,564 - EPICS - INFO -__init__ - init EPICS logging
+2021-04-13 18:27:21,734 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:md3:BeamstopX.DMOV=1 
+2021-04-13 18:27:21,796 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.99802 
+2021-04-13 18:27:21,797 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 979.99802),{}
+2021-04-13 18:27:34,173 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:MD3:Y.DMOV=0 
+2021-04-13 18:27:34,174 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('ChangeMD3Y', 0),{}
+2021-04-13 18:27:34,175 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:MD3:Y.VAL=30.0 
+2021-04-13 18:27:34,198 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.99612 
+2021-04-13 18:27:34,199 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 979.99612),{}
+2021-04-13 18:27:34,206 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.99294 
+2021-04-13 18:27:34,207 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 979.99294),{}
+2021-04-13 18:27:34,214 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.98928 
+2021-04-13 18:27:34,214 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 979.98928),{}
+2021-04-13 18:27:34,222 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.9842 
+2021-04-13 18:27:34,222 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 979.9842),{}
+2021-04-13 18:27:34,230 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.97578 
+2021-04-13 18:27:34,230 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 979.97578),{}
+2021-04-13 18:27:34,237 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.9629 
+2021-04-13 18:27:34,238 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 979.9629),{}
+2021-04-13 18:27:34,245 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.94578 
+2021-04-13 18:27:34,246 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 979.94578),{}
+2021-04-13 18:27:34,253 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.92454 
+2021-04-13 18:27:34,253 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 979.92454),{}
+2021-04-13 18:27:34,261 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.89954 
+2021-04-13 18:27:34,261 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 979.89954),{}
+2021-04-13 18:27:34,269 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.87122 
+2021-04-13 18:27:34,269 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 979.87122),{}
+2021-04-13 18:27:34,276 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.84156 
+2021-04-13 18:27:34,277 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 979.84156),{}
+2021-04-13 18:27:34,284 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.8108199999999 
+2021-04-13 18:27:34,285 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 979.8108199999999),{}
+2021-04-13 18:27:34,292 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.77792 
+2021-04-13 18:27:34,293 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 979.77792),{}
+2021-04-13 18:27:34,300 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.7422 
+2021-04-13 18:27:34,300 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 979.7422),{}
+2021-04-13 18:27:34,307 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.7048 
+2021-04-13 18:27:34,308 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 979.7048),{}
+2021-04-13 18:27:34,315 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.6664999999999 
+2021-04-13 18:27:34,316 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 979.6664999999999),{}
+2021-04-13 18:27:34,323 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.62774 
+2021-04-13 18:27:34,324 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 979.62774),{}
+2021-04-13 18:27:34,331 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.5882799999999 
+2021-04-13 18:27:34,331 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 979.5882799999999),{}
+2021-04-13 18:27:34,339 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.54892 
+2021-04-13 18:27:34,339 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 979.54892),{}
+2021-04-13 18:27:34,347 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.50988 
+2021-04-13 18:27:34,347 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 979.50988),{}
+2021-04-13 18:27:34,354 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.47066 
+2021-04-13 18:27:34,355 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 979.47066),{}
+2021-04-13 18:27:34,362 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.43146 
+2021-04-13 18:27:34,363 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 979.43146),{}
+2021-04-13 18:27:34,370 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.39266 
+2021-04-13 18:27:34,370 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 979.39266),{}
+2021-04-13 18:27:34,378 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.3538199999999 
+2021-04-13 18:27:34,378 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 979.3538199999999),{}
+2021-04-13 18:27:34,385 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.31466 
+2021-04-13 18:27:34,386 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 979.31466),{}
+2021-04-13 18:27:34,393 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.27536 
+2021-04-13 18:27:34,394 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 979.27536),{}
+2021-04-13 18:27:34,401 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.23648 
+2021-04-13 18:27:34,402 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 979.23648),{}
+2021-04-13 18:27:34,409 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.19768 
+2021-04-13 18:27:34,409 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 979.19768),{}
+2021-04-13 18:27:34,416 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.15842 
+2021-04-13 18:27:34,417 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 979.15842),{}
+2021-04-13 18:27:34,424 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.1190399999999 
+2021-04-13 18:27:34,425 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 979.1190399999999),{}
+2021-04-13 18:27:34,432 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.0796799999999 
+2021-04-13 18:27:34,433 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 979.0796799999999),{}
+2021-04-13 18:27:34,440 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.0403 
+2021-04-13 18:27:34,440 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 979.0403),{}
+2021-04-13 18:27:34,448 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=979.0012399999999 
+2021-04-13 18:27:34,448 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 979.0012399999999),{}
+2021-04-13 18:27:34,455 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.96348 
+2021-04-13 18:27:34,456 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 978.96348),{}
+2021-04-13 18:27:34,463 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.92468 
+2021-04-13 18:27:34,464 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 978.92468),{}
+2021-04-13 18:27:34,471 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.88514 
+2021-04-13 18:27:34,472 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 978.88514),{}
+2021-04-13 18:27:34,479 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.84546 
+2021-04-13 18:27:34,479 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 978.84546),{}
+2021-04-13 18:27:34,487 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.8063999999999 
+2021-04-13 18:27:34,487 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 978.8063999999999),{}
+2021-04-13 18:27:34,495 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.76766 
+2021-04-13 18:27:34,495 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 978.76766),{}
+2021-04-13 18:27:34,502 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.72866 
+2021-04-13 18:27:34,503 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 978.72866),{}
+2021-04-13 18:27:34,510 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.68902 
+2021-04-13 18:27:34,511 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 978.68902),{}
+2021-04-13 18:27:34,518 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.64968 
+2021-04-13 18:27:34,518 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 978.64968),{}
+2021-04-13 18:27:34,526 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.6109 
+2021-04-13 18:27:34,526 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 978.6109),{}
+2021-04-13 18:27:34,533 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.57156 
+2021-04-13 18:27:34,534 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 978.57156),{}
+2021-04-13 18:27:34,541 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.53248 
+2021-04-13 18:27:34,542 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 978.53248),{}
+2021-04-13 18:27:34,549 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.49378 
+2021-04-13 18:27:34,550 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 978.49378),{}
+2021-04-13 18:27:34,557 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.45478 
+2021-04-13 18:27:34,557 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 978.45478),{}
+2021-04-13 18:27:34,564 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.41534 
+2021-04-13 18:27:34,565 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 978.41534),{}
+2021-04-13 18:27:34,572 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.37594 
+2021-04-13 18:27:34,573 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 978.37594),{}
+2021-04-13 18:27:34,580 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.33696 
+2021-04-13 18:27:34,581 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 978.33696),{}
+2021-04-13 18:27:34,588 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.2979799999999 
+2021-04-13 18:27:34,588 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 978.2979799999999),{}
+2021-04-13 18:27:34,596 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.2585799999999 
+2021-04-13 18:27:34,596 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 978.2585799999999),{}
+2021-04-13 18:27:34,604 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.2191799999999 
+2021-04-13 18:27:34,604 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 978.2191799999999),{}
+2021-04-13 18:27:34,611 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.18038 
+2021-04-13 18:27:34,612 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 978.18038),{}
+2021-04-13 18:27:34,619 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.14168 
+2021-04-13 18:27:34,620 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 978.14168),{}
+2021-04-13 18:27:34,627 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.1024 
+2021-04-13 18:27:34,628 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 978.1024),{}
+2021-04-13 18:27:34,635 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.0627999999999 
+2021-04-13 18:27:34,635 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 978.0627999999999),{}
+2021-04-13 18:27:34,642 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=978.0236 
+2021-04-13 18:27:34,643 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 978.0236),{}
+2021-04-13 18:27:34,650 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.98478 
+2021-04-13 18:27:34,651 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 977.98478),{}
+2021-04-13 18:27:34,658 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.9457 
+2021-04-13 18:27:34,659 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 977.9457),{}
+2021-04-13 18:27:34,666 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.90652 
+2021-04-13 18:27:34,667 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 977.90652),{}
+2021-04-13 18:27:34,674 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.86726 
+2021-04-13 18:27:34,674 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 977.86726),{}
+2021-04-13 18:27:34,681 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.8281999999999 
+2021-04-13 18:27:34,682 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 977.8281999999999),{}
+2021-04-13 18:27:34,689 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.78912 
+2021-04-13 18:27:34,690 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 977.78912),{}
+2021-04-13 18:27:34,697 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.75022 
+2021-04-13 18:27:34,698 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 977.75022),{}
+2021-04-13 18:27:34,705 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.7114399999999 
+2021-04-13 18:27:34,705 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 977.7114399999999),{}
+2021-04-13 18:27:34,713 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.67264 
+2021-04-13 18:27:34,713 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 977.67264),{}
+2021-04-13 18:27:34,720 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.63378 
+2021-04-13 18:27:34,721 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 977.63378),{}
+2021-04-13 18:27:34,728 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.59488 
+2021-04-13 18:27:34,729 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 977.59488),{}
+2021-04-13 18:27:34,736 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.55574 
+2021-04-13 18:27:34,737 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 977.55574),{}
+2021-04-13 18:27:34,744 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.51674 
+2021-04-13 18:27:34,744 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 977.51674),{}
+2021-04-13 18:27:34,752 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.4775599999999 
+2021-04-13 18:27:34,752 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 977.4775599999999),{}
+2021-04-13 18:27:34,759 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.43848 
+2021-04-13 18:27:34,760 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 977.43848),{}
+2021-04-13 18:27:34,767 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.3996 
+2021-04-13 18:27:34,768 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 977.3996),{}
+2021-04-13 18:27:34,775 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.36064 
+2021-04-13 18:27:34,775 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 977.36064),{}
+2021-04-13 18:27:34,783 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.3217 
+2021-04-13 18:27:34,783 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 977.3217),{}
+2021-04-13 18:27:34,790 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.28264 
+2021-04-13 18:27:34,791 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 977.28264),{}
+2021-04-13 18:27:34,798 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.2434999999999 
+2021-04-13 18:27:34,799 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 977.2434999999999),{}
+2021-04-13 18:27:34,806 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.2047 
+2021-04-13 18:27:34,807 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 977.2047),{}
+2021-04-13 18:27:34,814 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.16586 
+2021-04-13 18:27:34,814 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 977.16586),{}
+2021-04-13 18:27:34,822 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.127 
+2021-04-13 18:27:34,822 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 977.127),{}
+2021-04-13 18:27:34,829 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.0879 
+2021-04-13 18:27:34,830 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 977.0879),{}
+2021-04-13 18:27:34,837 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.04876 
+2021-04-13 18:27:34,838 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 977.04876),{}
+2021-04-13 18:27:34,845 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=977.00968 
+2021-04-13 18:27:34,846 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 977.00968),{}
+2021-04-13 18:27:34,853 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.97052 
+2021-04-13 18:27:34,854 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 976.97052),{}
+2021-04-13 18:27:34,861 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.9316 
+2021-04-13 18:27:34,861 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 976.9316),{}
+2021-04-13 18:27:34,868 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.89288 
+2021-04-13 18:27:34,869 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 976.89288),{}
+2021-04-13 18:27:34,876 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.85408 
+2021-04-13 18:27:34,877 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 976.85408),{}
+2021-04-13 18:27:34,884 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.8149599999999 
+2021-04-13 18:27:34,884 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 976.8149599999999),{}
+2021-04-13 18:27:34,892 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.77562 
+2021-04-13 18:27:34,893 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 976.77562),{}
+2021-04-13 18:27:34,900 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.73642 
+2021-04-13 18:27:34,900 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 976.73642),{}
+2021-04-13 18:27:34,908 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.69746 
+2021-04-13 18:27:34,908 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 976.69746),{}
+2021-04-13 18:27:34,915 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.65828 
+2021-04-13 18:27:34,916 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 976.65828),{}
+2021-04-13 18:27:34,923 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.6191 
+2021-04-13 18:27:34,924 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 976.6191),{}
+2021-04-13 18:27:34,931 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.58026 
+2021-04-13 18:27:34,931 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 976.58026),{}
+2021-04-13 18:27:34,938 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.5414999999999 
+2021-04-13 18:27:34,939 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 976.5414999999999),{}
+2021-04-13 18:27:34,946 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.50254 
+2021-04-13 18:27:34,947 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 976.50254),{}
+2021-04-13 18:27:34,954 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.4633799999999 
+2021-04-13 18:27:34,955 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 976.4633799999999),{}
+2021-04-13 18:27:34,962 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.42432 
+2021-04-13 18:27:34,963 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 976.42432),{}
+2021-04-13 18:27:34,970 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.38536 
+2021-04-13 18:27:34,970 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 976.38536),{}
+2021-04-13 18:27:34,978 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.34636 
+2021-04-13 18:27:34,978 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 976.34636),{}
+2021-04-13 18:27:34,985 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.3068599999999 
+2021-04-13 18:27:34,986 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 976.3068599999999),{}
+2021-04-13 18:27:34,993 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.26766 
+2021-04-13 18:27:34,994 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 976.26766),{}
+2021-04-13 18:27:35,001 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.22888 
+2021-04-13 18:27:35,001 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 976.22888),{}
+2021-04-13 18:27:35,009 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.19088 
+2021-04-13 18:27:35,009 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 976.19088),{}
+2021-04-13 18:27:35,016 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.15298 
+2021-04-13 18:27:35,017 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 976.15298),{}
+2021-04-13 18:27:35,024 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.1131799999999 
+2021-04-13 18:27:35,025 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 976.1131799999999),{}
+2021-04-13 18:27:35,032 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.0698199999999 
+2021-04-13 18:27:35,033 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 976.0698199999999),{}
+2021-04-13 18:27:35,040 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=976.01972 
+2021-04-13 18:27:35,040 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 976.01972),{}
+2021-04-13 18:27:35,047 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.97944 
+2021-04-13 18:27:35,048 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 975.97944),{}
+2021-04-13 18:27:35,055 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.95308 
+2021-04-13 18:27:35,056 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 975.95308),{}
+2021-04-13 18:27:35,063 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.92112 
+2021-04-13 18:27:35,064 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 975.92112),{}
+2021-04-13 18:27:35,071 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.88036 
+2021-04-13 18:27:35,072 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 975.88036),{}
+2021-04-13 18:27:35,079 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.8376 
+2021-04-13 18:27:35,079 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 975.8376),{}
+2021-04-13 18:27:35,086 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.79626 
+2021-04-13 18:27:35,087 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 975.79626),{}
+2021-04-13 18:27:35,094 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.75928 
+2021-04-13 18:27:35,095 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 975.75928),{}
+2021-04-13 18:27:35,102 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.72106 
+2021-04-13 18:27:35,103 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 975.72106),{}
+2021-04-13 18:27:35,110 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.68052 
+2021-04-13 18:27:35,110 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 975.68052),{}
+2021-04-13 18:27:35,118 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.6398399999999 
+2021-04-13 18:27:35,118 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 975.6398399999999),{}
+2021-04-13 18:27:35,125 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.6034999999999 
+2021-04-13 18:27:35,126 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 975.6034999999999),{}
+2021-04-13 18:27:35,133 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.5654 
+2021-04-13 18:27:35,134 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 975.5654),{}
+2021-04-13 18:27:35,141 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.5245199999999 
+2021-04-13 18:27:35,142 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 975.5245199999999),{}
+2021-04-13 18:27:35,149 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.4854 
+2021-04-13 18:27:35,149 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 975.4854),{}
+2021-04-13 18:27:35,157 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.4471199999999 
+2021-04-13 18:27:35,157 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 975.4471199999999),{}
+2021-04-13 18:27:35,164 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.4084 
+2021-04-13 18:27:35,165 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 975.4084),{}
+2021-04-13 18:27:35,172 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.36852 
+2021-04-13 18:27:35,173 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 975.36852),{}
+2021-04-13 18:27:35,180 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.32942 
+2021-04-13 18:27:35,180 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 975.32942),{}
+2021-04-13 18:27:35,188 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.29178 
+2021-04-13 18:27:35,188 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 975.29178),{}
+2021-04-13 18:27:35,196 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.2528 
+2021-04-13 18:27:35,196 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 975.2528),{}
+2021-04-13 18:27:35,203 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.2125 
+2021-04-13 18:27:35,204 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 975.2125),{}
+2021-04-13 18:27:35,211 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.1736 
+2021-04-13 18:27:35,212 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 975.1736),{}
+2021-04-13 18:27:35,219 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.13504 
+2021-04-13 18:27:35,219 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 975.13504),{}
+2021-04-13 18:27:35,227 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.09578 
+2021-04-13 18:27:35,227 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 975.09578),{}
+2021-04-13 18:27:35,245 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.05616 
+2021-04-13 18:27:35,246 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 975.05616),{}
+2021-04-13 18:27:35,246 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=975.0167799999999 
+2021-04-13 18:27:35,247 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 975.0167799999999),{}
+2021-04-13 18:27:35,250 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.97892 
+2021-04-13 18:27:35,251 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 974.97892),{}
+2021-04-13 18:27:35,258 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.9403599999999 
+2021-04-13 18:27:35,258 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 974.9403599999999),{}
+2021-04-13 18:27:35,266 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.9008 
+2021-04-13 18:27:35,266 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 974.9008),{}
+2021-04-13 18:27:35,273 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.86176 
+2021-04-13 18:27:35,274 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 974.86176),{}
+2021-04-13 18:27:35,281 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.8226999999999 
+2021-04-13 18:27:35,282 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 974.8226999999999),{}
+2021-04-13 18:27:35,289 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.7836199999999 
+2021-04-13 18:27:35,290 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 974.7836199999999),{}
+2021-04-13 18:27:35,297 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.7445 
+2021-04-13 18:27:35,297 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 974.7445),{}
+2021-04-13 18:27:35,304 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.70528 
+2021-04-13 18:27:35,305 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 974.70528),{}
+2021-04-13 18:27:35,312 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.66608 
+2021-04-13 18:27:35,313 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 974.66608),{}
+2021-04-13 18:27:35,320 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.6267 
+2021-04-13 18:27:35,321 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 974.6267),{}
+2021-04-13 18:27:35,328 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.58758 
+2021-04-13 18:27:35,329 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 974.58758),{}
+2021-04-13 18:27:35,336 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.5488 
+2021-04-13 18:27:35,336 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 974.5488),{}
+2021-04-13 18:27:35,343 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.51022 
+2021-04-13 18:27:35,344 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 974.51022),{}
+2021-04-13 18:27:35,351 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.47108 
+2021-04-13 18:27:35,352 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 974.47108),{}
+2021-04-13 18:27:35,359 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.4317 
+2021-04-13 18:27:35,360 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 974.4317),{}
+2021-04-13 18:27:35,367 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.39228 
+2021-04-13 18:27:35,368 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 974.39228),{}
+2021-04-13 18:27:35,375 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.35326 
+2021-04-13 18:27:35,375 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 974.35326),{}
+2021-04-13 18:27:35,382 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.31416 
+2021-04-13 18:27:35,383 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 974.31416),{}
+2021-04-13 18:27:35,390 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.2752399999999 
+2021-04-13 18:27:35,391 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 974.2752399999999),{}
+2021-04-13 18:27:35,398 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.23608 
+2021-04-13 18:27:35,399 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 974.23608),{}
+2021-04-13 18:27:35,406 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.19692 
+2021-04-13 18:27:35,406 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 974.19692),{}
+2021-04-13 18:27:35,414 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.158 
+2021-04-13 18:27:35,414 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 974.158),{}
+2021-04-13 18:27:35,421 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.1189999999999 
+2021-04-13 18:27:35,422 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 974.1189999999999),{}
+2021-04-13 18:27:35,429 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.0798 
+2021-04-13 18:27:35,430 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 974.0798),{}
+2021-04-13 18:27:35,437 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.04052 
+2021-04-13 18:27:35,438 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 974.04052),{}
+2021-04-13 18:27:35,445 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=974.00164 
+2021-04-13 18:27:35,445 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 974.00164),{}
+2021-04-13 18:27:35,452 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.96336 
+2021-04-13 18:27:35,453 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 973.96336),{}
+2021-04-13 18:27:35,460 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.92432 
+2021-04-13 18:27:35,461 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 973.92432),{}
+2021-04-13 18:27:35,468 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.88492 
+2021-04-13 18:27:35,469 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 973.88492),{}
+2021-04-13 18:27:35,476 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.8456 
+2021-04-13 18:27:35,477 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 973.8456),{}
+2021-04-13 18:27:35,484 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.80662 
+2021-04-13 18:27:35,484 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 973.80662),{}
+2021-04-13 18:27:35,492 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.7678599999999 
+2021-04-13 18:27:35,492 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 973.7678599999999),{}
+2021-04-13 18:27:35,499 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.7293599999999 
+2021-04-13 18:27:35,500 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 973.7293599999999),{}
+2021-04-13 18:27:35,507 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.6907 
+2021-04-13 18:27:35,508 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 973.6907),{}
+2021-04-13 18:27:35,515 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.6519 
+2021-04-13 18:27:35,516 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 973.6519),{}
+2021-04-13 18:27:35,523 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.61286 
+2021-04-13 18:27:35,523 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 973.61286),{}
+2021-04-13 18:27:35,530 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.5735 
+2021-04-13 18:27:35,531 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 973.5735),{}
+2021-04-13 18:27:35,538 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.53436 
+2021-04-13 18:27:35,539 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 973.53436),{}
+2021-04-13 18:27:35,546 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.49538 
+2021-04-13 18:27:35,547 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 973.49538),{}
+2021-04-13 18:27:35,554 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.45618 
+2021-04-13 18:27:35,554 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 973.45618),{}
+2021-04-13 18:27:35,562 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.41702 
+2021-04-13 18:27:35,562 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 973.41702),{}
+2021-04-13 18:27:35,569 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.37824 
+2021-04-13 18:27:35,570 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 973.37824),{}
+2021-04-13 18:27:35,577 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.33974 
+2021-04-13 18:27:35,578 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 973.33974),{}
+2021-04-13 18:27:35,585 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.30084 
+2021-04-13 18:27:35,586 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 973.30084),{}
+2021-04-13 18:27:35,593 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.2615999999999 
+2021-04-13 18:27:35,594 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 973.2615999999999),{}
+2021-04-13 18:27:35,601 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.22236 
+2021-04-13 18:27:35,601 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 973.22236),{}
+2021-04-13 18:27:35,608 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.1833799999999 
+2021-04-13 18:27:35,609 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 973.1833799999999),{}
+2021-04-13 18:27:35,616 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.14422 
+2021-04-13 18:27:35,617 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 973.14422),{}
+2021-04-13 18:27:35,624 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.1051199999999 
+2021-04-13 18:27:35,625 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 973.1051199999999),{}
+2021-04-13 18:27:35,632 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.0660399999999 
+2021-04-13 18:27:35,632 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 973.0660399999999),{}
+2021-04-13 18:27:35,640 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=973.0271 
+2021-04-13 18:27:35,640 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 973.0271),{}
+2021-04-13 18:27:35,647 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.9878 
+2021-04-13 18:27:35,648 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 972.9878),{}
+2021-04-13 18:27:35,655 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.9484199999999 
+2021-04-13 18:27:35,656 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 972.9484199999999),{}
+2021-04-13 18:27:35,663 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.90948 
+2021-04-13 18:27:35,664 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 972.90948),{}
+2021-04-13 18:27:35,671 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.87076 
+2021-04-13 18:27:35,671 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 972.87076),{}
+2021-04-13 18:27:35,679 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.83172 
+2021-04-13 18:27:35,679 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 972.83172),{}
+2021-04-13 18:27:35,686 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.7923599999999 
+2021-04-13 18:27:35,687 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 972.7923599999999),{}
+2021-04-13 18:27:35,694 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.75294 
+2021-04-13 18:27:35,695 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 972.75294),{}
+2021-04-13 18:27:35,702 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.71384 
+2021-04-13 18:27:35,703 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 972.71384),{}
+2021-04-13 18:27:35,710 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.675 
+2021-04-13 18:27:35,710 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 972.675),{}
+2021-04-13 18:27:35,718 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.6358 
+2021-04-13 18:27:35,718 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 972.6358),{}
+2021-04-13 18:27:35,725 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.59664 
+2021-04-13 18:27:35,726 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 972.59664),{}
+2021-04-13 18:27:35,733 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.5577 
+2021-04-13 18:27:35,734 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 972.5577),{}
+2021-04-13 18:27:35,741 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.51882 
+2021-04-13 18:27:35,742 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 972.51882),{}
+2021-04-13 18:27:35,749 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.47956 
+2021-04-13 18:27:35,749 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 972.47956),{}
+2021-04-13 18:27:35,756 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.44016 
+2021-04-13 18:27:35,757 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 972.44016),{}
+2021-04-13 18:27:35,764 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.4010599999999 
+2021-04-13 18:27:35,765 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 972.4010599999999),{}
+2021-04-13 18:27:35,772 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.3623 
+2021-04-13 18:27:35,773 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 972.3623),{}
+2021-04-13 18:27:35,780 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.3231999999999 
+2021-04-13 18:27:35,781 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 972.3231999999999),{}
+2021-04-13 18:27:35,788 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.28406 
+2021-04-13 18:27:35,788 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 972.28406),{}
+2021-04-13 18:27:35,795 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.24496 
+2021-04-13 18:27:35,796 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 972.24496),{}
+2021-04-13 18:27:35,803 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.20632 
+2021-04-13 18:27:35,804 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 972.20632),{}
+2021-04-13 18:27:35,811 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.1682999999999 
+2021-04-13 18:27:35,811 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 972.1682999999999),{}
+2021-04-13 18:27:35,819 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.12974 
+2021-04-13 18:27:35,819 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 972.12974),{}
+2021-04-13 18:27:35,826 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.08922 
+2021-04-13 18:27:35,827 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 972.08922),{}
+2021-04-13 18:27:35,834 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.04692 
+2021-04-13 18:27:35,835 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 972.04692),{}
+2021-04-13 18:27:35,842 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=972.00278 
+2021-04-13 18:27:35,843 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 972.00278),{}
+2021-04-13 18:27:35,850 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.96672 
+2021-04-13 18:27:35,851 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 971.96672),{}
+2021-04-13 18:27:35,858 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.93368 
+2021-04-13 18:27:35,858 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 971.93368),{}
+2021-04-13 18:27:35,865 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.8959 
+2021-04-13 18:27:35,866 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 971.8959),{}
+2021-04-13 18:27:35,873 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.85552 
+2021-04-13 18:27:35,874 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 971.85552),{}
+2021-04-13 18:27:35,881 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.8144199999999 
+2021-04-13 18:27:35,882 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 971.8144199999999),{}
+2021-04-13 18:27:35,889 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.7764 
+2021-04-13 18:27:35,889 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 971.7764),{}
+2021-04-13 18:27:35,897 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.73802 
+2021-04-13 18:27:35,897 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 971.73802),{}
+2021-04-13 18:27:35,904 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.69866 
+2021-04-13 18:27:35,905 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 971.69866),{}
+2021-04-13 18:27:35,912 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.65842 
+2021-04-13 18:27:35,913 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 971.65842),{}
+2021-04-13 18:27:35,920 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.62018 
+2021-04-13 18:27:35,921 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 971.62018),{}
+2021-04-13 18:27:35,928 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.5822 
+2021-04-13 18:27:35,928 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 971.5822),{}
+2021-04-13 18:27:35,936 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.5421799999999 
+2021-04-13 18:27:35,936 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 971.5421799999999),{}
+2021-04-13 18:27:35,943 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.5028599999999 
+2021-04-13 18:27:35,944 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 971.5028599999999),{}
+2021-04-13 18:27:35,951 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.4643199999999 
+2021-04-13 18:27:35,952 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 971.4643199999999),{}
+2021-04-13 18:27:35,959 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.42604 
+2021-04-13 18:27:35,960 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 971.42604),{}
+2021-04-13 18:27:35,967 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.38676 
+2021-04-13 18:27:35,967 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 971.38676),{}
+2021-04-13 18:27:35,975 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.34696 
+2021-04-13 18:27:35,975 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 971.34696),{}
+2021-04-13 18:27:35,982 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.3085599999999 
+2021-04-13 18:27:35,983 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 971.3085599999999),{}
+2021-04-13 18:27:35,990 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.2699 
+2021-04-13 18:27:35,991 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 971.2699),{}
+2021-04-13 18:27:35,998 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.23016 
+2021-04-13 18:27:35,999 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 971.23016),{}
+2021-04-13 18:27:36,006 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.19102 
+2021-04-13 18:27:36,006 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 971.19102),{}
+2021-04-13 18:27:36,013 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.15212 
+2021-04-13 18:27:36,014 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 971.15212),{}
+2021-04-13 18:27:36,021 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.1131799999999 
+2021-04-13 18:27:36,022 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 971.1131799999999),{}
+2021-04-13 18:27:36,029 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.07386 
+2021-04-13 18:27:36,030 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 971.07386),{}
+2021-04-13 18:27:36,037 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=971.0343 
+2021-04-13 18:27:36,038 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 971.0343),{}
+2021-04-13 18:27:36,045 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.99554 
+2021-04-13 18:27:36,045 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 970.99554),{}
+2021-04-13 18:27:36,053 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.95692 
+2021-04-13 18:27:36,053 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 970.95692),{}
+2021-04-13 18:27:36,060 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.91802 
+2021-04-13 18:27:36,061 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 970.91802),{}
+2021-04-13 18:27:36,068 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.87896 
+2021-04-13 18:27:36,069 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 970.87896),{}
+2021-04-13 18:27:36,076 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.8398 
+2021-04-13 18:27:36,076 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 970.8398),{}
+2021-04-13 18:27:36,084 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.8004999999999 
+2021-04-13 18:27:36,084 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 970.8004999999999),{}
+2021-04-13 18:27:36,091 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.76114 
+2021-04-13 18:27:36,092 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 970.76114),{}
+2021-04-13 18:27:36,099 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.7220599999999 
+2021-04-13 18:27:36,100 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 970.7220599999999),{}
+2021-04-13 18:27:36,107 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.68282 
+2021-04-13 18:27:36,108 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 970.68282),{}
+2021-04-13 18:27:36,115 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.64316 
+2021-04-13 18:27:36,115 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 970.64316),{}
+2021-04-13 18:27:36,123 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.6039 
+2021-04-13 18:27:36,123 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 970.6039),{}
+2021-04-13 18:27:36,131 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.56516 
+2021-04-13 18:27:36,131 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 970.56516),{}
+2021-04-13 18:27:36,138 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.5264999999999 
+2021-04-13 18:27:36,139 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 970.5264999999999),{}
+2021-04-13 18:27:36,146 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.48754 
+2021-04-13 18:27:36,147 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 970.48754),{}
+2021-04-13 18:27:36,154 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.4481599999999 
+2021-04-13 18:27:36,154 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 970.4481599999999),{}
+2021-04-13 18:27:36,162 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.40882 
+2021-04-13 18:27:36,162 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 970.40882),{}
+2021-04-13 18:27:36,169 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.36952 
+2021-04-13 18:27:36,170 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 970.36952),{}
+2021-04-13 18:27:36,177 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.33032 
+2021-04-13 18:27:36,178 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 970.33032),{}
+2021-04-13 18:27:36,185 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.29264 
+2021-04-13 18:27:36,185 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 970.29264),{}
+2021-04-13 18:27:36,193 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.25742 
+2021-04-13 18:27:36,193 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 970.25742),{}
+2021-04-13 18:27:36,200 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.2247199999999 
+2021-04-13 18:27:36,201 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 970.2247199999999),{}
+2021-04-13 18:27:36,208 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.19426 
+2021-04-13 18:27:36,209 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 970.19426),{}
+2021-04-13 18:27:36,216 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.1659599999999 
+2021-04-13 18:27:36,217 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 970.1659599999999),{}
+2021-04-13 18:27:36,224 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.14036 
+2021-04-13 18:27:36,225 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 970.14036),{}
+2021-04-13 18:27:36,232 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.11698 
+2021-04-13 18:27:36,232 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 970.11698),{}
+2021-04-13 18:27:36,239 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.096 
+2021-04-13 18:27:36,240 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 970.096),{}
+2021-04-13 18:27:36,247 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.0769799999999 
+2021-04-13 18:27:36,248 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 970.0769799999999),{}
+2021-04-13 18:27:36,255 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.06044 
+2021-04-13 18:27:36,256 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 970.06044),{}
+2021-04-13 18:27:36,263 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.04648 
+2021-04-13 18:27:36,263 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 970.04648),{}
+2021-04-13 18:27:36,271 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.0350599999999 
+2021-04-13 18:27:36,271 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 970.0350599999999),{}
+2021-04-13 18:27:36,278 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.02616 
+2021-04-13 18:27:36,279 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 970.02616),{}
+2021-04-13 18:27:36,286 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.01986 
+2021-04-13 18:27:36,287 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 970.01986),{}
+2021-04-13 18:27:36,294 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.0160999999999 
+2021-04-13 18:27:36,295 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 970.0160999999999),{}
+2021-04-13 18:27:36,302 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.01454 
+2021-04-13 18:27:36,303 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 970.01454),{}
+2021-04-13 18:27:36,333 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.01076 
+2021-04-13 18:27:36,334 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 970.01076),{}
+2021-04-13 18:27:36,341 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.00604 
+2021-04-13 18:27:36,341 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 970.00604),{}
+2021-04-13 18:27:36,348 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.00288 
+2021-04-13 18:27:36,349 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 970.00288),{}
+2021-04-13 18:27:36,356 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.00184 
+2021-04-13 18:27:36,357 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 970.00184),{}
+2021-04-13 18:27:36,411 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:Det:Dis.RBV=970.0006 
+2021-04-13 18:27:36,412 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('NormalUpdate', 'DetDistance', 970.0006),{}
+2021-04-13 18:27:41,436 - EPICS - DEBUG -onMotorValueChange - PV value changed: 07a:MD3:Y.DMOV=1 
+2021-04-13 18:27:41,437 - EPICS - DEBUG -notify_observers - Epics notify_observers PID:3814912 ('ChangeMD3Y', 1),{}

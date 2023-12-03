@@ -108,7 +108,7 @@ class myepics():
             self.logger.warning(f'caput PV={PV},value={value} OK,wait={wait} take time {time.time()-t0}')
             return result
         else:
-            self.logger.critical(f"Caput {PV} value {value} Fail={error}, take time {time.time()-t0}")
+            self.logger.error(f"Caput {PV} value {value} Fail={error}, take time {time.time()-t0}")
             # return False
             return None
 
@@ -292,11 +292,15 @@ class workroundmd3moving():
                                     if caget('07a:md3:Status') == 'Scanning':
                                         pass
                                         pass
+                                    elif caget('07a:md3:Status') == 'Setting Transfer phase':
+                                        pass
                                     else:
                                         # counter += 1
                                         self.logger.warning(f'MD3 {self.mon[i]}:{targetvalue[i]=},{currentvalue[i]=},{diffwithtarget=}>{self.difth[i]}, {diffwithold=},state={item}goto target')
                                         self.logger.error(f'Try to fix MD3 {self.mon[i]} problem')
                                         self.ca.caput(self.TruePosname[i],targetvalue[i])
+                                
+
                                 else:
                                     self.logger.debug(f'{targetvalue[i]=},{currentvalue[i]=},{diffwithtarget=}<{self.difth[i]} not goto target')
                     else:

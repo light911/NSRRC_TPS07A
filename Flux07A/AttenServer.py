@@ -480,6 +480,7 @@ class atten():
         else:
             if flux < 1e5:
                 Fit_Attenuation = self.Target(1,False)
+                newsample = 0
             else:
                 ratio = flux/sample
                 Fit_Attenuation = self.Target(ratio,False)

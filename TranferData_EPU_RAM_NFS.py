@@ -31,7 +31,17 @@ def recursive_chown(path,uid,gid):
                 os.chmod(os.path.join(dirpath, filename), 0o700)
             except:
                 pass
-        
+def chown(path,uid,gid):
+    for dirpath, dirnames, filenames in os.walk(path):
+        os.chown(dirpath,uid,gid)
+        for filename in filenames:
+            try:
+                os.chown(os.path.join(dirpath, filename),uid,gid)
+                
+                os.chmod(os.path.join(dirpath, filename), 0o700)
+            except:
+                pass
+
 def TransferData(det,saveedlist,saveedpath,datareturn:Queue,toNFS=True):
    
     currentfile = det.fileWriterFiles()
@@ -52,6 +62,8 @@ def TransferData(det,saveedlist,saveedpath,datareturn:Queue,toNFS=True):
         gid = header['gid']
         beamsize = header['beamsize']
         atten = header['atten']
+        runIndex = header['runIndex']
+        fileindex = header['fileindex']
         #directory = header['directory'].replace('/data','/tps2gs/tps2ces/tps2nfs')
         #directory = header['directory'].replace('/data','/mnt/data_buffer')
         directory = header['directory']
@@ -88,37 +100,48 @@ def TransferData(det,saveedlist,saveedpath,datareturn:Queue,toNFS=True):
             if file == mastername:
                 targetPath = os.path.join(ramdirectory,file)
                 logger.info(f'{log}: add Header info')
-                with h5py.File(targetPath,'r+') as f:
+                counter = 0
+                while True:
+                    if counter >3:
+                        break
                     try:
-                        f['/entry/instrument/beam'].create_group(u'attenuator')
-                        f['/entry/instrument/beam/attenuator'].create_dataset(u'attenuator_transmission', data=float(atten))
-                        f['/entry/instrument/beam/'].create_dataset(u'name', data=b'NSRRC BEAMLINE TPS 07A')
-                        f['/entry/instrument/beam/'].create_dataset(u'incident_beam_size', data=float(beamsize))
-                        f['/entry/'].create_group(u'extrainfo')
-                        for data in header:
-                            name = data
-                            value = bytes(str(header[data]), encoding='utf-8')
-                            f['/entry/extrainfo/'].create_dataset(name, data=value)    
-                        #det.streamConfig('header_appendix')['value']
-                        #modify some header
-                        f['/entry/sample/transformations/omega'].attrs['vector'] = [0,1,0]#for DIALS
-                        distance = f['/entry/instrument/detector/detector_distance'][()]
-                        dis = f['/entry/instrument/detector/transformations/translation']
-                        dis[()]=distance# DIALS use for cal res?
-                        dis.attrs['vector'] = [0,0,-1]
+                        with h5py.File(targetPath,'r+') as f:
+                            try:
+                                f['/entry/instrument/beam'].create_group(u'attenuator')
+                                f['/entry/instrument/beam/attenuator'].create_dataset(u'attenuator_transmission', data=float(atten))
+                                f['/entry/instrument/beam/'].create_dataset(u'name', data=b'NSRRC BEAMLINE TPS 07A')
+                                f['/entry/instrument/beam/'].create_dataset(u'incident_beam_size', data=float(beamsize))
+                                f['/entry/'].create_group(u'extrainfo')
+                                for data in header:
+                                    name = data
+                                    value = bytes(str(header[data]), encoding='utf-8')
+                                    f['/entry/extrainfo/'].create_dataset(name, data=value)    
+                                #det.streamConfig('header_appendix')['value']
+                                #modify some header
+                                f['/entry/sample/transformations/omega'].attrs['vector'] = [0,1,0]#for DIALS
+                                distance = f['/entry/instrument/detector/detector_distance'][()]
+                                dis = f['/entry/instrument/detector/transformations/translation']
+                                dis[()]=distance# DIALS use for cal res?
+                                dis.attrs['vector'] = [0,0,-1]
 
-                        # disgeo = f['/entry/instrument/detector/geometry/translation/distances']
-                        # disgeo_data=disgeo[()]#
-                        # beam1=disgeo_data[0]*-0.075
-                        # beam2=disgeo_data[1]*0.075
-                        # # beam1 = int(beam1*1000)/1000
-                        # # beam2 = int(beam2*1000)/1000
-                        # disgeo[()] = [beam1,beam2,-1000*distance]#for DIALS [-0.1555,0.163575,-150]
+                                # disgeo = f['/entry/instrument/detector/geometry/translation/distances']
+                                # disgeo_data=disgeo[()]#
+                                # beam1=disgeo_data[0]*-0.075
+                                # beam2=disgeo_data[1]*0.075
+                                # # beam1 = int(beam1*1000)/1000
+                                # # beam2 = int(beam2*1000)/1000
+                                # disgeo[()] = [beam1,beam2,-1000*distance]#for DIALS [-0.1555,0.163575,-150]
+                                counter = 99#everyting is good
 
 
-
+                            except Exception as e:
+                                counter = counter +1
+                                logger.warning(f'{log}: Exception : {e}')
+                                time.sleep(0.1)
                     except Exception as e:
+                        counter = counter +1
                         logger.warning(f'{log}: Exception : {e}')
+                        time.sleep(0.1)
             runtime=time.time()-t0
             speed = filesize/runtime
             logger.info(f'{log}: Take time = {runtime}, File size = {filesize} MB, speed = {speed} MB/sec')
@@ -134,11 +157,26 @@ def TransferData(det,saveedlist,saveedpath,datareturn:Queue,toNFS=True):
                 else:
                     logger.info(f'{log}: try to remove {file} on DCU')
                     requests.delete(f'http://10.7.1.98/data/{file}')
-        recursive_chown(ramdirectory,uid,gid)
+        logger.info(f'{log}: start to recursive_chown')
+        if fileindex == 0:
+            # mutiposition
+            logger.info(f'{log}: mutiposition data,change single data set')
+            try:
+                os.chown(ramdirectory,uid,gid)
+                os.chown(fullpath,uid,gid)
+                os.chmod(fullpath, 0o700)
+            except:
+                logger.info(f'{log}: has problem when chown {fullpath}')
+            pass
+        else:
+            #maybe slow....
+            recursive_chown(ramdirectory,uid,gid)
+        logger.info(f'{log}: Done for recursive_chown')
         saveedlist.extend(fileDL)
         
         # print(f'savelist={saveedlist}')
     datareturn.put((saveedlist,saveedpath))
+    # logger.info(f'{log}: Done for Tranfer command')
     # logger.info(f'{log}: {datareturn} send,{(saveedlist,saveedpath)}')
     return saveedlist,saveedpath
 def rsync(source,target):
