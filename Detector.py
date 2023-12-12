@@ -1302,9 +1302,9 @@ class Eiger2X16M(Detector):
                 self.logger.debug(f'ask photon_energy')
                 # ans = det.detectorConfig('photon_energy')
                 detEn= detinfo['photon_energy']
-                # self.logger.debug(f'Current detector energy={detEn}')
+                self.logger.debug(f'Current detector energy={detEn},DCm energy ={Energy}')
                 # print(f'Current Energy:{Energy}, Current Detector setting energy={detEn}')
-                if (abs(Energy-detEn)>10):#change if more than 10v
+                if (abs(Energy-detEn)>0.5):#change if more than 0.5v
                     det.setDetectorConfig('photon_energy',Energy)
                     self.logger.info(f'Detector origin energy={detEn},now set to {Energy}')
 
