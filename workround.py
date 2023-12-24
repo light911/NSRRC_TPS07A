@@ -105,10 +105,10 @@ class myepics():
             error = ans.stderr
         
         if error == '':
-            self.logger.warning(f'caput PV={PV},value={value} OK,wait={wait} take time {time.time()-t0}')
+            self.logger.info(f'caput PV={PV},value={value} OK,wait={wait} take time {time.time()-t0}')
             return result
         else:
-            self.logger.error(f"Caput {PV} value {value} Fail={error}, take time {time.time()-t0}")
+            self.logger.warning(f"Caput {PV} value {value} Fail={error}, take time {time.time()-t0}")
             # return False
             return None
 
