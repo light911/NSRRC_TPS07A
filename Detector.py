@@ -1429,7 +1429,7 @@ class Eiger2X16M(Detector):
             # beamsizeP.start()
             self.logger.debug(f'{raster=},{beamwithdis=}')
             self.MoveBeamsize.target(float(self.beamsize),self.distance ,True,True)
-            self.sendQ.put(('endmove','beamSize',str(self.beamsize),'normal'), block=False)
+            # self.sendQ.put(('endmove','beamSize',str(self.beamsize),'normal'), block=False)
             self.sendQ.put(('updatevalue','currentBeamsize',str(self.beamsize),'string','normal'))
             
         else:
@@ -1443,7 +1443,7 @@ class Eiger2X16M(Detector):
             
             if movebeasize:
                 self.MoveBeamsize.target(float(self.beamsize),self.distance ,True,False)
-                self.sendQ.put(('endmove','beamSize',str(self.beamsize),'normal'), block=False)
+                # self.sendQ.put(('endmove','beamSize',str(self.beamsize),'normal'), block=False)
                 self.sendQ.put(('updatevalue','currentBeamsize',str(self.beamsize),'string','normal'))
             else:
                 #but we still need open cover

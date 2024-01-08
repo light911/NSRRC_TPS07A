@@ -463,6 +463,15 @@ class epicsdev(QThread):
             self.logger.debug(f'Got command from other program, command is {value}')
             self.handleCommand(value)
             pass
+        elif dcsstype == 'bypass':
+            # if dcssname == 'beamSize':
+            #     #update beam size info ?
+            #     self.sendQ.put(('endmove',dcssname,value,'normal'))
+            #     self.sendQ.put(('endmove','beamSize_x',value,'normal'))
+            #     self.sendQ.put(('endmove','beamSize_y',value,'normal'))
+            #     pass
+
+            pass
         #for other            
         if self.init_update:
             self.epicslist[pvname]["old_value"] = value

@@ -183,11 +183,11 @@ epicslist={
               "07a-ES:Beamsize":{
                             "PVname":"07a-ES:Beamsize",  
                             "PVID":"",#for uid object
-                            "GUIname":"Beamsize",
+                            "GUIname":"beamSize",
                             "old_value":"0",
                             "camon":True,
                             "deadband":0,
-                            'dcssname':"Beamsize",
+                            'dcssname':"beamSize",
                             'dcsstype':"bypass",
                             },
               "07a:md3:FastShutterIsOpen":{
