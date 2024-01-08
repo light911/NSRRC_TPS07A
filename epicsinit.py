@@ -1009,6 +1009,11 @@ class epicsdev(QThread):
                                 pass
                             elif dcsstype == 'change_mode':
                                 pos = self.ca.caget(dev,format=float)
+                                #if position == unknow,w e set to data collect mode, to keep bluice able to click center mode or Tranfer mode
+                                # 0 center, 1 beam, 2, collect , 3 Tranfer mode, 4 unknow
+                                if int(pos) == 4:#Unkonw mode
+                                    pos = 2.0#collect mode
+
                                 self.sendQ.put(('endmove',dcssname,pos,'normal'), block=False)
                             elif dcsstype == 'log' or dcsstype == 'opertation':
                                 pass
