@@ -34,6 +34,7 @@ Par={
                 'Filename':"Filename",
                 'Fileindex':0,
                 'nimages_per_file':1000,
+                'timeout':60#this should longer than prepare md3 sync detector
                 },
     'collect':{'start_oscillationPV':'07a:md3:startScanEx',
                'md3statePV':'07a:md3:State',

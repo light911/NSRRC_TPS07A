@@ -26,6 +26,20 @@ from workround import myepics
 import traceback,sys
 from myeigerclient import EigerClient,setDetectorConfig,setMonitorConfig,sendDetectorCommand,detectorConfig,setFileWriterConfig
 import concurrent.futures
+# from TranferData_EPU_RAM_NFS_HTTP import genDatasetNames
+
+def genDatasetNames(totalimage:int,nimages_per_file:int=1000,Filename:str='Test'):
+    maxfileset = totalimage // nimages_per_file
+    if  totalimage % nimages_per_file ==0:
+        maxfileset = maxfileset -1
+    maxfileset += 1
+    datalists = []
+    for i in range(maxfileset):
+        filenum = i + 1
+        dataname = f'{Filename}_data_{filenum:06}.h5'
+        datalists.append(dataname)
+    # print(datalist)
+    return datalists
 
 class Detector():
     def __init__(self,Par,Q,coverdhs=None) :
@@ -195,6 +209,12 @@ class Eiger2X16M(Detector):
     def updatefilestring(self):
         t0 = time.time()
         self.logger.info('Start updatefilestring')
+        totalframe = self.TotalFrames
+        expctedlist =[]
+        Filename = self.filename + "_" + str(self.fileindex).zfill(4)
+        masterfile = Filename + "_master.h5"
+        expctedlist.append(masterfile)
+        expctedlist.extend(genDatasetNames(self.TotalFrames,1000,Filename))
         #det = self.det
         det = DEigerClient(self.detectorip,self.detectorport,verbose=False)
         Filename = self.filename + "_" + str(self.fileindex).zfill(4)
@@ -217,33 +237,43 @@ class Eiger2X16M(Detector):
                 
             time.sleep(0.2)
             currentfile = det.fileWriterFiles()
-        #wait for new file
-        while len(currentfile) != 0:
-            currentfile.remove(masterfile)
-            filenum = len(currentfile)
-            if filenum == 0:
-                #wait for data
-                pass
-            else:
-                dataname = f'{Filename}_data_{filenum:06}.h5'
-                datapath = f'{self.directory }/{dataname}'
-                command[0] = 'updatevalue'
-                command[1] = 'lastImageCollected'
-                command[2] = datapath
-                command[3] = 'string'
-                command[4] = 'normal'
-                self.sendQ.put((command[0],command[1],command[2],command[3],command[4]))
-            #['empty_1_0001_data_000001.h5', 'empty_1_0001_master.h5']
-            time.sleep(0.2)
-            currentfile = det.fileWriterFiles()
+
+        # #wait for new file
+        # while len(currentfile) != 0:
+        #     currentfile.remove(masterfile)
+        #     filenum = len(currentfile)
+        #     if filenum == 0:
+        #         #wait for data
+        #         pass
+        #     else:
+        #         dataname = f'{Filename}_data_{filenum:06}.h5'
+        #         datapath = f'{self.directory }/{dataname}'
+        #         command[0] = 'updatevalue'
+        #         command[1] = 'lastImageCollected'
+        #         command[2] = datapath
+        #         command[3] = 'string'
+        #         command[4] = 'normal'
+        #         self.sendQ.put((command[0],command[1],command[2],command[3],command[4]))
+        #     #['empty_1_0001_data_000001.h5', 'empty_1_0001_master.h5']
+        #     time.sleep(0.2)
+        #     currentfile = det.fileWriterFiles()
+        try:
+            # while len(currentfile) != 0:
+            while bool(set(currentfile) & set(expctedlist)):
+                self.logger.info(f'wait for detector download data: file count :{set(currentfile) & set(expctedlist)}')
+                time.sleep(0.1)
+                currentfile = self.det.fileWriterFiles()
+        except Exception as e:
+            self.logger.critical(f'Error on monitor DCU file, error{e}')
+        self.logger.info(f'All data in detector is downloaded: file count :{currentfile}')
             
             
         #last update
-        nimages = det.detectorConfig('nimages')['value']
-        time.sleep(0.1)
-        ntrigger = det.detectorConfig('ntrigger')['value']
-        self.logger.debug(f'{nimages=},{ntrigger=}')
-        totalframe = int(nimages) * int(ntrigger)
+        # nimages = det.detectorConfig('nimages')['value']
+        # time.sleep(0.1)
+        # ntrigger = det.detectorConfig('ntrigger')['value']
+        # self.logger.debug(f'{nimages=},{ntrigger=}')
+        # totalframe = int(nimages) * int(ntrigger)
         lastnum = math.ceil(totalframe/1000)
         dataname = f'{Filename}_data_{lastnum:06}.h5'
         datapath = f'{self.directory }/{dataname}'
@@ -315,41 +345,53 @@ class Eiger2X16M(Detector):
         toDcsscommand = 'htos_set_string_completed system_status normal {Wating For Download Image} black #d0d000'
         self.sendQ.put(toDcsscommand)
         
+        expctedlist =[]
+        Filename = self.filename + "_" + str(self.fileindex).zfill(4)
+        masterfile = Filename + "_master.h5"
+        expctedlist.append(masterfile)
+        expctedlist.extend(genDatasetNames(self.TotalFrames,1000,Filename))
+        
         currentfile = self.det.fileWriterFiles()
         self.logger.info(f'Check for detector download data: file count :{currentfile}')
         # while type(currentfile) != type(None):
         try:
-            while len(currentfile) != 0:
-                self.logger.info(f'wait for detector download data: file count :{currentfile}')
+            # while len(currentfile) != 0:
+            while bool(set(currentfile) & set(expctedlist)):
+                self.logger.info(f'wait for detector download data: file count :{set(currentfile) & set(expctedlist)}')
                 time.sleep(0.1)
                 currentfile = self.det.fileWriterFiles()
         except Exception as e:
-            self.logger.critical(f'Erro on monitor DCU file, error{e}')
+            self.logger.critical(f'Error on monitor DCU file, error{e}')
         self.logger.info(f'All data in detector is downloaded: file count :{currentfile}')
-        #send to Autostra server if Frames <= 10
-        if self.TotalFrames <= 10:
-            url = 'http://10.7.1.107:65000/job'
-            #/data/blctl/test/test_0_matser.h5
 
-            masterfile =  self.directory + "/" + self.filename + '_'  + str(self.fileindex).zfill(4) +'_master.h5'
-            # masterfile =  f'{self.directory}/{self.filename}_{str(self.fileindex).zfill(4)}_master.h5'
-            data = {'path':masterfile}
-            p = Process(target=self.sendtoAutostra,args=(url,data))
-            p.start()
-            pass
-        # elif self.TotalFrames >= 20:
-        if self.TotalFrames >= 20:
-            #send to auto process
-            url = 'http://10.7.1.108:65001/job'
-            #/data/blctl/test/test_0_matser.h5
 
-            masterfile =  self.directory + "/" + self.filename + '_'  + str(self.fileindex).zfill(4) +'_master.h5'
-            masterfile.replace('/data','/mnt/proc_buffer')
-            # masterfile =  f'{self.directory}/{self.filename}_{str(self.fileindex).zfill(4)}_master.h5'
-            data = {'path':masterfile}
-            p = Process(target=self.sendtoAutostra,args=(url,data))
-            p.start()
-            pass
+        #now active in Download Server
+        # #send to Autostra server if Frames <= 10
+        # if self.TotalFrames <= 10:
+        #     url = 'http://10.7.1.107:65000/job'
+        #     #/data/blctl/test/test_0_matser.h5
+
+        #     masterfile =  self.directory + "/" + self.filename + '_'  + str(self.fileindex).zfill(4) +'_master.h5'
+        #     # masterfile =  f'{self.directory}/{self.filename}_{str(self.fileindex).zfill(4)}_master.h5'
+        #     data = {'path':masterfile}
+        #     p = Process(target=self.sendtoAutostra,args=(url,data))
+        #     p.start()
+        #     pass
+        # # elif self.TotalFrames >= 20:
+        # if self.TotalFrames >= 20:
+        #     #send to auto process
+        #     url = 'http://10.7.1.108:65001/job'
+        #     #/data/blctl/test/test_0_matser.h5
+
+        #     masterfile =  self.directory + "/" + self.filename + '_'  + str(self.fileindex).zfill(4) +'_master.h5'
+        #     masterfile.replace('/data','/mnt/proc_buffer')
+        #     # masterfile =  f'{self.directory}/{self.filename}_{str(self.fileindex).zfill(4)}_master.h5'
+        #     data = {'path':masterfile}
+        #     p = Process(target=self.sendtoAutostra,args=(url,data))
+        #     p.start()
+        #     pass
+
+
         #kill it if timeout?
         #check closecoverP state
         self.checkandretryCoverProcess(closecoverP,'close')
@@ -378,6 +420,7 @@ class Eiger2X16M(Detector):
         
     def sendtoAutostra(self,url,data):
         response = requests.post(url , json=data)
+        print(f'send to {url}')
         print(response.text)
 
         pass
@@ -459,11 +502,17 @@ class Eiger2X16M(Detector):
         
         # htos_note changing_detector_mode
         toDcsscommand = ('htos_note','changing_detector_mode')
+        if self.runIndex==0:
+            collectype= 'test image'
+        elif self.runIndex<40:
+            collectype= 'Normal dataset'
+        else:
+            collectype= 'Normal dataset'
         self.sendQ.put(toDcsscommand)
         #beam size and distance has moved by dcss
         # _oscillationTime,_filename = self.basesetup(movebeasize=False)
         # raster=False,roi=False,beamwithdis=False,movebeasize=True
-        args=(False,False,False,False,None,)
+        args=(False,False,False,False,None,collectype,)
         
         detectorsetupP = Process(target=self.basesetup,args=args,name='Detector_Setup')
         detectorsetupP.start()
@@ -493,7 +542,7 @@ class Eiger2X16M(Detector):
         t0=time.time()
         det = DEigerClient(self.detectorip,self.detectorport,verbose=False)
         self.operationHandle = command[1]
-        self.runIndex = command[2]
+        self.runIndex = command[2]# will be 0
         self.filename = command[3]
         self.directory = command[4]
         self.userName = command[5]
@@ -510,7 +559,7 @@ class Eiger2X16M(Detector):
         
 
         self.sessionId = command[15]
-        self.fileindex = int(command[16])
+        self.fileindex = int(command[16])# will be 1
         self.unknow = int(command[17]) #1
         self.beamsize = command[18] # 50
         self.atten = command[19] #0
@@ -529,10 +578,10 @@ class Eiger2X16M(Detector):
         self.roi=False
         # _oscillationTime,_filename = self.basesetup(raster=False,roi=self.roi,beamwithdis=True)
         # _filename = _filename + '.h5'
-
+        collectype='MutiPostion'
         # _oscillationTime,_filename = self.basesetup(movebeasize=False)
         # raster=False,roi=False,beamwithdis=False,movebeasize=True
-        args=(False,self.roi,True,True,None,)
+        args=(False,self.roi,True,True,None,collectype,)
         
         detectorsetupP = Process(target=self.basesetup,args=args,name='Detector_Setup')
         detectorsetupP.start()
@@ -624,30 +673,51 @@ class Eiger2X16M(Detector):
         # closecoverP = Process(target=self.cover.askforAction,args=('close',),name='mutiPosCollect_close_cover')
         # closecoverP.start()
         
-        toDcsscommand = 'htos_set_string_completed system_status normal {Wating For Download Image} black #d0d000'
-        self.sendQ.put(toDcsscommand)
-        currentfile = det.fileWriterFiles()
-        self.logger.info(f'Check for detector download data: file count :{currentfile}')
-        try :
-            if len(currentfile) != 0:
-                check = True
-            else:
-                check = False
-        except:
-                check = True
+        ############################
+        # toDcsscommand = 'htos_set_string_completed system_status normal {Wating For Download Image} black #d0d000'
+        # self.sendQ.put(toDcsscommand)
+
+        # expctedlist =[]
+        # Filename = self.filename + "_" + str(self.fileindex).zfill(4)
+        # masterfile = Filename + "_master.h5"
+        # expctedlist.append(masterfile)
+        # expctedlist.extend(genDatasetNames(self.TotalFrames,1000,Filename))
         
-        while check and not self.abort:
-            self.logger.info(f'wait for detector download data: file count :{currentfile}')
-            time.sleep(0.2)
-            currentfile = det.fileWriterFiles()
-            try :
-                if len(currentfile) != 0:
-                    check = True
-                else:
-                    check = False
-            except:
-                    check = True
-        self.logger.info(f'All data in detector is downloaded: file count :{currentfile}')
+        # currentfile = det.fileWriterFiles()
+        # self.logger.info(f'Check for detector download data: current file :{currentfile}')
+        # self.logger.info(f'Check for detector download data: expcted file :{expctedlist}')
+        # try:
+        #     # while len(currentfile) != 0:
+        #     while bool(set(currentfile) & set(expctedlist)):
+        #         self.logger.info(f'wait for detector download data: file :{set(currentfile) & set(expctedlist)}')
+        #         time.sleep(0.1)
+        #         currentfile = self.det.fileWriterFiles()
+        # except Exception as e:
+        #     self.logger.critical(f'Error on monitor DCU file, error{e}')
+        # self.logger.info(f'All data in detector is downloaded: file count :{currentfile}')
+        ###########################
+        # try :
+        #     if len(currentfile) != 0:
+        #         check = True
+        #     else:
+        #         check = False
+        # except:
+        #         check = True
+        
+        # while check and not self.abort:
+        #     self.logger.info(f'wait for detector download data: file count :{currentfile}')
+        #     time.sleep(0.2)
+        #     currentfile = det.fileWriterFiles()
+        #     try :
+        #         if len(currentfile) != 0:
+        #             check = True
+        #         else:
+        #             check = False
+        #     except:
+        #             check = True
+
+
+        # self.logger.info(f'All data in detector is downloaded: file count :{currentfile}')
         
         #now not close cover in end of collect, control by bluice2
         # self.logger.info(f'Check cover is cloesd,current code is {closecoverP.exitcode}')
@@ -714,7 +784,7 @@ class Eiger2X16M(Detector):
     # ,detectoroffX,detectoroffY,sessionId,fileindex,unknow,beamsize,atten,roi,numofX,numofY,uid,gid,gridsizex,gridsizey]
         t0=time.time()
         self.operationHandle = command[1]
-        self.runIndex = command[2]
+        self.runIndex = command[2]#for raster =101 or102
         self.filename = command[3]
         self.directory = command[4]
         self.userName = command[5]
@@ -764,11 +834,11 @@ class Eiger2X16M(Detector):
         # htos_note changing_detector_mode
         toDcsscommand = ('htos_note','changing_detector_mode')
         self.sendQ.put(toDcsscommand)
-
+        collectype= 'Raster'
         # _oscillationTime,_filename = self.basesetup(raster=True,roi=self.roi,beamwithdis=True)
         # _filename = _filename + '.h5'
         # raster=False,roi=False,beamwithdis=False,movebeasize=True
-        args=(True,self.roi,True,True,None,)
+        args=(True,self.roi,True,True,None,collectype,)
         
         detectorsetupP = Process(target=self.basesetup,args=args,name='Detector_Setup')
         detectorsetupP.start()
@@ -797,7 +867,7 @@ class Eiger2X16M(Detector):
         #     closecoverP = Process(target=self.cover.CloseCover,name='abort_close_cover')
         #     closecoverP.start()
         
-        self.logger.info(f'try to resete detector')
+        self.logger.info(f'try to reset detector')
         state = self.det.detectorStatus('state')
         self.abort = True
         if state == 'idle':
@@ -1173,7 +1243,7 @@ class Eiger2X16M(Detector):
             self.logger.warning(f'Setup detector has error {errMsg}')
             sys.exit(-1)#for mutiprocess
             
-    def basesetup(self,raster=False,roi=False,beamwithdis=False,movebeasize=True,detconn=None):
+    def basesetup(self,raster=False,roi=False,beamwithdis=False,movebeasize=True,detconn=None,collectype='test image'):
         #mutithread version
         try:
             t0 = time.time()
@@ -1190,7 +1260,7 @@ class Eiger2X16M(Detector):
                 self.logger.debug(f'setting Detector')
                 Filename = self.filename + "_" + str(self.fileindex).zfill(4)
                 que = queue.Queue()
-                write_headerP = Thread(target=self.write_header,args=(raster,Filename,que,),name='write_header')
+                write_headerP = Thread(target=self.write_header,args=(raster,Filename,que,collectype,),name='write_header')
                 
                 write_headerP.start()
                 #ask detector current setting
@@ -1338,18 +1408,31 @@ class Eiger2X16M(Detector):
                 if detinfo['detector_distance'] != self.distance/1000:
                     self.logger.debug(f'{detinfo["detector_distance"]=} != {self.distance/1000} update detector')
                     futures.append(executor.submit(setDetectorConfig, 'detector_distance',self.distance/1000,self.detectorip,self.detectorport))
-                if round(detinfo['omega_start'],3) != round(self.oscillationStart,3):
+                if detinfo['omega_start'] == None:
                     self.logger.debug(f'{detinfo["omega_start"]=} != {self.oscillationStart} update detector')
                     futures.append(executor.submit(setDetectorConfig, 'omega_start',self.oscillationStart,self.detectorip,self.detectorport))
-                if round(detinfo['omega_increment'],3) != round(self.detosc,3):
+                    pass
+                elif round(detinfo['omega_start'],3) != round(self.oscillationStart,3):
+                    self.logger.debug(f'{detinfo["omega_start"]=} != {self.oscillationStart} update detector')
+                    futures.append(executor.submit(setDetectorConfig, 'omega_start',self.oscillationStart,self.detectorip,self.detectorport))
+                if detinfo['omega_increment'] == None:
                     self.logger.debug(f'{detinfo["omega_increment"]=} != {self.detosc} update detector')
                     futures.append(executor.submit(setDetectorConfig, 'omega_increment',self.detosc,self.detectorip,self.detectorport))
-                if round(detinfo['chi_start'],3) != round(chi,3):
+                elif round(detinfo['omega_increment'],3) != round(self.detosc,3):
+                    self.logger.debug(f'{detinfo["omega_increment"]=} != {self.detosc} update detector')
+                    futures.append(executor.submit(setDetectorConfig, 'omega_increment',self.detosc,self.detectorip,self.detectorport))
+                if detinfo['chi_start'] == None:
+                    self.logger.debug(f'{detinfo["chi_start"]=} != {chi} update detector')
+                    futures.append(executor.submit(setDetectorConfig, 'chi_start',chi,self.detectorip,self.detectorport))
+                elif round(detinfo['chi_start'],3) != round(chi,3):
                     self.logger.debug(f'{detinfo["chi_start"]=} != {chi} update detector')
                     futures.append(executor.submit(setDetectorConfig, 'chi_start',chi,self.detectorip,self.detectorport))
                 
                 # futures.append(executor.submit(setDetectorConfig, 'chi_increment',0,self.detectorip,self.detectorport))
-                if round(detinfo['phi_start']) != round(phi,3):
+                if detinfo['phi_start'] == None:
+                    self.logger.debug(f'{detinfo["phi_start"]=} != {phi} update detector')
+                    futures.append(executor.submit(setDetectorConfig, 'phi_start',phi,self.detectorip,self.detectorport))
+                elif round(detinfo['phi_start']) != round(phi,3):
                     self.logger.debug(f'{detinfo["phi_start"]=} != {phi} update detector')
                     futures.append(executor.submit(setDetectorConfig, 'phi_start',phi,self.detectorip,self.detectorport))
                 # futures.append(executor.submit(setDetectorConfig, 'phi_increment',0,self.detectorip,self.detectorport))
@@ -1402,8 +1485,18 @@ class Eiger2X16M(Detector):
             # self.logger.debug('start to updatefilestring check')
             # monP = Process(target=self.updatefilestring,name='Monfile')
             # monP.start()
+
+            #Notify Download server
+            try:
+                url = 'http://10.7.1.108:64444/tranfer'
+                # response = requests.post(url , json=header_appendix)
+                p = Process(target=self.sendtoAutostra,args=(url,header_appendix))
+                p.start()
+            except Exception as e:
+                self.logger.warning(f'Notify Download server has error {e}')
+
             self.logger.info(f'setup time = {t1-t0}')
-            return TotalTime,Filename
+            # return TotalTime,Filename
         except Exception as e:
             error_class = e.__class__.__name__ #取得錯誤類型
             detail = e.args[0] #取得詳細內容
@@ -1413,7 +1506,7 @@ class Eiger2X16M(Detector):
             lineNum = lastCallStack[1] #取得發生的行號
             funcName = lastCallStack[2] #取得發生的函數名稱
             errMsg = "File \"{}\", line {}, in {}: [{}] {}".format(fileName, lineNum, funcName, error_class, detail)
-            self.logger.warning(f'Setup detector has error {errMsg}')
+            self.logger.warning(f'Setup detector has error {errMsg},{e}')
             sys.exit(-1)#for mutiprocess
     def setup_beamsize_cover_distance(self,raster=False,roi=False,beamwithdis=False,movebeasize=True):
         t0=time.time()
@@ -1450,7 +1543,7 @@ class Eiger2X16M(Detector):
                 self.MoveBeamsize.opencover(True)
                 pass
         self.logger.info(f'setup  = {time.time()-t0}')
-    def write_header(self,raster,Filename,que:queue.Queue):
+    def write_header(self,raster,Filename,que:queue.Queue,collectype):
         self.logger.debug(f'ask for asking beamline info')
 
         #handle ecpis on mutiprocess problem,but not work
@@ -1509,6 +1602,7 @@ class Eiger2X16M(Detector):
         header_appendix['gid'] = gidNumber
         header_appendix['Ebeamcurrent'] = Ebeamcurrent
         header_appendix['gap'] = gap
+        header_appendix['collectype'] = collectype
         header_appendix['dbpm1flux'] = dbpm1flux
         header_appendix['dbpm2flux'] = dbpm2flux
         header_appendix['dbpm3flux'] = dbpm3flux
@@ -1660,7 +1754,7 @@ class Eiger2X16M(Detector):
             self.det = DEigerClient(self.detectorip,self.detectorport,verbose=False)#ask for new client
             # time.sleep(0.2)
             a = list(args)
-            a[-1] = self.det
+            a[-2] = self.det
             b = tuple(a)
             detectorP = Process(target=self.basesetup,args=b,name='Detector_Setup')
             detectorP.start()

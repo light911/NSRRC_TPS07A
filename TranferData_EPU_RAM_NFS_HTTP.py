@@ -6,7 +6,7 @@ Created on Thu May 13 15:03:07 2021
 @author: blctl
 """
 
-from multiprocessing import Process,Queue
+from multiprocessing import Process,Queue,Manager
 from Eiger.DEiger2Client import DEigerClient
 import Config
 import time,os,re
@@ -21,7 +21,8 @@ from flask import Flask,jsonify,request,Response
 Par = Config.Par
 rsyncP=[]
 logger = logsetup.getloger2('TransferData',LOG_FILENAME='TransferDataLOG.txt',level = Par['Debuglevel'])
-
+m = Manager()
+ProcessFile = m.list()
 def recursive_chown(path,uid,gid):
     for dirpath, dirnames, filenames in os.walk(path):
         os.chown(dirpath,uid,gid)
@@ -33,56 +34,70 @@ def recursive_chown(path,uid,gid):
             except:
                 pass
         
-def TransferData(det,saveedlist,saveedpath,datareturn:Queue,header,expctedlist:list,toNFS=True):
+def TransferData(det:DEigerClient,saveedlist,saveedpath,datareturn:Queue,header,expctedlist:list,toNFS=True):
+    '''
+    expctedlist: expcted file list gen by header
+    '''
+    t0 = time.time()
     init = True
     detabort = False
     needtoDL = expctedlist
+    Autoprocess = False
+    bypassDownload = False
+    user = header['user']
+    uid = header['uid']
+    gid = header['gid']
+    beamsize = header['beamsize']
+    atten = header['atten']
+    runIndex =  int(header['runIndex'])
+    TotalFrames = header['TotalFrames']
+    fileindex = header['fileindex']   
+    directory = header['directory']
+    filename = header['filename']
     if toNFS:
         log = "NFS"
+        ramdirectory = header['directory']
+        Path(ramdirectory).mkdir(mode= 0o700,parents=True, exist_ok=True)
+        os.chown(ramdirectory,uid,gid)
     else:
         log = "EPU"
+        ramdirectory = header['directory'].replace('/data','/mnt/proc_buffer')
+        # data to ram
+        # raster runindex = 101 or 102
+        # mutipostion fileindex = 0, runIndex=1
+        # normal dataset runIndex 1~16
+        # test image runIndex = 0 
+        if TotalFrames >= 20 and runIndex < 40 and fileindex != 0:
+            Path(ramdirectory).mkdir(mode= 0o700,parents=True, exist_ok=True)
+            Autoprocess = True
+            pass
+        else:
+            bypassDownload = True#skip download
+            Autoprocess = False
     while True:
+        #when we got all except file or, fileWriterStatus from acquire to Ready Break loop
         state = det.fileWriterStatus('state')['value']
+        currentfileWriterpatten = det.fileWriterConfig('name_pattern')['value']#series_$id , test_0_0003
+        #make sure collect is started,
+        # dhs   detectorstat                       filewriter
+        # arm   idle->configure->READY->acquire-ilde  ready=>acquire->ready
         if state == 'acquire':
             init = False
-
+        #when we got all except file or, fileWriterStatus from acquire to Ready Break loop
         if init :
             pass
         else:
             if state == 'ready':
-                #detector from acquire to ready
+                #fileWriterStatus from acquire to ready
                 #if there is no file to downlaod may be detector abort
                 detabort = True
-        
-        currentfile = det.fileWriterFiles()
+
+        currentfile = det.fileWriterFiles()#['test_0_0008_data_000001.h5', 'test_0_0008_master.h5']
+
         if len(needtoDL) >0:
             # check frist item can we found on detector?
             if needtoDL[0] in currentfile:
-                # header =json.loads(det.streamConfig('header_appendix')['value'])
-                user = header['user']
-                uid = header['uid']
-                gid = header['gid']
-                beamsize = header['beamsize']
-                atten = header['atten']
-                #directory = header['directory'].replace('/data','/tps2gs/tps2ces/tps2nfs')
-                #directory = header['directory'].replace('/data','/mnt/data_buffer')
-                directory = header['directory']
-                if toNFS:
-                    ramdirectory = header['directory']
-                else:
-                    ramdirectory = header['directory'].replace('/data','/mnt/proc_buffer')
-                # print(directory)
-                # directory   /tps2gs/tps2ces/tps2nfs
-                # directory = '/home/blctl/Desktop/test12345'
-                filename = header['filename']           
                 file = needtoDL.pop(0)
-                # for file in fileDL:
-                    # t0=time.time()
-                    #mkdir folder
-                Path(directory).mkdir(mode= 0o700,parents=True, exist_ok=True)
-                if not toNFS:
-                    Path(ramdirectory).mkdir(mode= 0o700,parents=True, exist_ok=True)
-
                 fullpath = directory + "/" + file
                 if Path(fullpath).exists() and toNFS:
                     overwriteFolder= directory + '/OVERWRITE_OLD'
@@ -90,13 +105,19 @@ def TransferData(det,saveedlist,saveedpath,datareturn:Queue,header,expctedlist:l
                     Path(overwriteFolder).mkdir(parents=True, exist_ok=True)
                     movepath = overwriteFolder+ "/" + file
                     Path(fullpath).replace(movepath)
-                t0=time.time()
-                logger.info(f'{log}: Download {file} to {header["directory"]}')
-                det.fileWriterSave(file,targetDir=ramdirectory)
-                targetPath = os.path.join(ramdirectory,file)
-                filesize = os.stat(targetPath).st_size * 9.5367431640625e-7
+                    recursive_chown(overwriteFolder,uid,gid)
+                t0=time.time()                    
+                logger.info(f'{log}: Download {file} to {ramdirectory}')
+                if bypassDownload:
+                    pass
+                    filesize=0
+                    targetPath = os.path.join(ramdirectory,file)
+                else:
+                    det.fileWriterSave(file,targetDir=ramdirectory)
+                    targetPath = os.path.join(ramdirectory,file)
+                    filesize = os.stat(targetPath).st_size * 9.5367431640625e-7
                 mastername = filename + "_master.h5"
-                if file == mastername:
+                if file == mastername and not bypassDownload:
                     targetPath = os.path.join(ramdirectory,file)
                     logger.info(f'{log}: add Header info')
                     with h5py.File(targetPath,'r+') as f:
@@ -126,12 +147,49 @@ def TransferData(det,saveedlist,saveedpath,datareturn:Queue,header,expctedlist:l
                 #rsync to nfs
                 # rsync(targetPath,targetPath.replace('/mnt/proc_buffer','/data'))
                 saveedpath.append(targetPath)
-                recursive_chown(ramdirectory,uid,gid)
+                
+                # #final remove it on DCU
+                # # NFS is slowest, so after NFS download delete it
+                # # or using Queue info to control ?
+                # if toNFS:
+                #     ans =re.match("(.*)_master.h5",file)
+                #     if ans:
+                #         #not to delete master file
+                #         # we will delete it on main process
+                #         pass
+                #     else:
+                #         logger.info(f'{log}: try to remove {file} on DCU')
+                #         requests.delete(f'http://10.7.1.98/data/{file}')
                 
                 datareturn.put(['download',file])
+                if toNFS:
+                    logger.info(f'{log}: start to recursive_chown')
+                    if fileindex == 0:
+                        # mutiposition
+                        logger.info(f'{log}: mutiposition data,change single data set')
+                        try:
+                            # os.chown(ramdirectory,uid,gid)
+                            os.chown(fullpath,uid,gid)
+                            os.chmod(fullpath, 0o700)
+                        except:
+                            logger.info(f'{log}: has problem when chown {fullpath}')
+                        pass
+                    else:
+                        #normal dataset 
+                        try:
+                            # os.chown(ramdirectory,uid,gid)
+                            os.chown(fullpath,uid,gid)
+                            os.chmod(fullpath, 0o700)
+                        except:
+                            logger.info(f'{log}: has problem when chown {fullpath}')
+                        pass
+                        #maybe slow....
+                        # recursive_chown(ramdirectory,uid,gid)
+                    logger.info(f'{log}: Done for recursive_chown')
             elif detabort:
-                #detect no file and dete ready,maybe detector abort
-                break
+                logger.info(f'{log}: There still has some file need to download, but not found in fileWriter. and fileWriter is ready(no new file will generate)')
+                #detect no file and fileWriter ready,maybe detector abort
+                break           
             else:
                 # my file not on detector wait more time
                 time.sleep(0.1)
@@ -142,27 +200,45 @@ def TransferData(det,saveedlist,saveedpath,datareturn:Queue,header,expctedlist:l
             #not thing in needtoDL
             break
     datareturn.put(['jobdone'])
-    runIndex =  header['runIndex']
-    TotalFrames = header['TotalFrames']
-    fileindex = header['fileindex']
-    #for ram start autoproesss
+
+    
+    #for ram start autoproesss, raid run Autostra
+    # raster runindex = 101 or 102
+    # mutipostion fileindex = 0, runIndex=1
+    # normal dataset runIndex 1~16
+    # test image runIndex = 0 
     if toNFS:
         # ramdirectory = header['directory']
         # Autostra
-        pass
-    else:
-        # ramdirectory = header['directory'].replace('/data','/mnt/proc_buffer')
-        if TotalFrames >= 20 and runIndex < 40 and fileindex != 0:
-            #not raster
-            #not mutipos (fileindex==0)
-            #send to auto process
-            url = 'http://10.7.1.108:65001/job'
-            #/data/blctl/test/test_0_matser.h5
-
-            masterfile =  self.directory + "/" + self.filename + '_'  + str(self.fileindex).zfill(4) +'_master.h5'
-            masterfile.replace('/data','/mnt/proc_buffer')
-            # masterfile =  f'{self.directory}/{self.filename}_{str(self.fileindex).zfill(4)}_master.h5'
+        #TODO
+        if runIndex == 0:
+            url = 'http://10.7.1.107:65000/job'
+            masterfile =  ramdirectory + "/" + filename +'_master.h5'
             data = {'path':masterfile}
+            # response = requests.post(url , json=data)
+            # logger.info(f'{log}: Send command to Autostra. {response=}')
+            p = Process(target=sendtoAutostra,args=(url,data))
+            p.start()
+        pass
+    elif bypassDownload:
+        pass
+    elif Autoprocess:
+        #TODO
+        #not raster
+        #not mutipos (fileindex==0)
+        #send to auto process
+        url = 'http://10.7.1.108:65001/job'
+
+        #/data/blctl/test/test_0_matser.h5
+
+        masterfile =  directory + "/" + filename +'_master.h5'
+        # masterfile.replace('/data','/mnt/proc_buffer')
+        # masterfile =  f'{self.directory}/{self.filename}_{str(self.fileindex).zfill(4)}_master.h5'
+        data = {'path':masterfile}
+        p = Process(target=sendtoAutostra,args=(url,data))
+        p.start()
+        # response = requests.post(url , json=data)
+        # logger.info(f'{log}: Send command to Autoprocess. {response=}')
         pass
     # logger.info(f'{log}: {datareturn} send,{(saveedlist,saveedpath)}')
     return saveedlist,saveedpath
@@ -190,7 +266,7 @@ def savecurrentdata(det):
     except :
         pass
     
-def Detectormon():
+def Detectormon():#not used
     os.nice(-15)
     detforNFS = DEigerClient('192.168.31.98')
     detforEPU = DEigerClient('10.7.1.98')
@@ -321,7 +397,12 @@ def Detectormon():
         
         time.sleep(0.1)
 
-def removerawdata(masterfile):
+def sendtoAutostra(url,data):
+    response = requests.post(url , json=data)
+    print(response.text)
+
+    pass
+def removerawdata(masterfile):#not used
     remove = False
     path = pathlib.Path(masterfile)
     removelist = []
@@ -370,105 +451,177 @@ def welcome():
 @app.route('/tranfer', methods=['POST'])
 def jobPOST():
     getdata = request.data #give you strig
-    try:
-        if request.is_json:
-            detforNFS = DEigerClient('192.168.31.98')
-            detforEPU = DEigerClient('10.7.1.98')
-            NFSQ = Queue()
-            EPUQ = Queue()
-            saveedlistNFS=[]
-            saveedpathNFS=[]
-            saveedlistEPU=[]
-            saveedpathEPU=[]
-            header = request.get_json()
-            #except file 
-            filename = header['filename']
-            fileindex = header['fileindex']
-            TotalFrames = header['TotalFrames']
-            
-            datalist =[]
-            masterfile = filename + "_master.h5"
-            datalist.append(masterfile)
-            datalist.extend(genDatasetNames(TotalFrames,1000,filename))
-            NFSp = Process(target=TransferData,args=(detforNFS,saveedlistNFS,saveedpathNFS,NFSQ,header,datalist,True,))
-            EPUp = Process(target=TransferData,args=(detforEPU,saveedlistEPU,saveedpathEPU,EPUQ,header,datalist,False,))
-            NFSp.start()
-            EPUp.start()
-            NFSjobdone = False
-            EPUjobdone = False
-            delfilelist=[]
-            while True:
-                time.sleep(0.1)
-                try:
-                    NFSanswer = NFSQ.get(block=False)
-                except:
-                    NFSanswer = None
-                try:
-                    EPUanswer = EPUQ.get(block=False)
-                except:
-                    EPUanswer = None
-                if NFSanswer:
-                    #list [0] = state, other is data
-                    if NFSanswer[0] == 'download':
-                        saveedlistNFS.extend(NFSanswer[1])
-                    elif NFSanswer[0] == 'jobdone':
-                        NFSjobdone = True
-                    elif NFSanswer[0] == 'detabort':
-                        NFSjobdone = True
-                        pass
-                    else:
-                        logger.warning(f'unknow result {NFSanswer}')
-                    pass
-                if EPUanswer:
-                    #list [0] = state, other is data
-                    if EPUanswer[0] == 'download':
-                        saveedlistEPU.extend(EPUanswer[1])
-                    elif EPUanswer[0] == 'jobdone':
-                        EPUjobdone = True
-                    elif EPUanswer[0] == 'detabort':
-                        EPUjobdone = True
-                        pass
-                    else:
-                        logger.warning(f'unknow result {EPUanswer}')
-                    pass
-                
-                #del file on detector
-                # 将列表 a 和 b 转换为集合
-                set_a = set(saveedlistNFS)
-                set_b = set(saveedlistEPU)
-                #排除
-                set_c = set(delfilelist)
-
-                filetodel = list(set_a.intersection(set_b) - set_c)
-                if filetodel:
-                    for file in filetodel:
-                        logger.info(f'Try to remove {file} on DCU')
-                        requests.delete(f'http://10.7.1.98/data/{file}')
-                    delfilelist.extend(filetodel)
-                #state check
-                if EPUjobdone and NFSjobdone:
-                    break
-            
+    #check if there has same file downloading?
+    alreadRunning = False
+    if request.is_json:
+        header = request.get_json()
+        filename = header['filename']   
+        runIndex =  header['runIndex']
+        TotalFrames = header['TotalFrames']
+        logger.warning(f'Server got ask download:{filename=} ,{runIndex=},{TotalFrames=}')    
+        logger.debug(f'{header=}')    
+        if len(ProcessFile)>=1:
+            for item in ProcessFile:
+                if item == filename:
+                    alreadRunning = True
+        if alreadRunning:
+            logger.warning('There has same file ({filename})downloading!')
+            logger.debug(f'Current {ProcessFile[:]=}')
+            # for item in ProcessFile:
+            #     print(f"path : {item}")
+            ans = 'There has same file ({filename})downloading!'
         else:
-            
-            print('not json')
-            # print('Try covert data: ',request.get_json(True))
-            ans = "Got : " + str(getdata)
-        print("job ans = ",ans)
-        return ans
-    except:
-        pass
+            ProcessFile.append(filename)
+            logger.debug(f'Add job, Current {ProcessFile[:]=}')
+            p = Process(target=monitor_and_download_file,args=(header,ProcessFile))
+            p.start()
+            ans = "OK,add job"
+    else:       
+        logger.warning('not json')
+        # print('Try covert data: ',request.get_json(True))
+        ans = "Got : " + str(getdata)
+    return ans
 
-@app.route('/job', methods=['GET'])
-def jobGET():
-    ans = {}
-    for i,a in enumerate(datalist):
-        ans[i]=a
+# @app.route('/job', methods=['GET'])
+# def jobGET():
+    pass
+    # ans = {}
+    # for i,a in enumerate(datalist):
+    #     ans[i]=a
         
-    return  jsonify(ans)
+    # return  jsonify(ans)
 # Detectormon()
+def requestsdelete(command):
+    logger.debug(f'{command=}')
+    logger.debug(requests.delete(command))
+def monitor_and_download_file(header,ProcessFile: list):
+    filename = header['filename']
+    fileindex = header['fileindex']
+    TotalFrames = header['TotalFrames']
+    detforNFS = DEigerClient('192.168.31.98')
+    detforEPU = DEigerClient('10.7.1.98')
+    NFSQ = Queue()
+    EPUQ = Queue()
+    saveedlistNFS=[]
+    saveedpathNFS=[]
+    saveedlistEPU=[]
+    saveedpathEPU=[]
+    
+    #except file 
+    datalist =[]
+    masterfile = filename + "_master.h5"
+    datalist.append(masterfile)
+    datalist.extend(genDatasetNames(TotalFrames,1000,filename)) 
+    NFSp = Process(target=TransferData,args=(detforNFS,saveedlistNFS,saveedpathNFS,NFSQ,header,datalist,True,))
+    EPUp = Process(target=TransferData,args=(detforEPU,saveedlistEPU,saveedpathEPU,EPUQ,header,datalist,False,))
+    NFSp.start()
+    EPUp.start()
+    NFSjobdone = False
+    EPUjobdone = False
+    delfilelist=[]
+    while True:
+        #check filewrite state
+        try:
+            state = detforEPU.fileWriterStatus('state')['value']
+        except Exception as e:
+            logger.critical(f'Erro on getting state: {e}')
+        if state == 'error' :
+            logger.warning('fileWriterStatus state = error.try to reset it')
+            error = detforEPU.fileWriterStatus('error')['value']
+            logger.warning(f'Error = {error}')
+            detforEPU.sendFileWriterCommand("initialize")
+            detforEPU.setFileWriterConfig('mode','enabled')
+        elif state == 'disabled':
+            logger.warning('fileWriterStatus state = disabled.try to enabled it')
+            detforEPU.sendFileWriterCommand("initialize")
+            detforEPU.setFileWriterConfig('mode','enabled')
+
+        # time.sleep(0.1)
+        try:
+            NFSanswer = NFSQ.get(block=False,timeout=0.1)
+        except:
+            NFSanswer = None
+        try:
+            EPUanswer = EPUQ.get(block=False,timeout=0.1)
+        except:
+            EPUanswer = None
+        if NFSanswer:
+            #list [0] = state, other is data
+            if NFSanswer[0] == 'download':
+                logger.debug(f'Got NFS Q download {NFSanswer[1]}')
+                saveedlistNFS.append(NFSanswer[1])
+            elif NFSanswer[0] == 'jobdone':
+                logger.debug(f'Got NFS Q jobdone')
+                NFSjobdone = True
+            elif NFSanswer[0] == 'detabort':
+                NFSjobdone = True
+                pass
+            else:
+                logger.warning(f'unknow result {NFSanswer}')
+            pass
+        if EPUanswer:
+            #list [0] = state, other is data
+            if EPUanswer[0] == 'download':
+                logger.debug(f'Got EPU Q download {EPUanswer[1]}')
+                saveedlistEPU.append(EPUanswer[1])
+            elif EPUanswer[0] == 'jobdone':
+                logger.debug(f'Got EPU Q jobdone')
+                EPUjobdone = True
+            elif EPUanswer[0] == 'detabort':
+                EPUjobdone = True
+                pass
+            else:
+                logger.warning(f'unknow result {EPUanswer}')
+            pass
+        
+        #del file on detector
+        # 将列表 a 和 b 转换为集合
+        set_a = set(saveedlistNFS)
+        set_b = set(saveedlistEPU)
+        #排除
+        set_c = set(delfilelist)
+
+        filetodel = list(set_a.intersection(set_b) - set_c)
+        # print(filetodel)
+        # print(set_a)
+        # print(set_b)
+        # print(set_c)
+        # print(set_a.intersection(set_b))
+        
+        if filetodel:
+            for file in filetodel:
+                if file == masterfile:
+                    #bypass master file
+                    pass
+                else:
+                    logger.info(f'Try to remove {file} on DCU')
+                    # ansfordel = requests.delete(f'http://10.7.1.98/data/{file}')
+                    command = f'http://10.7.1.98/data/{file}'
+                    p1 = Process(target=requestsdelete,args=(command,))
+                    p1.start()
+                    
+            delfilelist.extend(filetodel)
+        #state check
+        if EPUjobdone and NFSjobdone:
+            logger.debug(f'Both EPU and NFS jobdone.')
+            break
+    logger.info(f'Try to remove {masterfile} on DCU')
+    
+    # requests.delete(f'http://10.7.1.98/data/{masterfile}')
+    command = f'http://10.7.1.98/data/{masterfile}'
+    p2 = Process(target=requestsdelete,args=(command,))
+    p2.start()
+    ProcessFile.remove(filename)
+    logger.info(f'Finish Download dataset {filename} , Allfile={saveedlistNFS}')
+    logger.debug(f'After download dataset Current {ProcessFile[:]=}')
+    pass
 if __name__ == '__main__':       
     # app.run(host='0.0.0.0', port=65000,threaded=False,processes=2)
+    det = DEigerClient('10.7.1.98')
+    savecurrentdata(det)
+    det.sendFileWriterCommand('clear')
+    logger.warning('clear detector memory')
+    
     try:
         os.nice(-15)
     except Exception as e:
