@@ -89,7 +89,7 @@ Par={
                                  'DBPM6kxfactor':'07A-DBPM6:dsp:kx',
                                  'DBPM6kyfactor':'07A-DBPM6:dsp:ky',
 
-                                 'SSMotor':'07a:Slits3:XOpening',
+                                 'SSMotor':'07a:2ndSlits:XOpening',
                                  'DetYMotor':'07a:Det:Y',
                                  'ApertureMotor':'07a:md3:CurrentApertureDiameterIndex',
                                  
