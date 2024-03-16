@@ -286,6 +286,7 @@ class DCSDHS():
         DetctorQ = Q['Queue']['DetectorQ']
         AttenQ = Q['Queue']['attenQ']
         msg = ""
+        abort_timeer = time.time()
         while True:
             #check command
             try:
@@ -339,7 +340,8 @@ class DCSDHS():
 
                         command = self.processrecvice(processdata).split(" ")
                         self.logger.debug(f"Got message from dcss : {command}")
-                        if command[0] == "stoh_abort_all":
+                        if command[0] == "stoh_abort_all" and time.time()-abort_timeer >5:
+                            abort_timeer = time.time()
                             self.logger.warning(f"Got {command}")
                             epicsQ.put(("stoh_abort_all",''))
                             DetctorQ.put(("stoh_abort_all",''))
@@ -350,7 +352,7 @@ class DCSDHS():
                                 for command in item:
                                     operdoneCommand.append(command)
                                 self.logger.info(f"send {item} for opdone")
-                                sendQ.put(operdoneCommand)#('operdone',command[0],command[1],command[3])
+                                sendQ.put(tuple(operdoneCommand))#('operdone',command[0],command[1],command[3])
                             toDcsscommand = 'htos_set_string_completed system_status normal {Abort!} black #d0d000'
                             sendQ.put(toDcsscommand)
                             pass
@@ -555,11 +557,18 @@ class DCSDHS():
                                     MoveDone = self.Par['EPICS'][GUIname]['DMOV']
                                     Pos = self.Par['EPICS'][GUIname]['RBV']
                                     TargetPos = self.Par['EPICS'][GUIname]['VAL']
+                                    # sendQ.put(f'htos_send_configuration {GUIname}')#not in our version
+                                    #  htos_configure_device 
+                                    # stoh_configure_real_motor detector_z EPICS detector_z 400.000000 900.100000 139.000000 78.740000 1000 350 -238 1 1 0 0 0 0 
+                                    sendQ.put(f'htos_configure_device {command[1]}')#not in our version
+                                    sendQ.put(('updatevalue',command[1],Pos,'motor','Normal'))
                                     if MoveDone:
+                                        # self.logger.warning(f'motor {command[1]} at {Pos}')
                                         # sendQ.put(('endmove',command[1],Pos,'Normal'))
-                                        sendQ.put(('updatevalue',command[1],Pos,'motor','Normal'))
+                                        # sendQ.put(('updatevalue',command[1],Pos,'motor','Normal'))
+                                        pass
                                     else:
-                                        sendQ.put(('updatevalue',command[1],Pos,'motor','Normal'))
+                                        # sendQ.put(('updatevalue',command[1],Pos,'motor','Normal'))
                                         sendQ.put(('startmove',command[1],TargetPos,'motor','Normal'))
                                 except :
                                     self.logger.warning(f"command : {command} has problem")
@@ -779,6 +788,7 @@ class DCSDHS():
                     
                 else:
                     pass
+                    self.logger.warning(f'sender recive unknow type {type(command),{command}}')
             except Exception as e:
                 self.logger.error(f"send process has error {e}")
 
