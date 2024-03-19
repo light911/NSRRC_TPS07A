@@ -23,6 +23,18 @@ rsyncP=[]
 logger = logsetup.getloger2('TransferData',LOG_FILENAME='TransferDataLOG.txt',level = Par['Debuglevel'])
 m = Manager()
 ProcessFile = m.list()
+def check_file_lock(file_path):
+    try:
+        # 使用 os.O_WRONLY 和 os.O_CREAT 标志尝试以写模式创建文件
+        # os.O_EXCL 标志确保如果文件已被锁定，则抛出 FileExistsError 异常
+        fd = os.open(file_path, os.O_WRONLY)
+        os.close(fd)  # 关闭文件描述符
+        return False  # 文件没有被锁定
+    # except FileExistsError:
+    #     return True   # 文件被锁定
+    except Exception as e:
+        logger.warning(f'Checking file lock exception = {e}')
+        return True
 def recursive_chown(path,uid,gid):
     for dirpath, dirnames, filenames in os.walk(path):
         os.chown(dirpath,uid,gid)
@@ -120,6 +132,15 @@ def TransferData(det:DEigerClient,saveedlist,saveedpath,datareturn:Queue,header,
                 if file == mastername and not bypassDownload:
                     targetPath = os.path.join(ramdirectory,file)
                     logger.info(f'{log}: add Header info')
+                    # time.sleep(0.2) #make sure file ok on raid
+                    tcheck_lock0 = time.time()
+                    _flag = True
+                    while  check_file_lock(targetPath):
+                        if _flag:
+                            _flag=False
+                            logger.warning(f'{log}: master file is locked, we need wait more time.')
+                        time.sleep(0.2)
+                    logger.info(f'{log}: finish check file lock on master file, take {time.time()-tcheck_lock0} sec')
                     with h5py.File(targetPath,'r+') as f:
                         try:
                             f['/entry/instrument/beam'].create_group(u'attenuator')
