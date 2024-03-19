@@ -257,14 +257,18 @@ class Eiger2X16M(Detector):
         #     #['empty_1_0001_data_000001.h5', 'empty_1_0001_master.h5']
         #     time.sleep(0.2)
         #     currentfile = det.fileWriterFiles()
+        t0 = time.time()
         try:
             # while len(currentfile) != 0:
             while bool(set(currentfile) & set(expctedlist)):
                 self.logger.info(f'wait for detector download data: file count :{set(currentfile) & set(expctedlist)}')
                 time.sleep(0.1)
                 currentfile = self.det.fileWriterFiles()
+                if (time.time()-t0) > 60:
+                    self.logger.info(f'wait for detector download data timeout!')
+                    return False
         except Exception as e:
-            self.logger.critical(f'Error on monitor DCU file, error{e}')
+            self.logger.error(f'Error on monitor DCU file, error: {e}')
         self.logger.info(f'All data in detector is downloaded: file count :{currentfile}')
             
             
@@ -516,8 +520,9 @@ class Eiger2X16M(Detector):
         
         detectorsetupP = Process(target=self.basesetup,args=args,name='Detector_Setup')
         detectorsetupP.start()
+        self.logger.debug('start to setup_beamsize_cover_distance')
         self.setup_beamsize_cover_distance(False,False,False,False)
-
+        self.logger.debug('End to setup_beamsize_cover_distance')
         _oscillationTime = self.TotalFrames * self.exposureTime
         Filename = self.filename + "_" + str(self.fileindex).zfill(4)
         _filename = Filename + '.h5'
