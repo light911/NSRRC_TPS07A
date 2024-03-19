@@ -249,7 +249,7 @@ class workroundmd3moving():
     def run(self,checktime = 0.1):
         oldvalue = self.ca.caget(self.TruePosname,float)
         oldstate = self.ca.caget(self.stateanme,str,debug = False)
-        slitstop = self.ca.caget('07a:Slits3:XOpening.DMOV',int,False,False)#1 for stop
+        # slitstop = self.ca.caget('07a:Slits3:XOpening.DMOV',int,False,False)#1 for stop
         slittimer = time.time()
         time.sleep(checktime)
         counter = 0
@@ -292,13 +292,16 @@ class workroundmd3moving():
                                     if caget('07a:md3:Status') == 'Scanning':
                                         pass
                                         pass
+                                        counterlist[i] = 0
                                     elif caget('07a:md3:Status') == 'Setting Transfer phase':
                                         pass
+                                        counterlist[i] = 0
                                     else:
                                         # counter += 1
                                         self.logger.warning(f'MD3 {self.mon[i]}:{targetvalue[i]=},{currentvalue[i]=},{diffwithtarget=}>{self.difth[i]}, {diffwithold=},state={item}goto target')
                                         self.logger.error(f'Try to fix MD3 {self.mon[i]} problem')
                                         self.ca.caput(self.TruePosname[i],targetvalue[i])
+                                        counterlist[i] = 0
                                 
 
                                 else:
@@ -320,25 +323,25 @@ class workroundmd3moving():
                 #when md3 has problem
                 #'NoneType' object is not iterable
             
-            #work round 07a:Slits3:XOpening moving problem
-            if self.ca.caget('07a:Slits3:XOpening.DMOV',int,False,False) == 1:
-                #stop restart timer 
-                slittimer = time.time()
-                pass
-            else:
-                #moving check moving time
-                time_to_last_stop = time.time() - slittimer
-                if time_to_last_stop > 10:#moving larger 10 sec
-                    self.logger.info(f'07a:Slits3:XOpening {time_to_last_stop=} moiving time larger 10 sec,we need more check..')
-                    #check Diffenert in VAL and RBV
-                    if abs(self.ca.caget('07a:Slits3:XOpening.VAL',float,False,False) - self.ca.caget('07a:Slits3:XOpening.RBV',float,False,False)) < 0.001:                       
-                        #in position check moving again
-                        self.logger.error('slit3 in postion but still moving, We will try to STOP 07a:Slits3:XPlus and 07a:Slits3:XMinus')
-                        self.ca.caput('07a:Slits3:XPlus.STOP',1)
-                        self.ca.caput('07a:Slits3:XMinus.STOP',1)
+            # #work round 07a:Slits3:XOpening moving problem
+            # if self.ca.caget('07a:Slits3:XOpening.DMOV',int,False,False) == 1:
+            #     #stop restart timer 
+            #     slittimer = time.time()
+            #     pass
+            # else:
+            #     #moving check moving time
+            #     time_to_last_stop = time.time() - slittimer
+            #     if time_to_last_stop > 10:#moving larger 10 sec
+            #         self.logger.info(f'07a:Slits3:XOpening {time_to_last_stop=} moiving time larger 10 sec,we need more check..')
+            #         #check Diffenert in VAL and RBV
+            #         if abs(self.ca.caget('07a:Slits3:XOpening.VAL',float,False,False) - self.ca.caget('07a:Slits3:XOpening.RBV',float,False,False)) < 0.001:                       
+            #             #in position check moving again
+            #             self.logger.error('slit3 in postion but still moving, We will try to STOP 07a:Slits3:XPlus and 07a:Slits3:XMinus')
+            #             self.ca.caput('07a:Slits3:XPlus.STOP',1)
+            #             self.ca.caput('07a:Slits3:XMinus.STOP',1)
                 
-                    else:
-                        self.logger.info(f'slits not in postion,we will not do any thing')
+            #         else:
+            #             self.logger.info(f'slits not in postion,we will not do any thing')
             
             
             # here for if Tranfer mode too long
