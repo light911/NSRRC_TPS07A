@@ -535,6 +535,30 @@ class Eiger2X16M(Detector):
 
         #make sure cover is opend
         self.MoveBeamsize.wait_opencover(True)
+        # handle injection
+        safeTimeInj= self.Par['collect']['safeTimeInj']
+        TimeToNextInjPV = self.Par['collect']['TimeToNextInjPV']
+        if safeTimeInj== 0:
+            #do notthing
+            pass
+        elif safeTimeInj >0 :
+            #wait until injection
+            while True:
+                TimeToNextInj = self.ca.caget(TimeToNextInjPV,format=float)
+                if TimeToNextInj > safeTimeInj+_oscillationTime:
+                    self.logger.info(f'TimeToNextInj:{TimeToNextInj} > {safeTimeInj}+{_oscillationTime} pass for collect')
+                    break
+            pass
+        elif safeTimeInj <0 :
+            #want to hit injection
+            while True:
+                TimeToNextInj = self.ca.caget(TimeToNextInjPV,format=float)
+                if TimeToNextInj < abs(safeTimeInj):
+                    self.logger.info(f'TimeToNextInj:{TimeToNextInj} < {abs(safeTimeInj)} pass for collect')
+                    break
+            
+            pass
+
         toDcsscommand = ('operupdate',command[0],self.operationHandle,'start_oscillation','shutter',str(_oscillationTime),_filename)
         self.sendQ.put(toDcsscommand)
         toDcsscommand = ('operdone',command[0],self.operationHandle)
