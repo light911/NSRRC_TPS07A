@@ -529,16 +529,14 @@ class Eiger2X16M(Detector):
         self.checkandretryDetectorSetupProcess(detectorsetupP,args)
         
         
-        self.logger.debug('start to updatefilestring check')
-        monP = Process(target=self.updatefilestring,name='Monfile')
-        monP.start()
+
 
         #make sure cover is opend
         self.MoveBeamsize.wait_opencover(True)
         # handle injection
         safeTimeInj= self.Par['collect']['safeTimeInj']
         TimeToNextInjPV = self.Par['collect']['TimeToNextInjPV']
-        if collectype== 'test image':
+        if collectype == 'test image':
             pass
         elif safeTimeInj== 0:
             #do notthing
@@ -573,6 +571,9 @@ class Eiger2X16M(Detector):
         toDcsscommand = ('operdone',command[0],self.operationHandle)
         self.sendQ.put(toDcsscommand)
         self.logger.warning(f'detector_collect_shutterless take {time.time()-t0} sec')
+        self.logger.debug('start to updatefilestring check')
+        monP = Process(target=self.updatefilestring,name='Monfile')
+        monP.start()
         # command = ('operdone',) + command
         # self.sendQ.put(command)
     def mutiPosCollect(self,command):
