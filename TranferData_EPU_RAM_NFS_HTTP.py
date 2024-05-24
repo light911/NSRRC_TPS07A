@@ -132,7 +132,7 @@ def TransferData(det:DEigerClient,saveedlist,saveedpath,datareturn:Queue,header,
                 if file == mastername and not bypassDownload:
                     targetPath = os.path.join(ramdirectory,file)
                     logger.info(f'{log}: add Header info')
-                    # time.sleep(0.2) #make sure file ok on raid
+                    time.sleep(0.5) #make sure file ok on raid
                     tcheck_lock0 = time.time()
                     _flag = True
                     while  check_file_lock(targetPath):
@@ -141,27 +141,52 @@ def TransferData(det:DEigerClient,saveedlist,saveedpath,datareturn:Queue,header,
                             logger.warning(f'{log}: master file is locked, we need wait more time.')
                         time.sleep(0.2)
                     logger.info(f'{log}: finish check file lock on master file, take {time.time()-tcheck_lock0} sec')
-                    with h5py.File(targetPath,'r+') as f:
-                        try:
-                            f['/entry/instrument/beam'].create_group(u'attenuator')
-                            f['/entry/instrument/beam/attenuator'].create_dataset(u'attenuator_transmission', data=float(atten))
-                            f['/entry/instrument/beam/'].create_dataset(u'name', data=b'NSRRC BEAMLINE TPS 07A')
-                            f['/entry/instrument/beam/'].create_dataset(u'incident_beam_size', data=float(beamsize))
-                            f['/entry/'].create_group(u'extrainfo')
-                            for data in header:
-                                name = data
-                                value = bytes(str(header[data]), encoding='utf-8')
-                                f['/entry/extrainfo/'].create_dataset(name, data=value)    
-                            #det.streamConfig('header_appendix')['value']
-                            #modify some header
-                            f['/entry/sample/transformations/omega'].attrs['vector'] = [0,1,0]#for DIALS
-                            distance = f['/entry/instrument/detector/detector_distance'][()]
-                            dis = f['/entry/instrument/detector/transformations/translation']
-                            dis[()]=distance# DIALS use for cal res?
-                            dis.attrs['vector'] = [0,0,-1]
+                    try:
+                        with h5py.File(targetPath,'r+') as f:
+                            try:
+                                f['/entry/instrument/beam'].create_group(u'attenuator')
+                                f['/entry/instrument/beam/attenuator'].create_dataset(u'attenuator_transmission', data=float(atten))
+                                f['/entry/instrument/beam/'].create_dataset(u'name', data=b'NSRRC BEAMLINE TPS 07A')
+                                f['/entry/instrument/beam/'].create_dataset(u'incident_beam_size', data=float(beamsize))
+                                f['/entry/'].create_group(u'extrainfo')
+                                for data in header:
+                                    name = data
+                                    value = bytes(str(header[data]), encoding='utf-8')
+                                    f['/entry/extrainfo/'].create_dataset(name, data=value)    
+                                #det.streamConfig('header_appendix')['value']
+                                #modify some header
+                                f['/entry/sample/transformations/omega'].attrs['vector'] = [0,1,0]#for DIALS
+                                distance = f['/entry/instrument/detector/detector_distance'][()]
+                                dis = f['/entry/instrument/detector/transformations/translation']
+                                dis[()]=distance# DIALS use for cal res?
+                                dis.attrs['vector'] = [0,0,-1]
 
-                        except Exception as e:
-                            logger.warning(f'{log}: Exception : {e}')
+                            except Exception as e:
+                                logger.warning(f'{log}: Exception : {e}')
+                    except Exception as e:
+                        time.sleep(1)
+                        logger.warning(f'{log}: Writeing master file Exception : {e}')
+                        with h5py.File(targetPath,'r+') as f:
+                            try:
+                                f['/entry/instrument/beam'].create_group(u'attenuator')
+                                f['/entry/instrument/beam/attenuator'].create_dataset(u'attenuator_transmission', data=float(atten))
+                                f['/entry/instrument/beam/'].create_dataset(u'name', data=b'NSRRC BEAMLINE TPS 07A')
+                                f['/entry/instrument/beam/'].create_dataset(u'incident_beam_size', data=float(beamsize))
+                                f['/entry/'].create_group(u'extrainfo')
+                                for data in header:
+                                    name = data
+                                    value = bytes(str(header[data]), encoding='utf-8')
+                                    f['/entry/extrainfo/'].create_dataset(name, data=value)    
+                                #det.streamConfig('header_appendix')['value']
+                                #modify some header
+                                f['/entry/sample/transformations/omega'].attrs['vector'] = [0,1,0]#for DIALS
+                                distance = f['/entry/instrument/detector/detector_distance'][()]
+                                dis = f['/entry/instrument/detector/transformations/translation']
+                                dis[()]=distance# DIALS use for cal res?
+                                dis.attrs['vector'] = [0,0,-1]
+
+                            except Exception as e:
+                                logger.warning(f'{log}: Exception : {e}')
                 runtime=time.time()-t0
                 speed = filesize/runtime
                 logger.info(f'{log}: Take time = {runtime}, File size = {filesize} MB, speed = {speed} MB/sec')
