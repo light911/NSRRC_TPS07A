@@ -660,7 +660,7 @@ class epicsdev(QThread):
                                     else:
                                         self.caput(self.Par['Energy']['evtogap'],0)
                                     if gapmotorablemove == 0:
-                                        self.logger.warning(f"Gap is unable to move")
+                                        self.logger.critical(f"Gap is unable to move")
                                         #bypass energy command
                                         self.caput(self.Par['Energy']['evtogap'],1)
                                         pos = self.epicsmotors['Energy']['PVID'].get('RBV') * 1000
