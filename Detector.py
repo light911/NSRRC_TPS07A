@@ -543,14 +543,21 @@ class Eiger2X16M(Detector):
             pass
         elif safeTimeInj >0 :
             #wait until injection
+            toDcsscommand = 'htos_set_string_completed system_status normal {Wating For injection} black #d0d000'
+            self.sendQ.put(toDcsscommand)
             while True:
                 TimeToNextInj = self.ca.caget(TimeToNextInjPV,format=float)
-                if TimeToNextInj > safeTimeInj+_oscillationTime:
+                if _oscillationTime > 240 - safeTimeInj:
+                    self.logger.info(f'Data collect time :{_oscillationTime} > 240 - {safeTimeInj} pass for collect, ther is no way to not hit injection')
+                    break
+                elif TimeToNextInj > safeTimeInj+_oscillationTime:
                     self.logger.info(f'TimeToNextInj:{TimeToNextInj} > {safeTimeInj}+{_oscillationTime} pass for collect')
                     break
             pass
         elif safeTimeInj <0 :
             #want to hit injection
+            toDcsscommand = 'htos_set_string_completed system_status normal {Wating For injection} black #d0d000'
+            self.sendQ.put(toDcsscommand)
             while True:
                 TimeToNextInj = self.ca.caget(TimeToNextInjPV,format=float)
                 if TimeToNextInj < abs(safeTimeInj):
