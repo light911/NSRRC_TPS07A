@@ -538,7 +538,9 @@ class Eiger2X16M(Detector):
         # handle injection
         safeTimeInj= self.Par['collect']['safeTimeInj']
         TimeToNextInjPV = self.Par['collect']['TimeToNextInjPV']
-        if safeTimeInj== 0:
+        if collectype== 'test image':
+            pass
+        elif safeTimeInj== 0:
             #do notthing
             pass
         elif safeTimeInj >0 :
