@@ -1516,6 +1516,7 @@ class Eiger2X16M(Detector):
                 text = json.dumps(header_appendix)
                 print(f'after get header que time = { time.time()-t0}')
                 det.setStreamConfig('header_appendix',text)
+                det.setStreamConfig('image_appendix',text)
                 print(f'after set streamconfig time = { time.time()-t0}')
 
                 self.logger.info(f'arm detector')
