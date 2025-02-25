@@ -62,7 +62,7 @@ class Detector():
         # self.sendQ = Queue()
         # self.CommandQ = Queue()
         
-        self.logger = logsetup.getloger2('Detector',LOG_FILENAME='./log/Detectorlog.txt',level = self.Par['Debuglevel'],bypassline=False)
+        self.logger = logsetup.getloger2('Detector',LOG_FILENAME='/home/blctl/Desktop/log/Detectorlog.txt',level = self.Par['Debuglevel'],bypassline=False)
         self.logger.info("init Detector logging")
         
         self.detectorip = self.Par['Detector']['ip']
@@ -191,6 +191,14 @@ class Eiger2X16M(Detector):
         self.det.setStreamConfig('mode','enabled')
         self.det.setFileWriterConfig('mode','enabled')
         self.det.setFileWriterConfig('nimages_per_file',int(self.Par['Detector']['nimages_per_file']))
+        # self.det.setFileWriterConfig('format','hdf5 nexus v2024.2 nxmx') #other choich: hdf5 nexus legacy nxmx
+        self.det.setFileWriterConfig('format','hdf5 nexus legacy nxmx')
+        self.det.setDetectorConfig('flux_type','flux_time_integrated')# '','flux','flux_area_integrated','flux_time_integrated','flux_area_and_time_integrated'
+        self.det.setDetectorConfig('instrument_name','NSRRC BEAMLINE TPS 07A')
+        self.det.setDetectorConfig('source_name','NSRRC')
+        # self.det.setDetectorConfig('omega_axis',[0,-1,0])
+        self.det.setDetectorConfig('omega_axis',[0,1,0])
+        self.det.setDetectorConfig('transformation_order',['omega'])
         self.det.setDetectorConfig('chi_increment',0)
         self.det.setDetectorConfig('phi_increment',0)
         self.x_pixels_in_detector= int(self.det.detectorConfig('x_pixels_in_detector')['value'])
@@ -1205,6 +1213,7 @@ class Eiger2X16M(Detector):
             write_headerP.join()
             text = que.get()
             det.setStreamConfig('header_appendix',text)
+            det.setStreamConfig('image_appendix',text)
 
             self.logger.info(f'arm detector')
             det.sendDetectorCommand('arm')
