@@ -14,6 +14,7 @@ Par={
     "calfactorname":'07a-ES:DetectorDistance:OFF',
     "minchangeGAP":0.006,#mm
     "minEVchangeGAP":0.01,#Kev
+    "logfolder":"/home/blctl/Desktop/log/",
     'dcss':{'host':"10.7.1.1",
             'port':14242,
             'dhsname':"EPICS",
@@ -52,7 +53,7 @@ Par={
                                  'DBPM6HorName':'07a-ES:Table:DBPM6X',
                                  'SSName':'07a-ES:Table:2ndslit',
                                  'ApertureName':'07a-ES:Table:MD3Aperture',
-                                 
+                                 'CurrentBeamsize':'07a-ES:Beamsize',
                                  'MD3YMotor':'07a:MD3:Y',
                                  'MD3VerMotor':'07a:MD3:Ver',
                                  'MD3HorMotor':'07a:MD3:Hor',

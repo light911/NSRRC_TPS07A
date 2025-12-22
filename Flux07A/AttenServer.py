@@ -25,7 +25,9 @@ class atten():
         t0=time.time()
         signal.signal(signal.SIGINT, self.quit)
         signal.signal(signal.SIGTERM, self.quit)
-        
+        # print('*************************************')
+        # print(Par)
+        # print('*************************************')
         #load config
         if Par == None:
             # self.m = Manager()
@@ -34,7 +36,7 @@ class atten():
             pass
         else:
             self.Par = Par
-        self.logger = logsetup.getloger2('AttenServer',level = self.Par['Debuglevel'],LOG_FILENAME='./log/AttenServerlog.txt')
+        self.logger = logsetup.getloger2('AttenServer',level = self.Par['Debuglevel'],LOG_FILENAME='/home/blctl/Desktop/log/AttenServerlog.txt')
         #load setup
         #20211027 new update
         att1name = ['Empty','Al1', 'Al2', 'Al3', 'Al4', 'Al6', 'Al12', 'Al18', 'Al24', 'Al30', 'Al36', 'Al42']
@@ -139,7 +141,7 @@ class atten():
                         dev='dbpm3'
                     else:
                         dev='dbpm3'
-                    count,flux = self.read_flux(dev)
+                    count,flux = self.read_flux(dev,command[1])
                     self.sendQ.put(('updatevalue',command[3] ,str(count),'ioncchamber',command[1]))
                 elif command[0] == 'setatten':
                     # other programe want set new atten
@@ -167,7 +169,7 @@ class atten():
             else:
                 self.logger.warning(f'Unknow command : {command}')
                 pass
-    def read_flux(self,dev="dbpm3"):
+    def read_flux(self,dev="dbpm3",timesleep=None):
         '''
         dev="dbpm3",dbpm5,dbpm6,sample
         '''
@@ -181,7 +183,22 @@ class atten():
             fluxPV = "07a-ES:Sample:Flux"
         else:
             fluxPV = "07a-ES:DBPM3:Flux"
-        flux = caget(fluxPV)
+        if timesleep:
+            t0 = time.time()
+            _timeout = False
+            flux = 0
+            readtimes = 0
+            while not _timeout:
+                time.sleep(0.1)
+                flux_temp = caget(fluxPV)
+                flux = flux + flux_temp
+                readtimes = readtimes + 1
+                timepass = time.time()-t0
+                if  timepass > float(timesleep):
+                    _timeout = True
+            flux = flux / readtimes 
+        else:
+            flux = caget(fluxPV)
         max = 1e14
         normalize_max = 1000000
         newcount = flux /max * normalize_max
@@ -459,14 +476,30 @@ class atten():
         
         if openallfilter:
             self.Target(0)
-            time.sleep(0.3)
+            time.sleep(0.5)
             count,dbpm3 = self.read_flux(dev="dbpm3")
             count,sample = self.read_flux(dev="sample")
         else:
             count,dbpm3 = self.read_flux(dev="dbpm3")
             count,sample = self.read_flux(dev="sample")
             sample = sample /(1-old_atten/100)
-
+        #update sample flux for current beamsize
+        CurrentBeamsizePV = self.Par['EPICS_special']['BeamSize']['CurrentBeamsize']
+        BeamSizeNamePV = self.Par['EPICS_special']['BeamSize']['BeamSizeName']
+        currentbeamsize = caget(CurrentBeamsizePV)
+        BeamSizeNamelist = caget(BeamSizeNamePV)
+        beamsizeindex = np.where(BeamSizeNamelist == currentbeamsize)
+        SampleFluxlistPV = self.Par['EPICS_special']['BeamSize']['SampleFluxlist']
+        Fluxlist=caget(SampleFluxlistPV)
+        Fluxlist[beamsizeindex] = sample
+        caput(SampleFluxlistPV,Fluxlist)
+        EnergyPV=self.Par['collect']['EnergyPV']
+        EnergyatrecordPV=self.Par['EPICS_special']['BeamSize']['Energyatrecord']
+        ebeam = caget(self.Par['collect']['EbeamPV'])
+        EeabmatrecordPV=self.Par['EPICS_special']['BeamSize']['Ebeamatrecord']
+        energy = caget(EnergyPV)
+        caput(EnergyatrecordPV,energy)
+        caput(EeabmatrecordPV,ebeam)
         if sample < 1e5:
             self.logger.warning('No beam!')
             self.logger.warning(f'Dbpm3 flux:{dbpm3:.4g} , sample flux = {sample:.4g}')            
