@@ -39,7 +39,7 @@ class Beamsize():
         # self.Par.update({'Queue':{}})
         # print(f'TYPE:{type(self.Par)}')
         #set log
-        self.logger = logsetup.getloger2('BeamSize',LOG_FILENAME='./log/Beamsize.txt',level = self.Par['Debuglevel'])
+        self.logger = logsetup.getloger2('BeamSize',LOG_FILENAME='/home/blctl/Desktop/log/Beamsize.txt',level = self.Par['Debuglevel'])
         self.logger.info("init BeamSize logging")
         self.logger.info("Logging show level = %s",self.Par['Debuglevel'])
         # self.logger.debug("Par Start=======")

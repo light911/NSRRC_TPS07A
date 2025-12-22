@@ -20,7 +20,7 @@ import requests
 from flask import Flask,jsonify,request,Response
 Par = Config.Par
 rsyncP=[]
-logger = logsetup.getloger2('TransferData',LOG_FILENAME='TransferDataLOG.txt',level = Par['Debuglevel'])
+logger = logsetup.getloger2('TransferData',LOG_FILENAME='/root/log/TransferDataLOG.txt',level = Par['Debuglevel'])
 m = Manager()
 ProcessFile = m.list()
 def check_file_lock(file_path):
@@ -154,12 +154,12 @@ def TransferData(det:DEigerClient,saveedlist,saveedpath,datareturn:Queue,header,
                                     value = bytes(str(header[data]), encoding='utf-8')
                                     f['/entry/extrainfo/'].create_dataset(name, data=value)    
                                 #det.streamConfig('header_appendix')['value']
-                                #modify some header
-                                f['/entry/sample/transformations/omega'].attrs['vector'] = [0,1,0]#for DIALS
-                                distance = f['/entry/instrument/detector/detector_distance'][()]
-                                dis = f['/entry/instrument/detector/transformations/translation']
-                                dis[()]=distance# DIALS use for cal res?
-                                dis.attrs['vector'] = [0,0,-1]
+                                # #modify some header
+                                # f['/entry/sample/transformations/omega'].attrs['vector'] = [0,1,0]#for DIALS
+                                # distance = f['/entry/instrument/detector/detector_distance'][()]
+                                # dis = f['/entry/instrument/detector/transformations/translation']
+                                # dis[()]=distance# DIALS use for cal res?
+                                # dis.attrs['vector'] = [0,0,-1]
 
                             except Exception as e:
                                 logger.warning(f'{log}: Exception : {e}')
@@ -265,6 +265,14 @@ def TransferData(det:DEigerClient,saveedlist,saveedpath,datareturn:Queue,header,
             # logger.info(f'{log}: Send command to Autostra. {response=}')
             p = Process(target=sendtoAutostra,args=(url,data))
             p.start()
+        elif TotalFrames <= 10 and runIndex < 40:
+            url = 'http://10.7.1.107:65000/job'
+            masterfile =  ramdirectory + "/" + filename +'_master.h5'
+            data = {'path':masterfile}
+            # response = requests.post(url , json=data)
+            # logger.info(f'{log}: Send command to Autostra. {response=}')
+            p = Process(target=sendtoAutostra,args=(url,data))
+            p.start()
         pass
     elif bypassDownload:
         pass
@@ -287,6 +295,8 @@ def TransferData(det:DEigerClient,saveedlist,saveedpath,datareturn:Queue,header,
         # logger.info(f'{log}: Send command to Autoprocess. {response=}')
         pass
     # logger.info(f'{log}: {datareturn} send,{(saveedlist,saveedpath)}')
+    
+
     return saveedlist,saveedpath
 def rsync(source,target):
     command=['rsync','-avWh','--no-compress',source,target]
@@ -541,6 +551,7 @@ def requestsdelete(command):
     logger.debug(f'{command=}')
     logger.debug(requests.delete(command))
 def monitor_and_download_file(header,ProcessFile: list):
+    os.nice(1)
     filename = header['filename']
     fileindex = header['fileindex']
     TotalFrames = header['TotalFrames']

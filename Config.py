@@ -62,7 +62,10 @@ Par={
                'kappaPV':'07a:md3:KappaPosition',
                'md3modePV':'07a:md3:CurrentPhase',
                'TimeToNextInjPV':'TPS:TimeToNextInjSec',
-               'safeTimeInj':0,
+               'safeTimeInj':3,# 0 for inactive , neg for want to hit injection,pos for not hit injection
+               'post_tri_timePV':'07a-ES:timing:post_tri_time',
+               'shutter_delayPV':'07a:beamline:timing:delay:shutter',
+               'detector_delayPV':'07a:beamline:timing:delay:detector',
                },
     'EPICS_special':{'BeamSize':{'BeamSizeName':'07a-ES:Table:Beamsize',
                                  'MD3YName':'07a-ES:Table:MD3Y',
@@ -78,7 +81,10 @@ Par={
                                  'DBPM6kyName':'07a-ES:Table:DBPM6ky',
                                  'SSName':'07a-ES:Table:2ndslit',
                                  'ApertureName':'07a-ES:Table:MD3Aperture',
-                                 
+                                 'CurrentBeamsize':'07a-ES:Beamsize',
+                                 'SampleFluxlist':'07a-ES:Table:SampleFluxlist',
+                                 'Energyatrecord':'07a-ES:Table:Energy',
+                                 'Ebeamatrecord':'07a-ES:Table:Ebeam',
                                  'MD3YMotor':'07a:MD3:Y',
                                  'MD3VerMotor':'07a:MD3:Ver',
                                  'MD3HorMotor':'07a:MD3:Hor',
@@ -90,7 +96,8 @@ Par={
                                  'DBPM6HorMotor':'07a:DBPM6:X',
                                  'DBPM6kxfactor':'07A-DBPM6:dsp:kx',
                                  'DBPM6kyfactor':'07A-DBPM6:dsp:ky',
-
+                                 'BeamSizeX': '07a-ES:Table:BeamsizeX',
+                                 'BeamSizeY': '07a-ES:Table:BeamsizeY',
                                  'SSMotor':'07a:2ndSlits:XOpening',
                                  'DetYMotor':'07a:Det:Y',
                                  'ApertureMotor':'07a:md3:CurrentApertureDiameterIndex',

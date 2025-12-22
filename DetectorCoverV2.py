@@ -25,7 +25,7 @@ class MOXA():
         self.Par.update(Config.Par)
         self.Par['Coverstate'] = None
         #set log
-        self.logger = logsetup.getloger2('CoverDHS',LOG_FILENAME='./log/CoverLog.txt',level = self.Par['Debuglevel'],bypassline=False)
+        self.logger = logsetup.getloger2('CoverDHS',LOG_FILENAME='/home/blctl/Desktop/log/CoverLog.txt',level = self.Par['Debuglevel'],bypassline=False)
         self.logger.info("init CoverDHS logging")
         self.logger.info("Logging show level = %s",self.Par['Debuglevel'])
         

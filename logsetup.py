@@ -56,7 +56,7 @@ def getloger(logname='Main',LOG_FILENAME='log.txt',level = 'INFO'):
 
 
 
-def getloger2(logname='Main',LOG_FILENAME='./log/log.txt',level = 'INFO',bypassdb=False,Beamline:str='TPS07A',lineserver='http://172.19.7.199:40000/job',bypassline=True):
+def getloger2(logname='Main',LOG_FILENAME='/home/blctl/Desktop/log/log.txt',level = 'INFO',bypassdb=False,Beamline:str='TPS07A',lineserver='http://172.19.7.199:40000/job',bypassline=True):
     logger=logging.getLogger(logname)
     #fotmatterstr = '%(asctime)s - %(name)s - %(levelname)s -%(funcName)s - %(message)s'
     fotmatterstr = " %(asctime)s - %(name)s - %(levelname)s -%(funcName)s - %(message)s (%(filename)s:%(lineno)d)"

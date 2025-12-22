@@ -16,17 +16,18 @@ import logsetup
   
 from multiprocessing import  Queue,Process
 import queue
-from PyQt5.QtCore import QObject,QThread,pyqtSignal,pyqtSlot,QMutex,QMutexLocker
+# from PyQt5.QtCore import QObject,QThread,pyqtSignal,pyqtSlot,QMutex,QMutexLocker
 import subprocess
 from DetectorCoverV2 import MOXA
 #from PyQt5.QtCore import pyqtSignal
 from workround import myepics
 
-class epicsdev(QThread):
+# class epicsdev(QThread):
+class epicsdev():
     # EpicsValueChange=pyqtSignal(str,str,str)
     # EpicsConnectChange=pyqtSignal(str,str)    
     def __init__(self,epicslist,par,Q,epicsmotors=None,parent=None,coverdhs=None):
-        super(self.__class__,self).__init__(parent)
+        # super(self.__class__,self).__init__(parent)
         # super().__init__(parent)
         # self.data=np.empty(0)
         signal.signal(signal.SIGINT, self.quit)
@@ -40,7 +41,7 @@ class epicsdev(QThread):
         #     debuglevel = "INFO"
         
         
-        self.logger = logsetup.getloger2('EPICSdev',LOG_FILENAME='./log/epicsdevlog.txt',level = self.Par['Debuglevel'],bypassline=False)
+        self.logger = logsetup.getloger2('EPICSdev',LOG_FILENAME='/home/blctl/Desktop/log/epicsdevlog.txt',level = self.Par['Debuglevel'],bypassline=False)
         self.logger.info("init EPICS logging")
                
         
@@ -736,11 +737,27 @@ class epicsdev(QThread):
                                         self.sendQ.put(("startmove",command[1],command[2],"Normal"))
                                         state = PVID.move(TargetPos)
                                         self.logger.debug(f"Motor ={command[1]} moving state = {state}")
+                        elif command[1] == 'CentringTableFocus':
+                            # Recheck range by caget PV
+                            #TODO
+                            # check if motor is moving
+                            self.logger.debug(f"case1 CentringTableFocus Motor DMOV = {PVID.DMOV}")
+                            if str(PVID.DMOV) == "0":
+                                #moing
+                                self.logger.warning(f"{command} has bypass sicne motor is moving")
+                                pass
+                            else:
+                                self.sendQ.put(("startmove",command[1],command[2],"Normal"))
+                                state = PVID.move(TargetPos)
+                                self.logger.debug(f"Motor ={command[1]} moving state = {state}")
+                            pass
                         else:
+                            
                             LLM = PVID.LLM
                             HLM = PVID.HLM
                             pos = PVID.RBV
                             dcssname = command[1]
+                            self.logger.info(f"Motor ={command[1]} out Range,TargetPOS:{command[2]} is out of limits {LLM} to {HLM}")
                             warningTXT = f'Motor {command[1]} TargetPOS:{command[2]} is out of limits {LLM} to {HLM}'
                             self.sendQ.put(("warning",warningTXT))
                             self.sendQ.put(('endmove',dcssname,pos,'normal'), block=False)
@@ -790,7 +807,7 @@ class epicsdev(QThread):
                                 pass
                             else:
                                 #wait md3 ready?
-                                self.waitMD3Ready(timeout=10)
+                                self.waitMD3Ready(timeout=15)
                                 self.caput(PVname,value)
 
                             # p = CAProcess(target=self.oldCAPUT, args=(PVname,float(command[2]),))
@@ -1040,7 +1057,7 @@ class epicsdev(QThread):
             else:
                 pass
         pass
-    def waitMD3Ready(self,timeout=10):
+    def waitMD3Ready(self,timeout=15):
         t0 = time.time()
         check = True
         while check:

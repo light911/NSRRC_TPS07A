@@ -13,9 +13,9 @@ import multiprocessing as mp
 import logsetup,time,subprocess
 from Eiger.DEiger2Client import DEigerClient
 # from epics import caput,CAProcess,caget
-from epics import caput,caget,ca,CAProcess
+from epics import caput,caget,ca,CAProcess,cainfo
 import epics
-import json
+import json,re
 from pwd import getpwnam
 # from DetectorCover import MOXA
 from DetectorCoverV2 import MOXA
@@ -26,6 +26,7 @@ from workround import myepics
 import traceback,sys
 from myeigerclient import EigerClient,setDetectorConfig,setMonitorConfig,sendDetectorCommand,detectorConfig,setFileWriterConfig
 import concurrent.futures
+import numpy as np
 # from TranferData_EPU_RAM_NFS_HTTP import genDatasetNames
 
 def genDatasetNames(totalimage:int,nimages_per_file:int=1000,Filename:str='Test'):
@@ -270,13 +271,23 @@ class Eiger2X16M(Detector):
             # while len(currentfile) != 0:
             while bool(set(currentfile) & set(expctedlist)):
                 self.logger.info(f'wait for detector download data: file count :{set(currentfile) & set(expctedlist)}')
-                time.sleep(0.1)
+                time.sleep(0.2)
                 currentfile = self.det.fileWriterFiles()
+                # filenum = len(currentfile)-1
+                # # dataname = f'{Filename}_data_{filenum:06}.h5'
+                # dataname = f'{Filename}_master.h5'
+                # datapath = f'{self.directory }/{dataname}'
+                # command[0] = 'updatevalue'
+                # command[1] = 'lastImageCollected'
+                # command[2] = datapath
+                # command[3] = 'string'
+                # command[4] = 'normal'
+                # self.sendQ.put((command[0],command[1],command[2],command[3],command[4]))
                 if (time.time()-t0) > 60:
                     self.logger.info(f'wait for detector download data timeout!')
                     return False
         except Exception as e:
-            self.logger.error(f'Error on monitor DCU file, error: {e}')
+            self.logger.info(f'Error on monitor DCU file, error: {e}')
         self.logger.info(f'All data in detector is downloaded: file count :{currentfile}')
             
             
@@ -286,6 +297,7 @@ class Eiger2X16M(Detector):
         # ntrigger = det.detectorConfig('ntrigger')['value']
         # self.logger.debug(f'{nimages=},{ntrigger=}')
         # totalframe = int(nimages) * int(ntrigger)
+        time.sleep(0.5)
         lastnum = math.ceil(totalframe/1000)
         dataname = f'{Filename}_data_{lastnum:06}.h5'
         datapath = f'{self.directory }/{dataname}'
@@ -459,6 +471,18 @@ class Eiger2X16M(Detector):
         self.logger.info(f'send command to dcss: {toDcsscommand}')
         self.sendQ.put(toDcsscommand)
         pass
+    def cal_post_tri_time(self,post_tri_time,scan_range,exposure_time,start_angle,nimages):
+        single_exposure_time = exposure_time / nimages
+        scanspeed = scan_range/exposure_time
+        addrangetimes = math.ceil(post_tri_time/single_exposure_time)
+        delaytime = addrangetimes * single_exposure_time - exposure_time
+        new_start_angle =  start_angle - (scanspeed * single_exposure_time * addrangetimes)
+        new_scanrange = scan_range + (scanspeed * single_exposure_time * addrangetimes)
+        new_exposure_time = exposure_time + (single_exposure_time * addrangetimes)
+        self.logger.warning(f'{addrangetimes=},{single_exposure_time=}')
+        self.logger.warning(f'new_scanrange={new_scanrange},new_exposure_time={new_exposure_time},new_start_angle={new_start_angle},delaytime={delaytime}')
+        return new_scanrange,new_exposure_time,new_start_angle,nimages,delaytime
+        pass
     def detector_collect_shutterless(self,command):
     #    ('detector_collect_shutterless', '1.24', '1', 'test_1', '/data/blctl/test', 'blctl', 'gonio_phi', '0.1', '0.000009', '1.0', '10', '750.000060', '0.976226127404', '0.000231', '50.000000', '0', '0', 'PRIVATEA03F6ADA6F19A8DA1DEE6BFC325F4DCE', '1', '10', '50.000000', '0.0')
     #['stoh_start_operation', 'detector_collect_shutterless', '1.2', '0', 'test_0', '/data/blctl/test', 'blctl', 'gonio_phi', '0.1', '0.000000', '1.0', '1', '750.000080', '0.976226127404', '0.000071', '50.000000', '0', '0', 'PRIVATEA03F6ADA6F19A8DA1DEE6BFC325F4DCE', '3', '1', '50.000000', '0.0']
@@ -478,13 +502,16 @@ class Eiger2X16M(Detector):
     #                  $wavelength \
     #                  [set $gMotorHorz] \
     #                  [set $gMotorVert] \
-    #                  0 \
+    #                  0 \detector mode
     #                  0 \
     #                  $sessionId \
     #                  [lindex $args 0] \
     #                  $totalFrames \
-    #                 $beam_size $attn]
+    #                  $beam_size \
+    #                  $attn]\
+    #
         t0 = time.time()
+        
         self.operationHandle = command[1]
         self.runIndex = int(command[2])
         self.filename = command[3]
@@ -501,16 +528,37 @@ class Eiger2X16M(Detector):
         self.wavelength = float(command[12])
         self.detectoroffX = float(command[13])
         self.detectoroffY = float(command[14])
-        
+        self.detmode = int(command[15])
         self.sessionId = command[17]
         self.fileindex = int(command[18])
         self.unknow = int(command[19]) #1
         self.beamsize = command[20] # 50
         self.atten = command[21] #0
-        
+        print("##########")
+        print(self.detmode)
+        print("##########")
         #  sscanf(commandBuffer.textInBuffe
         # self.logger.info(f'Default action for {command[0]}:{command[1:]}')
         self.logger.info(f'command: {command[1:]}')
+        self.ca.caput('07a-ES:timing:nimage',self.TotalFrames,format=int)
+        scan_range =  self.TotalFrames * self.detosc
+        post_tri_timePV = self.Par['collect']['post_tri_timePV']
+        shutter_delayPV = self.Par['collect']['shutter_delayPV']
+        detector_delayPV = self.Par['collect']['detector_delayPV']
+        post_tri_time = self.ca.caget(post_tri_timePV,format=float)
+        if post_tri_time == 0 :
+            self.ca.caput(shutter_delayPV,0,format=float)
+            self.ca.caput(detector_delayPV,0,format=float)
+            pass
+        elif post_tri_time > 0:
+            new_scanrange,new_exposure_time,new_start_angle,nimages,delaytime = self.cal_post_tri_time(post_tri_time,scan_range,self.exposureTime,self.oscillationStart,self.TotalFrames)
+            delaytimeus = int(delaytime * 1e6)
+            shutterdelayus = int((delaytime -0.01)* 1e6)#shutter tri early 10ms
+            self.logger.warning(f'{delaytimeus=},{shutter_delayPV=}')
+            self.ca.caput(shutter_delayPV,shutterdelayus,format=int)
+            self.ca.caput(detector_delayPV,delaytimeus,format=int)
+            pass
+
         
         # htos_note changing_detector_mode
         toDcsscommand = ('htos_note','changing_detector_mode')
@@ -524,7 +572,17 @@ class Eiger2X16M(Detector):
         #beam size and distance has moved by dcss
         # _oscillationTime,_filename = self.basesetup(movebeasize=False)
         # raster=False,roi=False,beamwithdis=False,movebeasize=True
-        args=(False,False,False,False,None,collectype,)
+        #detmode 0 = one energy 16M
+        #detmode 1 = one energy ROI (4M)
+        #detmode 2 = two energy 16M
+        #detmode 3 = two energy ROI (4M)
+        if self.detmode == 0 or self.detmode == 2:
+            roi = False
+            pass
+        elif self.detmode == 1 or self.detmode == 3:
+            roi = True
+            pass
+        args=(False,roi,False,False,None,collectype,)
         
         detectorsetupP = Process(target=self.basesetup,args=args,name='Detector_Setup')
         detectorsetupP.start()
@@ -673,6 +731,9 @@ class Eiger2X16M(Detector):
         
         MD3state = self.waitMD3Ready()
         caput(NumberOfFramesPV,1)# control by detector
+        #save current pos for collect
+        sendPV = self.Par['collect']['saveCentringPositionsPV']
+        caput(sendPV,'__EMPTY__')
         if MD3state:
             
             state = caput(PVcollect,value)
@@ -1213,7 +1274,7 @@ class Eiger2X16M(Detector):
             write_headerP.join()
             text = que.get()
             det.setStreamConfig('header_appendix',text)
-            det.setStreamConfig('image_appendix',text)
+            # det.setStreamConfig('image_appendix',text)
 
             self.logger.info(f'arm detector')
             det.sendDetectorCommand('arm')
@@ -1627,7 +1688,26 @@ class Eiger2X16M(Detector):
         dbpm6flux = self.ca.caget(self.Par['collect']['DBPM6PV'],format=float)
         sampleflux = self.ca.caget(self.Par['collect']['samplefluxPV'],format=float)
         kappa = self.ca.caget(self.Par['collect']['kappaPV'],format=float)
-        #tps 07a only
+        #update beamsize for current beamsize
+        try:
+            CurrentBeamsizePV = self.Par['EPICS_special']['BeamSize']['CurrentBeamsize']
+            BeamSizeNamePV = self.Par['EPICS_special']['BeamSize']['BeamSizeName']
+            currentbeamsize = self.ca.caget(CurrentBeamsizePV,format=float)
+            BeamSizeNamelist = self.ca.caget(BeamSizeNamePV,array=True,format=float)
+            # print(BeamSizeNamelist,currentbeamsize)
+            beamsizeindex = np.where(BeamSizeNamelist == currentbeamsize)
+            SampleSizeXPV = self.Par['EPICS_special']['BeamSize']['BeamSizeX']
+            SampleSizeYPV = self.Par['EPICS_special']['BeamSize']['BeamSizeY']
+            SampleSizeXlist = self.ca.caget(SampleSizeXPV,array=True,format=float)
+            SampleSizeYlist = self.ca.caget(SampleSizeYPV,array=True,format=float)
+            SampleSizeX = float(SampleSizeXlist[beamsizeindex])
+            SampleSizeY = float(SampleSizeYlist[beamsizeindex])
+            # txt = epics.cainfo(SampleSizeXPV, print_out=False)
+            # flux_timestamp = re.search(r'.*timestamp.*\((.*)\)', txt)[1]
+            #tps 07a only
+        except:
+            SampleSizeX = float(currentbeamsize)
+            SampleSizeY = float(currentbeamsize)
         self.dbpm1.update()
         self.dbpm2.update()
         self.dbpm3.update()
@@ -1642,6 +1722,9 @@ class Eiger2X16M(Detector):
         header_appendix['directory'] = self.directory
         header_appendix['runIndex'] = self.runIndex
         header_appendix['beamsize'] = self.beamsize
+        header_appendix['beamsizeHor'] = SampleSizeX
+        header_appendix['beamsizeVer'] = SampleSizeY
+        # header_appendix['timestamp_record_beamprofile'] = flux_timestamp
         header_appendix['atten'] = self.atten
         header_appendix['fileindex'] = self.fileindex
         header_appendix['filename'] = Filename

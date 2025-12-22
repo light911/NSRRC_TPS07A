@@ -20,7 +20,7 @@ class ladpcleint():
             self.Par.update(Config.Par)
         else:
             self.Par = Par
-        self.logger = logsetup.getloger2('ladpcleint',level = self.Par['Debuglevel'],LOG_FILENAME='./log/Ladpcleintlog.txt')
+        self.logger = logsetup.getloger2('ladpcleint',level = self.Par['Debuglevel'],LOG_FILENAME='/home/blctl/Desktop/log/Ladpcleintlog.txt')
         self.ldap = ldap.initialize(self.ldapserver)
         self.ldap.simple_bind_s("","")
     def getuserinfo(self,username):

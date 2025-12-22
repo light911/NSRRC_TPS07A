@@ -31,7 +31,7 @@ class myepics():
 
         self.Par = Config.Par
         if not logger:
-            self.logger = logsetup.getloger2('myepics',LOG_FILENAME='./log/workround.txt',level = self.Par['Debuglevel'],bypassline=False)
+            self.logger = logsetup.getloger2('myepics',LOG_FILENAME='/home/blctl/Desktop/log/workround.txt',level = self.Par['Debuglevel'],bypassline=False)
         else:
             self.logger = logger
         
@@ -226,7 +226,7 @@ class workroundmd3moving():
     def __init__(self,Q = None,logger=None) -> None:
         self.Par = Config.Par
         if not logger:
-            self.logger = logsetup.getloger2('fixmd3moving',LOG_FILENAME='./log/fixmd3moving.txt',level = self.Par['Debuglevel'],bypassline=False)
+            self.logger = logsetup.getloger2('fixmd3moving',LOG_FILENAME='/home/blctl/Desktop/log/fixmd3moving.txt',level = self.Par['Debuglevel'],bypassline=False)
         else:
             self.logger = logger
         pass

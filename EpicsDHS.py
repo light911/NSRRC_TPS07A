@@ -16,7 +16,7 @@ from epicsinit import epicsdev
 import logsetup
 # import epicsfile
 import Config
-import EpicsConfig,requests
+import EpicsConfig,requests,math
 import Detector
 from Flux07A.AttenServer import atten
 from DetectorCoverV2 import MOXA
@@ -42,7 +42,7 @@ class DCSDHS():
         # print(f'TYPE:{type(self.Par)}')
         
         #set log
-        self.logger = logsetup.getloger2('EPICSDHS',LOG_FILENAME='./log/EpicsLog.txt',level = self.Par['Debuglevel'],bypassline=False)
+        self.logger = logsetup.getloger2('EPICSDHS',LOG_FILENAME='/home/blctl/Desktop/log/EpicsLog.txt',level = self.Par['Debuglevel'],bypassline=False)
         self.logger.info(f'EPICS DCSDHS PID = {os.getpid()}')
         self.logger.info("init EPICSDHS logging")
         self.logger.info("Logging show level = %s",self.Par['Debuglevel'])
@@ -201,6 +201,17 @@ class DCSDHS():
             time.sleep(0.1)
         self.logger.info(f'MD3 is Ready')     
         return True    
+    def cal_post_tri_time(self,post_tri_time,scan_range,exposure_time,start_angle,nimages):
+        single_exposure_time = exposure_time / nimages
+        scanspeed = scan_range/exposure_time
+        addrangetimes = math.ceil(post_tri_time/single_exposure_time)
+        delaytime = addrangetimes * single_exposure_time - exposure_time
+        new_start_angle =  start_angle - (scanspeed * single_exposure_time * addrangetimes)
+        new_scanrange = scan_range + (scanspeed * single_exposure_time * addrangetimes)
+        new_exposure_time = exposure_time + (single_exposure_time * addrangetimes)
+        self.logger.warning(f'{addrangetimes=},{single_exposure_time=}')
+        self.logger.warning(f'new_scanrange={new_scanrange},new_exposure_time={new_exposure_time},new_start_angle={new_start_angle},delaytime={delaytime}')
+        return new_scanrange,new_exposure_time,new_start_angle,nimages,delaytime
     def start_oscillation(self,Par,Q,command):
         reciveQ = Q['Queue']['reciveQ']
         sendQ = Q['Queue']['sendQ']
@@ -223,13 +234,26 @@ class DCSDHS():
         start_angle = float(command[5])
         fileindex = int(Par['Detector']['Fileindex'])
         number_of_passes = int(1)
-        nimages = int(Par['Detector']['nimages'])
+        # nimages = int(Par['Detector']['nimages'])
+        nimages = self.ca.caget('07a-ES:timing:nimage',format=int)
         Timeout = 30 + exposure_time
         
         LastTaskInfoPV = Par['collect']['LastTaskInfoPV']
         PV = Par['collect']['start_oscillationPV']
         NumberOfFramesPV = Par['collect']['NumberOfFramesPV']
-        
+
+        post_tri_timePV = self.Par['collect']['post_tri_timePV']
+        post_tri_time = self.ca.caget(post_tri_timePV,format=float)
+        if post_tri_time == 0 :
+            pass
+        elif post_tri_time > 0:
+            new_scanrange,new_exposure_time,new_start_angle,nimages,delaytime = self.cal_post_tri_time(post_tri_time,scan_range,exposure_time,start_angle,nimages)
+            scan_range = new_scanrange
+            exposure_time = new_exposure_time
+            start_angle = new_start_angle
+            
+            pass
+
 
         value = [fileindex,start_angle,scan_range,exposure_time,number_of_passes]
         self.logger.warning(f"MD3 Expouse Scan Start,with start_angle:{start_angle},scan_range:{scan_range},exposure_time:{exposure_time}, number_of_passes:{number_of_passes}  ")
@@ -516,6 +540,12 @@ class DCSDHS():
                                 pass
                             elif command[1] == "detector_open_cover":
                                 self.logger.warning(f"detector_open_cover operation from dcss : {command}")
+                                command.pop(0)
+                                DetctorQ.put(tuple(command))
+                                pass
+                            #SSXCollect
+                            elif command[1] == "SSXCollect":
+                                self.logger.warning(f"SSXCollect operation from dcss : {command}")
                                 command.pop(0)
                                 DetctorQ.put(tuple(command))
                                 pass
