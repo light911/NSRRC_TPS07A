@@ -174,7 +174,9 @@ class epicsdev():
                     #move done
                     self.logger.debug("Energy end of moing,Disable gap to energy")
                     #Disable = 1
-                    self.caput(self.Par['Energy']['evtogap'],1)
+                    #20260312 Disable become 0
+                    #Disable = 0
+                    self.caput(self.Par['Energy']['evtogap'],0)
                     # p = CAProcess(target=self.oldCAPUT, args=(self.Par['Energy']['evtogap'],1,))
                     # p.start()
                     # p.join()
@@ -659,11 +661,11 @@ class epicsdev():
                                     if self.ca.caget("TPS:OPStatus",format=int) == 0:
                                         self.logger.warning(f"ring closed")
                                     else:
-                                        self.caput(self.Par['Energy']['evtogap'],0)
+                                        self.caput(self.Par['Energy']['evtogap'],1)
                                     if gapmotorablemove == 0:
                                         self.logger.critical(f"Gap is unable to move")
                                         #bypass energy command
-                                        self.caput(self.Par['Energy']['evtogap'],1)
+                                        self.caput(self.Par['Energy']['evtogap'],0)
                                         pos = self.epicsmotors['Energy']['PVID'].get('RBV') * 1000
                                         self.sendQ.put(('endmove','energy',pos,'normal'), block=False)
                                         continue#end of this while loop
@@ -672,8 +674,8 @@ class epicsdev():
                                     # p.join()
                                 else:
                                     self.logger.debug(f"det detGap {abs(C_gap - N_gap)} is small than {self.Par['minchangeGAP']},and  {abs(C_energy - newenergy)} > {self.Par['minEVchangeGAP']},NO chane gap setting")
-                                    #Disable = 1
-                                    self.caput(self.Par['Energy']['evtogap'],1)
+                                    #Disable = 0
+                                    self.caput(self.Par['Energy']['evtogap'],0)
                                     # p = CAProcess(target=self.oldCAPUT, args=(self.Par['Energy']['evtogap'],1,))
                                     # p.start()
                                     # p.join()
