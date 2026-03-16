@@ -185,9 +185,9 @@ class Beamsize():
             self.logger.warn(f'i will replay beamsize 10 frist')
             beamsize = 10
         return beamsize
-    def target(self,beamsize=50,Targetdistance=150,opencover=False,checkdis=False):
+    def target(self,beamsize=50,Targetdistance=150,opencover=False,checkdis=False,bypassslit=False):
         self.Busy = True
-        
+        # bypassslit for speical beam size
         self.logger.info(f'Move beam size to {beamsize} with openvoer = {opencover},Targetdistance = {Targetdistance} with moveit = {checkdis}')
         requests.post(f'http://10.7.1.105/ptzpreset?camid=1&goto_preset={int(beamsize)}')
         current_dis = self.ca.caget(self.fakeDistanceName)
@@ -215,7 +215,7 @@ class Beamsize():
                 self.logger.debug(f'Beam size : {beamsize} is in beam list index = {index}')
                 
                 movinglist[self.MD3YMotor] = self.MD3YLists[index]
-                if self.SSUsing :
+                if self.SSUsing and not bypassslit:
                     movinglist[self.SSMotor] = self.SSLists[index]
                 if self.MD3VerUsing :
                     movinglist[self.MD3VerMotor] = self.MD3VerLists[index]

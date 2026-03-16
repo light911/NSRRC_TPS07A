@@ -549,6 +549,12 @@ class DCSDHS():
                                 command.pop(0)
                                 DetctorQ.put(tuple(command))
                                 pass
+                            #SSXStopCollect
+                            elif command[1] == "SSXStopCollect":
+                                self.logger.warning(f"SSXStopCollect operation from dcss : {command}")
+                                command.pop(0)
+                                DetctorQ.put(tuple(command))
+                                pass
                             else:
                                  self.logger.warning(f"Unkonw operation from dcss : {command}")
                                  unknownFlag = True

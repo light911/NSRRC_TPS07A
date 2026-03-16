@@ -323,10 +323,10 @@ class Eiger2X16M(Detector):
         if len(command)>=4:
             #want to move distance too
             distance = float(command[3])
-            beamsizeP = Thread(target=self.MoveBeamsize.target,args=(float(beamsize),distance,False,True),name='MoveBeamSize')
+            beamsizeP = Thread(target=self.MoveBeamsize.target,args=(float(beamsize),distance,False,True,False),name='MoveBeamSize')
         else:
             distance = None
-            beamsizeP = Thread(target=self.MoveBeamsize.target,args=(float(beamsize),150,False,False),name='MoveBeamSize')
+            beamsizeP = Thread(target=self.MoveBeamsize.target,args=(float(beamsize),150,False,False,False),name='MoveBeamSize')
         #arg1 = beamsize , Targetdistance, opencover,checkdis
         #set checkdis to true will make change distance to Targetdistance
         # beamsizeP = Process(target=self.MoveBeamsize.target,args=(float(beamsize),150,False,False),name='MoveBeamSize')
@@ -587,12 +587,12 @@ class Eiger2X16M(Detector):
         detectorsetupP = Process(target=self.basesetup,args=args,name='Detector_Setup')
         detectorsetupP.start()
         self.logger.debug('start to setup_beamsize_cover_distance')
-        self.setup_beamsize_cover_distance(False,False,False,False)
+        self.setup_beamsize_cover_distance(False,False,False,False,False)
         self.logger.debug('End to setup_beamsize_cover_distance')
         _oscillationTime = self.TotalFrames * self.exposureTime
         Filename = self.filename + "_" + str(self.fileindex).zfill(4)
         _filename = Filename + '.h5'
-        self.checkandretryDetectorSetupProcess(detectorsetupP,args)
+        self.checkandretryDetectorSetupProcess(detectorsetupP,args,30)#orignal 10 may be not enought set to 30sec
         
         
 
@@ -642,6 +642,252 @@ class Eiger2X16M(Detector):
         monP.start()
         # command = ('operdone',) + command
         # self.sendQ.put(command)
+    def SSXCollect(self,command):
+        self.logger.info(f'Got SSXCollect OP :{command}')
+        # parlist = []
+        # filename = self.SSX_Prefix.text() 2
+        # directory = self.SSX_Directory.text() 3
+        # userName = self.user  4
+        # exposureTime = self.SSX_Time.value()  5
+        # oscillationStart = 0  6
+        # detosc = 0    7
+        # TotalFrames = self.SSX_NumberFrames.value()   8
+        # distance = self.SSX_Distance.value()  9
+        # wavelength = 1/self.bluiceData['motor']['energy']['pos']*12398    10
+        # detectoroffX = self.bluiceData['motor']['detector_vert']['pos']   11
+        # detectoroffY = self.bluiceData['motor']['detector_horz']['pos']   12
+        # fileindex = 0 13
+        # detmode = self.SSX_DetectorMode.currentIndex()    14
+        # beamsize = 1  15
+        # atten = self.SSX_Attenuation.value()  16
+        # LaserInitialState = self.SSX_LaserInitialState.currentIndex() 17
+        # SSX_LassrTimeArray_1 = self.SSX_LassrTimeArray_1.value()  18
+        # SSX_LassrTimeArray_2 = self.SSX_LassrTimeArray_2.value()  19
+        # SSX_PeakSearchAlgorithm = self.SSX_PeakSearchAlgorithm.currentIndex() 20
+        # SSX_PeakSearch_threshold = self.SSX_PeakSearch_threshold.value()  21
+        # SSX_PeakSearch_minsnr = self.SSX_PeakSearch_minsnr.value()    22
+        # SSX_PeakSearch_min_pix_count = self.SSX_PeakSearch_min_pix_count.value()  23
+        # SSX_PeakSearch_max_pix_count = self.SSX_PeakSearch_max_pix_count.value()  24
+        # SSX_PeakSearch_local_bg_radius = self.SSX_PeakSearch_local_bg_radius.value()  25
+        # SSX_PeakSearch_min_res = self.SSX_PeakSearch_min_res.value()  26
+        # SSX_PeakSearch_max_res = self.SSX_PeakSearch_max_res.value()  27
+        # SSX_PeakSearch_min_snr_biggest_pix = self.SSX_PeakSearch_min_snr_biggest_pix.value()  28
+        # SSX_PeakSearch_min_snr_peak_pix = self.SSX_PeakSearch_min_snr_peak_pix.value()    29
+        # SSX_PeakSearch_min_sig = self.SSX_PeakSearch_min_sig.value()  30
+        # runIndex = int(105) #105 for SSX collect ,view1 =101 view2 =102   31
+        
+        self.operationHandle = command[1]
+        self.filename = command[2]
+        self.directory = command[3]
+        self.userName = command[4]
+        self.exposureTime = float(command[5])
+        self.oscillationStart = float(command[6])
+        self.detosc =  float(command[7])  
+        self.TotalFrames = int(command[8])
+        self.distance = float(command[9])
+        self.wavelength = float(command[10])
+        self.detectoroffX = float(command[11])
+        self.detectoroffY = float(command[12])
+        self.fileindex = int(command[13])
+        self.detmode = int(command[14])
+        self.beamsize = command[15]
+        self.atten = command[16]
+        LaserInitialState = int(command[17])
+        SSX_LassrTimeArray_1 = float(command[18])
+        SSX_LassrTimeArray_2 = float(command[19])
+        SSX_PeakSearchAlgorithm = int(command[20])
+        SSX_PeakSearch_threshold = int(command[21])
+        SSX_PeakSearch_minsnr = float(command[22])
+        SSX_PeakSearch_min_pix_count = float(command[23])
+        SSX_PeakSearch_max_pix_count = float(command[24])
+        SSX_PeakSearch_local_bg_radius = float(command[25])
+        SSX_PeakSearch_min_res = float(command[26])
+        SSX_PeakSearch_max_res = float(command[27])
+        SSX_PeakSearch_min_snr_biggest_pix = float(command[28])
+        SSX_PeakSearch_min_snr_peak_pix = float(command[29])
+        SSX_PeakSearch_min_sig = float(command[30])
+        self.runIndex = command[31]#for raster =101 or102 105 fir SSX
+        #setup MD3 mode
+        #move md3 phase inadvance,we will wait at detectorsetup again
+        # md3phase = float(self.ca.caget(self.Par['collect']['md3modePV']))
+        md3phase = self.ca.caget(self.Par['collect']['md3modePV'],format=str)
+        if md3phase != 'DataCollection\n': 
+            self.ca.caput(self.Par['collect']['md3modePV'],2)
+            time.sleep(0.1)
+            pass
+        #setup timeing
+        post_tri_timePV = self.Par['collect']['post_tri_timePV']
+        shutter_delayPV = self.Par['collect']['shutter_delayPV']
+        detector_delayPV = self.Par['collect']['detector_delayPV']
+        SSXtriggerPV = self.Par['collect']['SSXtriggerPV']
+        SSXtrigerwidthPV = self.Par['collect']['SSXtrigerwidthPV']
+        laser_init_statePV = self.Par['collect']['laser_init_statePV']
+        laser_timing_arrayPV = self.Par['collect']['laser_timing_arrayPV']
+        self.ca.caput(post_tri_timePV,0)
+        self.ca.caput(shutter_delayPV,0)
+        self.ca.caput(detector_delayPV,10000)
+        if self.TotalFrames == 0:
+            self.TotalFrames = 10800000
+        _oscillationTime = self.TotalFrames * self.exposureTime * 1e3 + 10#sec to ms
+        
+        self.ca.caput(SSXtrigerwidthPV,_oscillationTime)
+        self.ca.caput(laser_init_statePV,LaserInitialState)
+        laser_timing_array = [SSX_LassrTimeArray_1*1000000,SSX_LassrTimeArray_2*1000000,
+                             0,0,0,0,0,0,0,0]#sec to usec
+        self.ca.caput(laser_timing_arrayPV,laser_timing_array)
+        #setup peaksearch server
+        
+        #setup and arm detector
+        # htos_note changing_detector_mode
+        toDcsscommand = ('htos_note','changing_detector_mode')
+        self.sendQ.put(toDcsscommand)
+        collectype= 'SSXCollect'
+        #detmode 0 = one energy 16M
+        #detmode 1 = one energy ROI (4M)
+        #detmode 2 = Highspeed 16M
+        #detmode 3 = Highspeed (4M)
+        if self.detmode == 0 or self.detmode == 2:
+            roi = False
+            pass
+        elif self.detmode == 1 or self.detmode == 3:
+            roi = True
+            pass
+        # raster,roi=False,beamwithdis,movebeasize=True,detconn=None,collectype='test image')
+        args=(False,roi,False,False,None,collectype,)
+
+        detectorsetupP = Process(target=self.basesetup,args=args,name='Detector_Setup')
+        detectorsetupP.start()
+        self.logger.debug('start to setup_cover_distance (not 2nd slit)')
+        # raster=False,roi=False,beamwithdis=False,movebeasize=True,bypassslit):
+        # move beam size but not 2nd slit
+        self.setup_beamsize_cover_distance(False,False,False,False,True)
+        self.logger.debug('End to setup_cover_distance  (not 2nd slit)')
+        
+        Filename = self.filename + "_" + str(self.fileindex).zfill(4)
+        _filename = Filename + '.h5'
+        self.checkandretryDetectorSetupProcess(detectorsetupP,args,30)#orignal 10 may be not enought set to 30sec
+
+
+
+        #make sure cover is opend
+        self.MoveBeamsize.wait_opencover(True)
+        
+
+
+        # tri peak search?
+
+        #before we open shutter make sure mode again
+        md3phase = self.ca.caget(self.Par['collect']['md3modePV'],format=str)
+        if md3phase != 'DataCollection\n': 
+            self.logger.critical(f'SSX Collect Fail: MD3 not in DataCollection mode')
+            pass
+        else:
+            #trigger collect
+            self.ca.caput(SSXtriggerPV,1)
+            # finish data collect if detector back to idle
+            monP = Process(target=self.check_SSX_done,name='check_SSX_done')
+            monP.start()
+
+        toDcsscommand = ('operdone',command[0],self.operationHandle)
+        self.logger.info(f'send command to dcss: {toDcsscommand}')
+        self.sendQ.put(toDcsscommand)
+        pass
+    def SSXStopCollect(self,command):
+        self.operationHandle = command[1]
+        self.logger.info(f'Got SSXStopCollect OP :{command}')
+        #stop detector frist
+        self.logger.info(f'try to reset detector')
+        state = self.det.detectorStatus('state')
+        self.abort = True
+        if state == 'idle':
+            pass
+        elif state == 'acquire':
+            self.det.sendDetectorCommand('disarm')
+        elif state == 'ready':
+            self.det.sendDetectorCommand('disarm')
+        else:
+            self.det.sendDetectorCommand('abort')
+        self.logger.info(f'try to close detector cover')
+        closecoverP = Process(target=self.cover.askforAction,args=('close',),name='abort_close_cover')
+        closecoverP.start()
+        #force stop trigger
+        SSXtrigerwidthPV = self.Par['collect']['SSXtrigerwidthPV']
+        # SSXtriggerPV = self.Par['collect']['SSXtriggerPV']
+        # self.ca.caput(SSXtriggerPV,1)#usless
+        self.ca.caput(SSXtrigerwidthPV,1)
+        toDcsscommand = ('operdone',command[0],self.operationHandle)
+        self.logger.info(f'send command to dcss: {toDcsscommand}')
+        self.sendQ.put(toDcsscommand)
+        pass
+
+    def check_SSX_done(self):
+        det = DEigerClient(self.detectorip,self.detectorport,verbose=False)
+        _check = True
+        init = True
+        while _check:
+            state = det.fileWriterStatus('state')['value']
+            #make sure collect is started,
+            # dhs   detectorstat                       filewriter
+            # arm   idle->configure->READY->acquire-ilde  ready=>acquire->ready
+            if state == 'acquire':
+                init = False
+            #when we got all except file or, fileWriterStatus from acquire to Ready Break loop
+            if init :
+                pass
+            else:
+                if state == 'ready':
+                    #fileWriterStatus from acquire to ready
+                    #if there is no file to downlaod may be detector abort
+                    _check = False
+        #collect id done
+        command=["","","","","",""]
+        totalframe = self.TotalFrames
+        Filename = self.filename + "_" + str(self.fileindex).zfill(4)
+        lastnum = math.ceil(totalframe/1000)
+        dataname = f'{Filename}_data_{lastnum:06}.h5'
+        datapath = f'{self.directory }/{dataname}'
+        command[0] = 'updatevalue'
+        command[1] = 'lastImageCollected'
+        command[2] = datapath
+        command[3] = 'string'
+        command[4] = 'normal'
+        self.sendQ.put((command[0],command[1],command[2],command[3],command[4]))
+        #send detector stop?
+        #check detector data is clear
+
+        self.logger.info(f'close cover after got detector stop ({command}) ')
+        # closecoverP = Process(target=self.cover.CloseCover,name='stop_close_cover')
+        closecoverP = Process(target=self.cover.askforAction,args=('close',),name='stop_close_cover')
+        closecoverP.start()
+        
+        toDcsscommand = 'htos_set_string_completed system_status normal {Wating For Download Image} black #d0d000'
+        self.sendQ.put(toDcsscommand)
+        
+        expctedlist =[]
+        Filename = self.filename + "_" + str(self.fileindex).zfill(4)
+        masterfile = Filename + "_master.h5"
+        expctedlist.append(masterfile)
+        expctedlist.extend(genDatasetNames(self.TotalFrames,1000,Filename))
+        
+        currentfile = self.det.fileWriterFiles()
+        self.logger.info(f'Check for detector download data: file count :{currentfile}')
+        # while type(currentfile) != type(None):
+        try:
+            # while len(currentfile) != 0:
+            while bool(set(currentfile) & set(expctedlist)):
+                self.logger.info(f'wait for detector download data: file count :{set(currentfile) & set(expctedlist)}')
+                time.sleep(0.1)
+                currentfile = self.det.fileWriterFiles()
+        except Exception as e:
+            self.logger.critical(f'Error on monitor DCU file, error{e}')
+        self.logger.info(f'All data in detector is downloaded: file count :{currentfile}')
+
+        self.checkandretryCoverProcess(closecoverP,'close')
+
+        toDcsscommand = 'htos_set_string_completed system_status normal Ready black #00a040'
+        self.sendQ.put(toDcsscommand)
+        self.logger.info(f'Done for check_SSX_done ({command}) ')
+
     def mutiPosCollect(self,command):
         # ans =  [runIndex,filename,directory,userName,axisName,exposureTime,oscillationStart,detosc,TotalFrames,distance,wavelength,detectoroffX,detectoroffY,sessionId,fileindex,unknow,beamsize,atten]
         t0=time.time()
@@ -690,11 +936,11 @@ class Eiger2X16M(Detector):
         
         detectorsetupP = Process(target=self.basesetup,args=args,name='Detector_Setup')
         detectorsetupP.start()
-        self.setup_beamsize_cover_distance(False,self.roi,True,True)
+        self.setup_beamsize_cover_distance(False,self.roi,True,True,False)
         _oscillationTime = self.TotalFrames * self.exposureTime
         Filename = self.filename + "_" + str(self.fileindex).zfill(4)
         _filename = Filename + '.h5'
-        self.checkandretryDetectorSetupProcess(detectorsetupP,args,timeout=10)#need to move beam size take longer time
+        self.checkandretryDetectorSetupProcess(detectorsetupP,args,timeout=30)#need to move beam size take longer time
         
         
         self.logger.warning(f'mutiPosCollect detector setup take {time.time()-t0} sec')
@@ -950,7 +1196,7 @@ class Eiger2X16M(Detector):
         
         detectorsetupP = Process(target=self.basesetup,args=args,name='Detector_Setup')
         detectorsetupP.start()
-        self.setup_beamsize_cover_distance(True,self.roi,True,True)
+        self.setup_beamsize_cover_distance(True,self.roi,True,True,False)
         # _oscillationTime = self.TotalFrames * self.exposureTime
         # Filename = self.filename + "_" + str(self.fileindex).zfill(4)
         # _filename = Filename + '.h5'
@@ -1362,7 +1608,7 @@ class Eiger2X16M(Detector):
             self.logger.debug(f'oscillationStart =  {self.oscillationStart},framewidth = {self.detosc}')
             self.logger.debug(f'directory =  {self.directory},filename = {self.filename},fileindex={self.fileindex}')
             self.logger.debug(f'distance =  {self.distance},wavelength = {self.wavelength},detectoroffX={self.detectoroffX},detectoroffY={self.detectoroffY},beamsize={self.beamsize},atten={self.atten}')
-            self.logger.debug(f'Unknow =  {self.unknow}')
+            # self.logger.debug(f'Unknow =  {self.unknow}')
             framerate = 1 / self.exposureTime 
             TotalTime = self.TotalFrames * self.exposureTime
             with concurrent.futures.ThreadPoolExecutor() as executor:
@@ -1618,7 +1864,7 @@ class Eiger2X16M(Detector):
             errMsg = "File \"{}\", line {}, in {}: [{}] {}".format(fileName, lineNum, funcName, error_class, detail)
             self.logger.warning(f'Setup detector has error {errMsg},{e}')
             sys.exit(-1)#for mutiprocess
-    def setup_beamsize_cover_distance(self,raster=False,roi=False,beamwithdis=False,movebeasize=True):
+    def setup_beamsize_cover_distance(self,raster=False,roi=False,beamwithdis=False,movebeasize=True,bypassslit=False):
         t0=time.time()
         #move cryjet in
         askCryojetIn(self.Par['robot']['host'],self.Par['robot']['commandprot'])
@@ -1631,7 +1877,7 @@ class Eiger2X16M(Detector):
             # beamsizeP = Thread(target=self.MoveBeamsize.target,args=(float(self.beamsize),self.distance ,True,True,),name='MoveBeamSize')
             # beamsizeP.start()
             self.logger.debug(f'{raster=},{beamwithdis=}')
-            self.MoveBeamsize.target(float(self.beamsize),self.distance ,True,True)
+            self.MoveBeamsize.target(float(self.beamsize),self.distance ,True,True,bypassslit)
             # self.sendQ.put(('endmove','beamSize',str(self.beamsize),'normal'), block=False)
             self.sendQ.put(('updatevalue','currentBeamsize',str(self.beamsize),'string','normal'))
             
@@ -1645,7 +1891,7 @@ class Eiger2X16M(Detector):
             # beamsizeP.start()
             
             if movebeasize:
-                self.MoveBeamsize.target(float(self.beamsize),self.distance ,True,False)
+                self.MoveBeamsize.target(float(self.beamsize),self.distance ,True,False,bypassslit)
                 # self.sendQ.put(('endmove','beamSize',str(self.beamsize),'normal'), block=False)
                 self.sendQ.put(('updatevalue','currentBeamsize',str(self.beamsize),'string','normal'))
             else:
@@ -1879,7 +2125,7 @@ class Eiger2X16M(Detector):
                 self.logger.critical(f'detector process has problem kill it!')
                 self.errorcount = self.errorcount + 1
             else:
-                self.logger.warning(f'detector process has problem kill it!')
+                self.logger.warning(f'detector process has problem kill it! Count={self.errorcount}')
             detectorprocess.kill()
             #try to close again
             self.logger.warning(f'Try to resetup detector again!')
@@ -1890,14 +2136,13 @@ class Eiger2X16M(Detector):
             b = tuple(a)
             detectorP = Process(target=self.basesetup,args=b,name='Detector_Setup')
             detectorP.start()
-            
-
-            self.checkandretryDetectorSetupProcess(detectorP,args,timeout=timeout)
+            # 2nd try short timeout
+            self.checkandretryDetectorSetupProcess(detectorP,args,timeout=5)
         else:
             self.logger.info(f'OK for detector setup')
             self.errorcount = 0
         pass
-    def recheckandretryProcess(self,beamsizeP,raster,beamwithdis):
+    def recheckandretryProcess(self,beamsizeP,raster,beamwithdis,bypassslit):
         beamsizeP.join(60)
         if beamsizeP.exitcode == None:
             self.logger.warning(f'beamsize P has problem kill it!')
@@ -1905,17 +2150,17 @@ class Eiger2X16M(Detector):
             beamsizeP.kill()
             self.logger.warning(f'Try to go beamsize again!')
             if raster or beamwithdis:
-                beamsizeP2 = Process(target=self.MoveBeamsize.target,args=(float(self.beamsize),self.distance ,True,True,),name='MoveBeamSize')
+                beamsizeP2 = Process(target=self.MoveBeamsize.target,args=(float(self.beamsize),self.distance ,True,True,bypassslit,),name='MoveBeamSize')
                 beamsizeP2.start()
-                self.recheckandretryProcess(beamsizeP2,raster,beamwithdis)
+                self.recheckandretryProcess(beamsizeP2,raster,beamwithdis,bypassslit)
                 
             else:
                 #check frame rate?
                 # framerate = self.TotalFrames / self.exposureTime
                 # beamsizeP = CAProcess(target=self.MoveBeamsize.target,args=(float(self.beamsize),self.distance ,True,False),name='MoveBeamSize')
-                beamsizeP2 = Process(target=self.MoveBeamsize.target,args=(float(self.beamsize),self.distance ,True,False),name='MoveBeamSize')
+                beamsizeP2 = Process(target=self.MoveBeamsize.target,args=(float(self.beamsize),self.distance ,True,False,bypassslit),name='MoveBeamSize')
                 beamsizeP2.start()
-                self.recheckandretryProcess(beamsizeP2,raster,beamwithdis)
+                self.recheckandretryProcess(beamsizeP2,raster,beamwithdis,bypassslit)
     #todo rcheckandretryCoverProcess
 class dbpm07a():
     def __init__(self,number,ca=None) -> None:
