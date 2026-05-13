@@ -27,6 +27,7 @@ import traceback,sys
 from myeigerclient import EigerClient,setDetectorConfig,setMonitorConfig,sendDetectorCommand,detectorConfig,setFileWriterConfig
 import concurrent.futures
 import numpy as np
+import datetime
 # from TranferData_EPU_RAM_NFS_HTTP import genDatasetNames
 
 def genDatasetNames(totalimage:int,nimages_per_file:int=1000,Filename:str='Test'):
@@ -41,6 +42,22 @@ def genDatasetNames(totalimage:int,nimages_per_file:int=1000,Filename:str='Test'
         datalists.append(dataname)
     # print(datalist)
     return datalists
+def generate_timestamp_string(fmt='%Y%m%d%H%M%S'):
+    """
+    根據當前時間產生數字文字
+
+    Args:
+        fmt (str): 時間格式，預設為 '%Y%m%d%H%M%S' (例如: 20250226143052)
+                   可選格式:
+                   - '%Y%m%d%H%M%S' -> 20250226143052
+                   - '%Y%m%d%H%M%S%f' -> 20250226143052123456 (含微秒)
+                   - '%Y%m%d' -> 20250226
+                   - '%H%M%S' -> 143052
+
+    Returns:
+        str: 時間數字字串
+    """
+    return datetime.datetime.now().strftime(fmt)
 
 class Detector():
     def __init__(self,Par,Q,coverdhs=None) :
@@ -475,13 +492,13 @@ class Eiger2X16M(Detector):
         single_exposure_time = exposure_time / nimages
         scanspeed = scan_range/exposure_time
         addrangetimes = math.ceil(post_tri_time/single_exposure_time)
-        delaytime = addrangetimes * single_exposure_time - exposure_time
         new_start_angle =  start_angle - (scanspeed * single_exposure_time * addrangetimes)
         new_scanrange = scan_range + (scanspeed * single_exposure_time * addrangetimes)
         new_exposure_time = exposure_time + (single_exposure_time * addrangetimes)
+        true_start_angle = new_start_angle + post_tri_time * scanspeed
         self.logger.warning(f'{addrangetimes=},{single_exposure_time=}')
-        self.logger.warning(f'new_scanrange={new_scanrange},new_exposure_time={new_exposure_time},new_start_angle={new_start_angle},delaytime={delaytime}')
-        return new_scanrange,new_exposure_time,new_start_angle,nimages,delaytime
+        self.logger.warning(f'new_scanrange={new_scanrange},new_exposure_time={new_exposure_time},new_start_angle={new_start_angle},true_start_angle={true_start_angle}')
+        return new_scanrange,new_exposure_time,new_start_angle,nimages,true_start_angle
         pass
     def detector_collect_shutterless(self,command):
     #    ('detector_collect_shutterless', '1.24', '1', 'test_1', '/data/blctl/test', 'blctl', 'gonio_phi', '0.1', '0.000009', '1.0', '10', '750.000060', '0.976226127404', '0.000231', '50.000000', '0', '0', 'PRIVATEA03F6ADA6F19A8DA1DEE6BFC325F4DCE', '1', '10', '50.000000', '0.0')
@@ -551,10 +568,17 @@ class Eiger2X16M(Detector):
             self.ca.caput(detector_delayPV,0,format=float)
             pass
         elif post_tri_time > 0:
-            new_scanrange,new_exposure_time,new_start_angle,nimages,delaytime = self.cal_post_tri_time(post_tri_time,scan_range,self.exposureTime,self.oscillationStart,self.TotalFrames)
-            delaytimeus = int(delaytime * 1e6)
-            shutterdelayus = int((delaytime -0.01)* 1e6)#shutter tri early 10ms
-            self.logger.warning(f'{delaytimeus=},{shutter_delayPV=}')
+            _oscillationTime = self.TotalFrames * self.exposureTime
+            new_scanrange,new_exposure_time,new_start_angle,nimages,true_start_angle = self.cal_post_tri_time(post_tri_time,scan_range,_oscillationTime,self.oscillationStart,self.TotalFrames)
+            delaytimeus = int(post_tri_time * 1e6)
+            self.oscillationStart = true_start_angle
+            if delaytimeus <= 10000:#delay short than 10ms may have problem for shutter tri early, set shutter to 0(fastest)
+                self.logger.warning(f'post_tri_time is too short, can not tri early, set to 0')
+                # delaytimeus = 0
+                shutterdelayus = 0
+            else:
+                shutterdelayus = int((post_tri_time -0.01)* 1e6)#shutter tri early 10ms
+            self.logger.warning(f'{delaytimeus=},{shutterdelayus=}')
             self.ca.caput(shutter_delayPV,shutterdelayus,format=int)
             self.ca.caput(detector_delayPV,delaytimeus,format=int)
             pass
@@ -725,7 +749,7 @@ class Eiger2X16M(Detector):
         laser_timing_arrayPV = self.Par['collect']['laser_timing_arrayPV']
         self.ca.caput(post_tri_timePV,0)
         self.ca.caput(shutter_delayPV,0)
-        self.ca.caput(detector_delayPV,10000)
+        self.ca.caput(detector_delayPV,0)#TODO detector tri delay 10ms(10000) for SSX, but laser should delay 10ms as will, now it trigger the same time with shutter,workround set to 0ms
         if self.TotalFrames == 0:
             self.TotalFrames = 10800000
         _oscillationTime = self.TotalFrames * self.exposureTime * 1e3 + 10#sec to ms
@@ -1820,6 +1844,7 @@ class Eiger2X16M(Detector):
                 write_headerP.join()
                 header_appendix = que.get()
                 header_appendix['TotalFrames'] = self.TotalFrames
+                header_appendix['stream_name'] = generate_timestamp_string()
                 text = json.dumps(header_appendix)
                 print(f'after get header que time = { time.time()-t0}')
                 det.setStreamConfig('header_appendix',text)
@@ -1942,6 +1967,7 @@ class Eiger2X16M(Detector):
             BeamSizeNamelist = self.ca.caget(BeamSizeNamePV,array=True,format=float)
             # print(BeamSizeNamelist,currentbeamsize)
             beamsizeindex = np.where(BeamSizeNamelist == currentbeamsize)
+            beamsizeindex = int(beamsizeindex[0][0])
             SampleSizeXPV = self.Par['EPICS_special']['BeamSize']['BeamSizeX']
             SampleSizeYPV = self.Par['EPICS_special']['BeamSize']['BeamSizeY']
             SampleSizeXlist = self.ca.caget(SampleSizeXPV,array=True,format=float)
@@ -1951,7 +1977,8 @@ class Eiger2X16M(Detector):
             # txt = epics.cainfo(SampleSizeXPV, print_out=False)
             # flux_timestamp = re.search(r'.*timestamp.*\((.*)\)', txt)[1]
             #tps 07a only
-        except:
+        except Exception as e:
+            self.logger.warning(f'Fail to get Sample Size info, error{e}')
             SampleSizeX = float(currentbeamsize)
             SampleSizeY = float(currentbeamsize)
         self.dbpm1.update()
