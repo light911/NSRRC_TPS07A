@@ -20,7 +20,7 @@ import EpicsConfig,requests,math
 import Detector
 from Flux07A.AttenServer import atten
 from DetectorCoverV2 import MOXA
-
+from CVLS_dhs.cvls_control import CVLSController
 class DCSDHS():
     def __init__(self,par:dict=None,m:Manager=None) :
 #        super(self.__class__,self).__init__(parent)
@@ -67,6 +67,7 @@ class DCSDHS():
         self.Q['Queue']['DetectorQ'] = Queue()
         self.Q['Queue']['attenQ'] = Queue()
         self.Q['Queue']['workroundQ'] = Queue()
+        self.Q['Queue']['CVLSQ'] = Queue()
         # self.Q={'Queue':{}}
         # self.Q['Queue']['reciveQ'] = self.m.Queue() 
         # self.Q['Queue']['sendQ'] = self.m.Queue() 
@@ -160,7 +161,7 @@ class DCSDHS():
         Detector_ = Process(target=self.detector, args=(self.Par,self.Q,self.client,self.cover))
         # epcisPV_ = Process(target=self.epicsPV, args=(self.Par,Q,self.client,))
         # control_ = Process(target=self.controlCenter, args=(self.Par,self.Q,self.client,))
-        
+        # Cvls_ = Process(target=self.CVLScontrol, args=(self.Par,self.Q,self.client,))
         
         # epcisPV_.start()
         # time.sleep(1)
@@ -168,14 +169,24 @@ class DCSDHS():
         reciver_.start()
         sender_.start()
         Detector_.start()
+        # Cvls_.start()
         
         reciver_.join()
         sender_.join()
         Detector_.join()
         # epcisPV_.join()
         # control_.join()
+        # Cvls_.join()
         self.initconnection()
-        
+    def CVLScontrol(self,Par,Q,tcpclient):
+        reciveQ = Q['Queue']['reciveQ']
+        sendQ = Q['Queue']['sendQ']
+        epicsQ = Q['Queue']['epicsQ']
+        ContrlQ = Q['Queue']['ControlQ']
+        DetctorQ = Q['Queue']['DetectorQ']
+        CvlsQ = Q['Queue']['CVLSQ']
+        CVLS = CVLSController(Par,Q)
+        CVLS.run()
     def detector(self,Par,Q,tcpclient,coverdhs):
         reciveQ = Q['Queue']['reciveQ']
         sendQ = Q['Queue']['sendQ']
@@ -205,13 +216,14 @@ class DCSDHS():
         single_exposure_time = exposure_time / nimages
         scanspeed = scan_range/exposure_time
         addrangetimes = math.ceil(post_tri_time/single_exposure_time)
-        delaytime = addrangetimes * single_exposure_time - exposure_time
+        # delaytime = addrangetimes * single_exposure_time - exposure_time
         new_start_angle =  start_angle - (scanspeed * single_exposure_time * addrangetimes)
         new_scanrange = scan_range + (scanspeed * single_exposure_time * addrangetimes)
         new_exposure_time = exposure_time + (single_exposure_time * addrangetimes)
+        true_start_angle = new_start_angle + post_tri_time * scanspeed
         self.logger.warning(f'{addrangetimes=},{single_exposure_time=}')
-        self.logger.warning(f'new_scanrange={new_scanrange},new_exposure_time={new_exposure_time},new_start_angle={new_start_angle},delaytime={delaytime}')
-        return new_scanrange,new_exposure_time,new_start_angle,nimages,delaytime
+        self.logger.warning(f'new_scanrange={new_scanrange},new_exposure_time={new_exposure_time},new_start_angle={new_start_angle},true_start_angle={true_start_angle}')
+        return new_scanrange,new_exposure_time,new_start_angle,nimages,true_start_angle
     def start_oscillation(self,Par,Q,command):
         reciveQ = Q['Queue']['reciveQ']
         sendQ = Q['Queue']['sendQ']
@@ -309,6 +321,7 @@ class DCSDHS():
         ContrlQ = Q['Queue']['ControlQ']
         DetctorQ = Q['Queue']['DetectorQ']
         AttenQ = Q['Queue']['attenQ']
+        CvlsQ = Q['Queue']['CVLSQ']
         msg = ""
         abort_timeer = time.time()
         while True:
@@ -554,6 +567,18 @@ class DCSDHS():
                                 self.logger.warning(f"SSXStopCollect operation from dcss : {command}")
                                 command.pop(0)
                                 DetctorQ.put(tuple(command))
+                                pass
+                            #setBackLightColor
+                            elif command[1] == "setBackLightColor":
+                                self.logger.warning(f"setBackLightColor operation from dcss : {command}")
+                                command.pop(0)
+                                CvlsQ.put(tuple(command))
+                                pass
+                            #switchSampleEnvironment
+                            elif command[1] == "switchSampleEnvironment":
+                                self.logger.warning(f"switchSampleEnvironment operation from dcss : {command}")
+                                command.pop(0)
+                                CvlsQ.put(tuple(command))
                                 pass
                             else:
                                  self.logger.warning(f"Unkonw operation from dcss : {command}")
@@ -865,6 +890,11 @@ class DCSDHS():
     def Attenserver(self,Par,Q):
         a = atten(Par)
         a.monitor(Q)
+    def CVLSserver(self,Par,Q):
+        
+
+        c = CVLSController(Par,Q)
+        c.monitor(Q)
     def workroundmd3moving(self,Par,Q):
         b = workroundmd3moving(Q=Q,logger=None)
         b.run()

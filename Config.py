@@ -18,6 +18,9 @@ Par={
     "robot":{'host':"10.7.1.3",
              'commandprot':10001
             },
+    "CVLS":{'host':"10.7.1.111",#SCHOTT ColdVision Light Source
+             'commandprot':50811
+            },
     'dcss':{'host':"10.7.1.1",
             'port':14242,
             'dhsname':"EPICS",
