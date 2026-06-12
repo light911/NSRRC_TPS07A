@@ -1,7 +1,6 @@
 
 import time,signal,os
 
-from pkg_resources import normalize_path
 # try:
 #     from Flux07A.Tools import Filiter,cal_thickness,cal_tr
 # except :

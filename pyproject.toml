@@ -1,0 +1,23 @@
+[project]
+name = "epicsdhs"
+version = "1.0.0"
+description = "TPS 07A EPICS DHS: bridge between DCSS/BluIce and EPICS beamline hardware"
+#ldapclient.py uses the crypt module which was removed in python 3.13
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "pyepics",
+    "numpy",
+    "requests",
+    "coloredlogs",
+    "psycopg[binary]",
+    "python-ldap",
+    "xraylib>=4.2.1",
+]
+
+[project.optional-dependencies]
+#CVLS_dhs only needs pyserial for USB/UART connection, not for ethernet
+cvls-usb = ["pyserial>=3.5"]
+
+[tool.uv]
+#flat script layout, nothing to build/install as a package
+package = false

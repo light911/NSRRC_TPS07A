@@ -108,8 +108,22 @@ class DCSDHS():
         self.workroundmd3moving_.start()
         time.sleep(3)
 
-    def initconnection(self):
-        
+    def serve_forever(self):
+        #connect -> handshake -> session -> close -> reconnect
+        #flat loop: the old initconnection()/run() called each other recursively,
+        #leaking one stack frame and one socket per DCSS reconnect
+        while True:
+            if self.connect_dcss():
+                self.run_session()
+            try:
+                self.client.close()
+            except Exception as e:
+                self.logger.warning(f'close DCSS socket fail: {e}')
+            self.logger.warning('DCSS session ended, reconnect in 1 sec')
+            time.sleep(1)
+
+    def connect_dcss(self):
+        '''connect to DCSS and do the handshake, return True when ready'''
         self.logger.info("try to connect")
         trytime=0
         while True:
@@ -119,8 +133,8 @@ class DCSDHS():
                 self.client.settimeout(self.tcptimeout)
                 self.logger.info("try to Connect to %s:%d" % (self.host, self.port))
                 self.client.connect((self.host, self.port))
-                
-                
+
+
             except Exception as e:
                 self.client.close()
                 self.logger.debug(f'fail connect to {self.host} {self.port} Error ={e}')
@@ -130,54 +144,43 @@ class DCSDHS():
                     trytime =1
                 else:
                     self.logger.debug("connection fail wait 1 sec then try again")
-                    
+
                 time.sleep(1)
                 continue
             break
-        
-        self.logger.info("DCSS connection success")
-        ans = self.client.recv(4096)
-        index = ans.decode().find('\x00')
-#        print (f'DCSS answer:{ans}')
-#        print (f'len:{len(ans)}')
-        if ans[0:index].decode() == "stoc_send_client_type" :
-            self.logger.debug("dcss ans correct!")
-            echo="htos_client_is_hardware "+ self.dhsname
-        else:
-            self.logger.debug("dcss ans NOT correct!")
-            echo="htos_client_is_hardware "+ self.dhsname
-        self.logger.info ("Answer to DCSS:%s" % (echo))
-        command = self.ansDHS(echo)
-        self.client.sendall(command.encode())
-        self.run()
 
-    def run(self) :
-        # self.logger.debug('Creat sub Process')
+        self.logger.info("DCSS connection success")
+        try:
+            ans = self.client.recv(4096)
+            index = ans.decode().find('\x00')
+            if ans[0:index].decode() == "stoc_send_client_type" :
+                self.logger.debug("dcss ans correct!")
+            else:
+                self.logger.debug("dcss ans NOT correct!")
+            echo="htos_client_is_hardware "+ self.dhsname
+            self.logger.info ("Answer to DCSS:%s" % (echo))
+            command = self.ansDHS(echo)
+            self.client.sendall(command.encode())
+        except Exception as e:
+            self.logger.warning(f'DCSS handshake fail: {e}')
+            return False
+        return True
+
+    def run_session(self) :
+        '''one DCSS session: workers run until the connection dies'''
         self.Par['operationRecord'][:] = []#clear operationRecord
-        # self.logger.debug(f'TYPE:{type(self.Par)}')
-        
+
         reciver_ = Process(target=self.reciver, args=(self.Par,self.Q,self.client,))
         sender_ = Process(target=self.sender, args=(self.Par,self.Q,self.client,))
         Detector_ = Process(target=self.detector, args=(self.Par,self.Q,self.client,self.cover))
-        # epcisPV_ = Process(target=self.epicsPV, args=(self.Par,Q,self.client,))
-        # control_ = Process(target=self.controlCenter, args=(self.Par,self.Q,self.client,))
-        # Cvls_ = Process(target=self.CVLScontrol, args=(self.Par,self.Q,self.client,))
-        
-        # epcisPV_.start()
-        # time.sleep(1)
-        # control_.start()
+
         reciver_.start()
         sender_.start()
         Detector_.start()
-        # Cvls_.start()
-        
+
         reciver_.join()
         sender_.join()
         Detector_.join()
-        # epcisPV_.join()
-        # control_.join()
-        # Cvls_.join()
-        self.initconnection()
     def CVLScontrol(self,Par,Q,tcpclient):
         reciveQ = Q['Queue']['reciveQ']
         sendQ = Q['Queue']['sendQ']
@@ -386,8 +389,10 @@ class DCSDHS():
                             # self.logger.warning(f"debug {self.Par['operationRecord']=}")
                             for item in self.Par['operationRecord']:
                                 operdoneCommand = ['operdone']
-                                for command in item:
-                                    operdoneCommand.append(command)
+                                #note: do not name the loop variable 'command',
+                                #it would overwrite the dcss command being processed
+                                for op_field in item:
+                                    operdoneCommand.append(op_field)
                                 self.logger.info(f"send {item} for opdone")
                                 sendQ.put(tuple(operdoneCommand))#('operdone',command[0],command[1],command[3])
                             toDcsscommand = 'htos_set_string_completed system_status normal {Abort!} black #d0d000'
@@ -1031,7 +1036,7 @@ def test():
     print("sleep 2sec")
     time.sleep(2)
     print("start test dhs")
-    p2 = Process(target=dhstest.run)
+    p2 = Process(target=dhstest.serve_forever)
 
     p2.start()
     p2.join()
@@ -1063,6 +1068,7 @@ def quit(signum,frame):
 #     p.join()
 #     print ("end")
 def ToLineNotify(beamline:str=None,msg:str=None,nosound:bool=False,stickerPackageId:int=None,stickerId:int=None,server='http://172.19.7.199:40000/job'):
+    response = None
     try:
         jsondata={}
         jsondata['beamline'] = beamline
@@ -1070,37 +1076,32 @@ def ToLineNotify(beamline:str=None,msg:str=None,nosound:bool=False,stickerPackag
         jsondata['nosound'] = nosound
         jsondata['stickerPackageId'] = stickerPackageId
         jsondata['stickerId'] = stickerId
-        response = requests.post(server , json=jsondata)
+        response = requests.post(server , json=jsondata, timeout=2)
         # print(response)
     except Exception as e:
         print(e)
     return response
     
 if __name__ == "__main__":
-    # mp.set_forkserver_preload()
-    # mp.set_start_method('forkserver')
-    # mp.set_start_method('spawn')
-    # mp.set_start_method('fork')
-    
+    #everything here relies on fork semantics (children inherit Par proxy,
+    #Queues and the DCSS socket); python 3.14 changes the linux default,
+    #so pin it explicitly
+    mp.set_start_method('fork')
+
     signal.signal(signal.SIGINT, quit)
     signal.signal(signal.SIGTERM, quit)
-    # logger=logsetup.getloger2('Main')
     print(f'main PID = {os.getpid()}')
     m = Manager()
     Par = m.dict()
-    # EpicsDHS(m)
-    # self.logger.critical(f'm pid={self.m._process.ident}')
     EpicsDHS = DCSDHS(Par,m)
     print ("start*****************************")
-    p = Process(target=EpicsDHS.initconnection)
+    p = Process(target=EpicsDHS.serve_forever)
 
     p.start()
     ToLineNotify(beamline='TPS07A',msg="EPICS DHS Started",nosound=True)
     print('*************************')
-    
-    while p.is_alive():
-        time.sleep(0.1)
-        pass
+
+    p.join()
 
     print ("end")
     ToLineNotify(beamline='TPS07A',msg="EPICS DHS Closed",nosound=True)

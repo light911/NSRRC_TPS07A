@@ -4,6 +4,7 @@ dbloginstr.py
 #python build artifacts
 __pycache__/
 *.pyc
+.venv/
 
 #runtime logs
 log/
