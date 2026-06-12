@@ -1658,8 +1658,15 @@ class Eiger2X16M(Detector):
         #mutithread version
         try:
             t0 = time.time()
-            # det = EigerClient(self.detectorip,self.detectorport)
-            det = self.det
+            if detconn is not None:
+                det = detconn
+            else:
+                #own client: basesetup runs in a forked child, and sharing the
+                #parent's persistent HTTP connection desyncs request/response
+                #pairing when both sides talk to the DCU at the same time
+                #(GET then receives the list reply of a previous PUT ->
+                #"list indices must be integers" errors)
+                det = DEigerClient(self.detectorip,self.detectorport,verbose=False)
             self.logger.debug(f'TotalFrames =  {self.TotalFrames},exposureTime = {self.exposureTime} ')
             self.logger.debug(f'oscillationStart =  {self.oscillationStart},framewidth = {self.detosc}')
             self.logger.debug(f'directory =  {self.directory},filename = {self.filename},fileindex={self.fileindex}')
