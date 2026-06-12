@@ -75,6 +75,10 @@ ca.caput(pv, value)                              # 成功回傳 truthy,失敗 No
   caget/caput**(libca context 跨 fork 不安全;需要在子行程用 CA 就在子行程內呼叫)。
 - 事件型的延遲/等待用 `threading.Thread/Timer`,不要 `multiprocessing.Process`
   — 從持有 libca 的行程 fork 既慢(成本隨 RSS 增加)又不安全。
+- **絕對不要在 CA monitor callback 裡直接做 caput/caget** — put 會卡在發送
+  緩衝區不 flush(動態限位曾因此沒送到 IOC,擋掉 raster scan 的 distance
+  同步移動)。`epicsdev.caput` 已自動把 put 轉送到專屬 worker 執行緒,callback
+  裡一律呼叫它,不要呼叫 `epics.caput`。
 - 舊的 CLI subprocess 版 caget 會回傳帶 `\n` 的字串,pyepics 版是乾淨的;
   比較字串時一律用 `.strip()` 防呆。
 

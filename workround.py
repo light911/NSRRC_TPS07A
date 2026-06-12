@@ -2,7 +2,7 @@ from multiprocessing import Process, Queue, Manager
 import multiprocessing as mp
 import logsetup,time,subprocess
 import threading
-from epics import caput,CAProcess,caget
+from epics import caput,CAProcess,caget,ca
 from epics import PV as EpicsPV
 import json,re
 import Config,numpy
@@ -48,6 +48,10 @@ class myepics():
 
     def _pv(self,name):
         name = str(name)
+        #a thread without a CA context must join the context that owns the
+        #cached channels, otherwise the chids are unusable in this thread
+        if ca.current_context() is None and ca.initial_context is not None:
+            ca.use_initial_context()
         with self._pvlock:
             pv = self._pvcache.get(name)
             if pv is None:

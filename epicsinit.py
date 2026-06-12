@@ -75,6 +75,13 @@ class epicsdev():
         self.saveCentringPositionFlag_sample_z = False
         self.saveCentringPositionFlag_cam_horz = False
         self.ca = myepics(self.logger)
+        #all caputs run on this worker thread: CA operations issued inside a
+        #CA monitor callback stay unflushed in the send buffer (the limit
+        #update during a beamsize change never reached the IOC), so callbacks
+        #only enqueue the put here
+        self._ca_putQ = queue.Queue()
+        self._ca_putworker = threading.Thread(target=self._ca_put_worker, daemon=True, name='ca_put_worker')
+        self._ca_putworker.start()
         if not coverdhs:
             self.cover = MOXA()
         else:
@@ -1238,9 +1245,30 @@ class epicsdev():
         print(f'ca put state={state}')
         time.sleep(0.1)
         
+    def _ca_put_worker(self):
+        ca.use_initial_context()
+        while True:
+            pvname, value, box, done = self._ca_putQ.get()
+            try:
+                box.append(caput(pvname, value, wait=False, timeout=5))
+            except Exception as e:
+                box.append(e)
+            done.set()
+
+    def _queued_caput(self,PV,value):
+        box = []
+        done = threading.Event()
+        self._ca_putQ.put((str(PV), value, box, done))
+        if not done.wait(timeout=10):
+            self.logger.critical(f"Caput {PV} value {value} timed out in put worker")
+            return False
+        state = box[0]
+        if state == 1:
+            return True
+        self.logger.critical(f"Caput {PV} value {value} Fail,state={state}")
+        return False
+
     def caput(self,PV,value):
-        #pyepics instead of caput CLI subprocess: the channel is created once
-        #and cached, no fork + CA reconnect per put
         self.logger.warning(f'caput PV={PV},value={value}')
         if isinstance(value,str):
             #the caput CLI converted numeric strings itself, keep that behavior
@@ -1249,27 +1277,11 @@ class epicsdev():
                 value = float(value)
             except ValueError:
                 pass
-        try:
-            state = caput(str(PV), value, wait=False, timeout=5)
-        except Exception as e:
-            self.logger.critical(f"Caput {PV} value {value} Fail={e}")
-            return False
-        if state == 1:
-            return True
-        self.logger.critical(f"Caput {PV} value {value} Fail,state={state}")
-        return False
+        return self._queued_caput(PV,value)
 
     def caputarray(self,PV,array):
         self.logger.warning(f'caput PV={PV},value={array}')
-        try:
-            state = caput(str(PV), array, wait=False, timeout=5)
-        except Exception as e:
-            self.logger.critical(f"Caput {PV} value {array} Fail={e}")
-            return False
-        if state == 1:
-            return True
-        self.logger.critical(f"Caput {PV} value {array} Fail,state={state}")
-        return False
+        return self._queued_caput(PV,array)
     #Detector distance interolck
     def updateMD3Ylimits(self,usingVAL=False) :
         #usingVAL = True for just start moving
