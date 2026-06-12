@@ -82,10 +82,11 @@ class DCSDHS():
         self.client.settimeout(self.tcptimeout)
         bypasscover = self.Par['bypasscover']
         self.cover = MOXA(m)
-        if bypasscover == False: 
-            self.cover.bypass = False   
-            coverP = Process(target=self.cover.run,name='Cover_server')
-            coverP.start()
+        self.coverP_ = None
+        if bypasscover == False:
+            self.cover.bypass = False
+            self.coverP_ = Process(target=self.cover.run,name='Cover_server')
+            self.coverP_.start()
             self.logger.warning(f'Detector Cover Fuction Enable')
         else:
             self.cover.bypass = True
@@ -108,6 +109,26 @@ class DCSDHS():
         self.workroundmd3moving_ = Process(target=self.workroundmd3moving, args=(self.Par,self.Q,))
         self.workroundmd3moving_.start()
         time.sleep(3)
+
+    def checkservers(self):
+        '''restart dead service processes. a queue must never lose its only
+        consumer: a libca callback crash in epicsPVP would otherwise leave
+        every zoom/motor/abort command unserved forever'''
+        services = {
+            'epcisPV_':            (self.epicsPVP,           (self.Par,self.Q,self.cover,)),
+            'Atten_':              (self.Attenserver,        (self.Par,self.Q,)),
+            'workroundmd3moving_': (self.workroundmd3moving, (self.Par,self.Q,)),
+        }
+        if self.coverP_ is not None:
+            services['coverP_'] = (self.cover.run, ())
+        for attr,(target,args) in services.items():
+            proc = getattr(self,attr)
+            if not proc.is_alive():
+                #CRITICAL also pushes a LINE notify
+                self.logger.critical(f'Service process {attr} (pid={proc.pid}, exitcode={proc.exitcode}) died! restarting it')
+                newproc = Process(target=target, args=args, name=attr)
+                newproc.start()
+                setattr(self,attr,newproc)
 
     def serve_forever(self):
         #connect -> handshake -> session -> close -> reconnect
@@ -961,7 +982,10 @@ if __name__ == "__main__":
     ToLineNotify(beamline='TPS07A',msg="EPICS DHS Started",nosound=True)
     print('*************************')
 
-    p.join()
+    #supervise: respawn dead service processes while the DCSS loop runs
+    while p.is_alive():
+        time.sleep(2)
+        EpicsDHS.checkservers()
 
     print ("end")
     ToLineNotify(beamline='TPS07A',msg="EPICS DHS Closed",nosound=True)

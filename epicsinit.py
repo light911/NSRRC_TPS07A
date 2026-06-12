@@ -378,8 +378,16 @@ class epicsdev():
                     self.tempcommand=[]
             elif value[6] != "null":
                 #['Auto Centring', '8', '2021-10-07 12:33:29.267', '2021-10-07 12:34:04.733', 'true', 'null', '1']
-                #['Auto Centring' '8' '2021-10-07 12:39:31.811' '2021-10-07 12:39:42.288','null' 'Invalid position: -173375007607934.7200' '-1'] 
+                #['Auto Centring' '8' '2021-10-07 12:39:31.811' '2021-10-07 12:39:42.288','null' 'Invalid position: -173375007607934.7200' '-1']
                 self.md3TaskBusy = False
+                #task ended with error: still replay deferred commands so a
+                #queued zoom/motor move is not silently dropped
+                if len(self.tempcommand) >0:
+                    time.sleep(0.1)
+                    for command in self.tempcommand:
+                         self.logger.warning(f"Recover {command}(pervious sicne MD3 busy)")
+                         self.epicsQ.put(command)
+                    self.tempcommand=[]
             else:
                 self.md3TaskBusy =True
                 
@@ -810,13 +818,21 @@ class epicsdev():
                                 value = int(float(command[2]))
                             else:
                                 value = command[2]
-                            ok = self.caput(PVname,value)
-                            if ok:
-                                pass
+                            if self.md3TaskBusy and str(PVname).startswith('07a:md3'):
+                                #MD3 ignores writes while a task runs (zoom never
+                                #reports done) and putting to a busy MD3 has
+                                #crashed libca: defer and replay when the task
+                                #finishes, same as the md3 motors above
+                                self.tempcommand.append(command)
+                                self.logger.warning(f"{command} has paused sicne MD3 busy")
                             else:
-                                #wait md3 ready?
-                                self.waitMD3Ready(timeout=15)
-                                self.caput(PVname,value)
+                                ok = self.caput(PVname,value)
+                                if ok:
+                                    pass
+                                else:
+                                    #wait md3 ready?
+                                    self.waitMD3Ready(timeout=15)
+                                    self.caput(PVname,value)
 
                             # p = CAProcess(target=self.oldCAPUT, args=(PVname,float(command[2]),))
                             # p.start()
