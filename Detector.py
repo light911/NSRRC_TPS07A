@@ -608,7 +608,8 @@ class Eiger2X16M(Detector):
             pass
         args=(False,roi,False,False,None,collectype,)
         
-        detectorsetupP = Process(target=self.basesetup,args=args,name='Detector_Setup')
+        #CAProcess: child uses CA, must not inherit the parent's dead libca state
+        detectorsetupP = CAProcess(target=self.basesetup,args=args,name='Detector_Setup')
         detectorsetupP.start()
         self.logger.debug('start to setup_beamsize_cover_distance')
         self.setup_beamsize_cover_distance(False,False,False,False,False)
@@ -662,12 +663,18 @@ class Eiger2X16M(Detector):
         self.sendQ.put(toDcsscommand)
         self.logger.warning(f'detector_collect_shutterless take {time.time()-t0} sec')
         self.logger.debug('start to updatefilestring check')
-        monP = Process(target=self.updatefilestring,name='Monfile')
+        monP = CAProcess(target=self.updatefilestring,name='Monfile')
         monP.start()
         # command = ('operdone',) + command
         # self.sendQ.put(command)
     def SSXCollect(self,command):
         self.logger.info(f'Got SSXCollect OP :{command}')
+        # #htos_set_string_completed strname status arguments
+        # echo = "htos_set_string_completed " + str(command[1]) + " " + str(command[4]) + " " + str(command[2])
+        # echo = "htos_set_string_completed " + "tps_current" + " " + "normal" + " 500"
+        # command 0:command 1:motorname 2:position 3:type 4:state
+        toDcsscommand = ('updatevalue','ssx_state','setup','string','normal')
+        self.sendQ.put(toDcsscommand)
         # parlist = []
         # filename = self.SSX_Prefix.text() 2
         # directory = self.SSX_Directory.text() 3
@@ -699,7 +706,7 @@ class Eiger2X16M(Detector):
         # SSX_PeakSearch_min_snr_peak_pix = self.SSX_PeakSearch_min_snr_peak_pix.value()    29
         # SSX_PeakSearch_min_sig = self.SSX_PeakSearch_min_sig.value()  30
         # runIndex = int(105) #105 for SSX collect ,view1 =101 view2 =102   31
-        
+        # SSXautoreapeat = int(self.SSX_AutoRepeat.isChecked())  32
         self.operationHandle = command[1]
         self.filename = command[2]
         self.directory = command[3]
@@ -731,11 +738,13 @@ class Eiger2X16M(Detector):
         SSX_PeakSearch_min_snr_peak_pix = float(command[29])
         SSX_PeakSearch_min_sig = float(command[30])
         self.runIndex = command[31]#for raster =101 or102 105 fir SSX
+        self.SSXautoreapeat = int(command[32]) #we desicde not use it for now, control by GUI
         #setup MD3 mode
         #move md3 phase inadvance,we will wait at detectorsetup again
         # md3phase = float(self.ca.caget(self.Par['collect']['md3modePV']))
         md3phase = self.ca.caget(self.Par['collect']['md3modePV'],format=str)
-        if md3phase != 'DataCollection\n': 
+        #strip(): the old CLI caget returned 'DataCollection\n', pyepics is clean
+        if str(md3phase).strip() != 'DataCollection':
             self.ca.caput(self.Par['collect']['md3modePV'],2)
             time.sleep(0.1)
             pass
@@ -749,15 +758,25 @@ class Eiger2X16M(Detector):
         laser_timing_arrayPV = self.Par['collect']['laser_timing_arrayPV']
         self.ca.caput(post_tri_timePV,0)
         self.ca.caput(shutter_delayPV,0)
-        self.ca.caput(detector_delayPV,0)#TODO detector tri delay 10ms(10000) for SSX, but laser should delay 10ms as will, now it trigger the same time with shutter,workround set to 0ms
+        self.ca.caput(detector_delayPV,10000)#TODO detector tri delay 10ms(10000) for SSX, but laser should delay 10ms as will.
         if self.TotalFrames == 0:
             self.TotalFrames = 10800000
         _oscillationTime = self.TotalFrames * self.exposureTime * 1e3 + 10#sec to ms
         
         self.ca.caput(SSXtrigerwidthPV,_oscillationTime)
         self.ca.caput(laser_init_statePV,LaserInitialState)
-        laser_timing_array = [SSX_LassrTimeArray_1*1000000,SSX_LassrTimeArray_2*1000000,
-                             0,0,0,0,0,0,0,0]#sec to usec
+        #modify SSX Laser timing to compensate the delay of shutter and detector
+        if LaserInitialState == 1:
+            #initial state is on, add 10ms at SSX_LassrTimeArray_1 to tri laser with detector
+            self.ca.caput(laser_init_statePV,0)#change to 0 to tri laser at the beginning of collect, but add 10ms delay for laser to tri with detector and shutter
+            SSX_LassrTimeArray_2 = SSX_LassrTimeArray_2 - 0.01
+            laser_timing_array = [0.01*1000000,SSX_LassrTimeArray_1*1000000,SSX_LassrTimeArray_2*1000000,
+                                0,0,0,0,0,0,0]#sec to usec
+        else:
+            #initial state is off, tri laser at the beginning of collect, but add 10ms delay for laser to tri with detector and shutter
+            #TODO
+            laser_timing_array = [SSX_LassrTimeArray_1*1000000,SSX_LassrTimeArray_2*1000000,
+                                0,0,0,0,0,0,0,0]#sec to usec
         self.ca.caput(laser_timing_arrayPV,laser_timing_array)
         #setup peaksearch server
         
@@ -779,7 +798,8 @@ class Eiger2X16M(Detector):
         # raster,roi=False,beamwithdis,movebeasize=True,detconn=None,collectype='test image')
         args=(False,roi,False,False,None,collectype,)
 
-        detectorsetupP = Process(target=self.basesetup,args=args,name='Detector_Setup')
+        #CAProcess: child uses CA, must not inherit the parent's dead libca state
+        detectorsetupP = CAProcess(target=self.basesetup,args=args,name='Detector_Setup')
         detectorsetupP.start()
         self.logger.debug('start to setup_cover_distance (not 2nd slit)')
         # raster=False,roi=False,beamwithdis=False,movebeasize=True,bypassslit):
@@ -802,14 +822,17 @@ class Eiger2X16M(Detector):
 
         #before we open shutter make sure mode again
         md3phase = self.ca.caget(self.Par['collect']['md3modePV'],format=str)
-        if md3phase != 'DataCollection\n': 
+        #strip(): the old CLI caget returned 'DataCollection\n', pyepics is clean
+        if str(md3phase).strip() != 'DataCollection':
             self.logger.critical(f'SSX Collect Fail: MD3 not in DataCollection mode')
             pass
         else:
             #trigger collect
+            toDcsscommand = ('updatevalue','ssx_state','collecting','string','normal')
+            self.sendQ.put(toDcsscommand)
             self.ca.caput(SSXtriggerPV,1)
             # finish data collect if detector back to idle
-            monP = Process(target=self.check_SSX_done,name='check_SSX_done')
+            monP = CAProcess(target=self.check_SSX_done,name='check_SSX_done')
             monP.start()
 
         toDcsscommand = ('operdone',command[0],self.operationHandle)
@@ -819,6 +842,8 @@ class Eiger2X16M(Detector):
     def SSXStopCollect(self,command):
         self.operationHandle = command[1]
         self.logger.info(f'Got SSXStopCollect OP :{command}')
+        toDcsscommand = ('updatevalue','ssx_state','stop','string','normal')
+        self.sendQ.put(toDcsscommand)
         #stop detector frist
         self.logger.info(f'try to reset detector')
         state = self.det.detectorStatus('state')
@@ -905,9 +930,13 @@ class Eiger2X16M(Detector):
         except Exception as e:
             self.logger.critical(f'Error on monitor DCU file, error{e}')
         self.logger.info(f'All data in detector is downloaded: file count :{currentfile}')
-
+        # if self.SSXautoreapeat == 1:
+        #     pass
+        # else:
+                
         self.checkandretryCoverProcess(closecoverP,'close')
-
+        toDcsscommand = ('updatevalue','ssx_state','done','string','normal')
+        self.sendQ.put(toDcsscommand)
         toDcsscommand = 'htos_set_string_completed system_status normal Ready black #00a040'
         self.sendQ.put(toDcsscommand)
         self.logger.info(f'Done for check_SSX_done ({command}) ')
@@ -958,7 +987,8 @@ class Eiger2X16M(Detector):
         # raster=False,roi=False,beamwithdis=False,movebeasize=True
         args=(False,self.roi,True,True,None,collectype,)
         
-        detectorsetupP = Process(target=self.basesetup,args=args,name='Detector_Setup')
+        #CAProcess: child uses CA, must not inherit the parent's dead libca state
+        detectorsetupP = CAProcess(target=self.basesetup,args=args,name='Detector_Setup')
         detectorsetupP.start()
         self.setup_beamsize_cover_distance(False,self.roi,True,True,False)
         _oscillationTime = self.TotalFrames * self.exposureTime
@@ -1015,7 +1045,7 @@ class Eiger2X16M(Detector):
             self.logger.critical(f"Caput {PVcollect} value {value} Fail!")
         
         self.logger.debug('start to updatefilestring check')
-        monP = Process(target=self.updatefilestring,name='Monfile')
+        monP = CAProcess(target=self.updatefilestring,name='Monfile')
         monP.start()
 
         time.sleep(0.5)
@@ -1204,7 +1234,8 @@ class Eiger2X16M(Detector):
         #move md3 phase inadvance
         # md3phase = float(self.ca.caget(self.Par['collect']['md3modePV']))
         md3phase = self.ca.caget(self.Par['collect']['md3modePV'],format=str)
-        if md3phase != 'DataCollection\n': 
+        #strip(): the old CLI caget returned 'DataCollection\n', pyepics is clean
+        if str(md3phase).strip() != 'DataCollection':
             self.ca.caput(self.Par['collect']['md3modePV'],2)
             time.sleep(0.1)
             pass
@@ -1218,7 +1249,8 @@ class Eiger2X16M(Detector):
         # raster=False,roi=False,beamwithdis=False,movebeasize=True
         args=(True,self.roi,True,True,None,collectype,)
         
-        detectorsetupP = Process(target=self.basesetup,args=args,name='Detector_Setup')
+        #CAProcess: child uses CA, must not inherit the parent's dead libca state
+        detectorsetupP = CAProcess(target=self.basesetup,args=args,name='Detector_Setup')
         detectorsetupP.start()
         self.setup_beamsize_cover_distance(True,self.roi,True,True,False)
         # _oscillationTime = self.TotalFrames * self.exposureTime
@@ -1229,7 +1261,7 @@ class Eiger2X16M(Detector):
         
         
         self.logger.debug('start to updatefilestring check')
-        monP = Process(target=self.updatefilestring,name='Monfile')
+        monP = CAProcess(target=self.updatefilestring,name='Monfile')
         monP.start()
         #make sure cover is opend
         self.MoveBeamsize.wait_opencover(True)
@@ -2161,7 +2193,7 @@ class Eiger2X16M(Detector):
             a = list(args)
             a[-2] = self.det
             b = tuple(a)
-            detectorP = Process(target=self.basesetup,args=b,name='Detector_Setup')
+            detectorP = CAProcess(target=self.basesetup,args=b,name='Detector_Setup')
             detectorP.start()
             # 2nd try short timeout
             self.checkandretryDetectorSetupProcess(detectorP,args,timeout=5)
