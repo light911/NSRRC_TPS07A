@@ -1,7 +1,9 @@
 from multiprocessing import Process, Queue, Manager
 import multiprocessing as mp
 import logsetup,time,subprocess
+import threading
 from epics import caput,CAProcess,caget
+from epics import PV as EpicsPV
 import json,re
 import Config,numpy
 
@@ -27,6 +29,11 @@ import Config,numpy
 # DBR_STRING 	dbr_string_t    	40 character string
 
 class myepics():
+    '''
+    caget/caput with the same call convention as the old CLI-subprocess
+    version, but backed by pyepics with a per-process PV cache: the channel
+    is created once and reused, no fork + CA reconnect for every access.
+    '''
     def __init__(self,logger=None) -> None:
 
         self.Par = Config.Par
@@ -34,8 +41,21 @@ class myepics():
             self.logger = logsetup.getloger2('myepics',LOG_FILENAME='/home/blctl/Desktop/log/workround.txt',level = self.Par['Debuglevel'],bypassline=False)
         else:
             self.logger = logger
-        
-        pass
+        #lazy PV cache: nothing connects before first use, so an instance
+        #created before fork() is still safe in the child process
+        self._pvcache = {}
+        self._pvlock = threading.Lock()
+
+    def _pv(self,name):
+        name = str(name)
+        with self._pvlock:
+            pv = self._pvcache.get(name)
+            if pv is None:
+                pv = EpicsPV(name)
+                self._pvcache[name] = pv
+        if not pv.connected:
+            pv.wait_for_connection(timeout=2)
+        return pv
     def cainfo(self,PV):
         t0=time.time()
         command = ['cainfo',str(PV)]
@@ -65,163 +85,73 @@ class myepics():
 
     def caput(self,PV,value,format=str,wait=False,timeout=1,debug=True):
         t0 = time.time()
-        # self.logger.warning(f'caput PV={PV},value={value}')
-        command = ['caput','-w',f'{timeout}']
-        if wait:
-            command.append('-c')
-        if type(PV) is list and type(value) is not list:
-            # self.logger.critical(f"if PV is a list then value must a list!")
+        if type(PV) is list:
             self.logger.critical(f"ca.caput unsupport muti put!")
             return None
-        elif type(PV) is not list and type(value) is list:
-            #single PV, array value
-            command.append('-a')
-            
-            command.append(str(PV))
-            command.append(f'{len(value)}')
-            
-            for item in value:
-                command.append(str(format(item)))
-        elif type(PV) is not list and type(value) is not list:
-            #single PV single value
-            command.append(str(PV))
-            command.append(str(format(value)))
-        elif type(PV) is list and type(value) is list:
-            #muti PV for muti value
-            # ziplist = zip(PV,value)
-            self.logger.critical(f"ca.caput unsupport muti put unsupport!")
-            return None
-        else:
-            self.logger.critical(f"something wrong with {PV=},{value=}")
-            return None
-
-        ans = subprocess.run(command,capture_output=True)
-        if debug:     
-            self.logger.debug(f'caput result={ans}')
-        result = ans.stdout.decode('utf-8')
         try:
-            error = ans.stderr.decode('utf-8')
-        except:
-            error = ans.stderr
-        
-        if error == '':
-            self.logger.info(f'caput PV={PV},value={value} OK,wait={wait} take time {time.time()-t0}')
-            return result
-        else:
-            self.logger.warning(f"Caput {PV} value {value} Fail={error}, take time {time.time()-t0}")
-            # return False
+            if isinstance(value,list):
+                if format == int or format == float:
+                    value = [format(item) for item in value]
+            elif format == int or format == float:
+                value = format(value)
+            elif isinstance(value,str):
+                #the caput CLI converted numeric strings itself, keep that
+                #('__EMPTY__' and other real strings stay strings)
+                try:
+                    value = float(value)
+                except ValueError:
+                    pass
+            pv = self._pv(PV)
+            state = pv.put(value, wait=wait, timeout=timeout)
+        except Exception as e:
+            self.logger.warning(f"Caput {PV} value {value} Fail={e}, take time {time.time()-t0}")
             return None
+        if state == 1:
+            if debug:
+                self.logger.info(f'caput PV={PV},value={value} OK,wait={wait} take time {time.time()-t0}')
+            return '1'
+        self.logger.warning(f"Caput {PV} value {value} Fail,state={state}, take time {time.time()-t0}")
+        return None
 
     def caget(self,PV,format='Auto',array=False,debug=False):
         t0 = time.time()
-        if format == int or format == float:
-            command = ['caget','-ntF_']
-        else:
-            command = ['caget','-stF_']
-
-        if type(PV) is list:
-            for item in PV:
-                command.append(str(item))
-        else:
-            command.append(str(PV))
-
-        # command = ['caget','-stF_',str(PV)]
-        ans = subprocess.run(command,capture_output=True)
-        result = ans.stdout.decode('utf-8')
         try:
-            error = ans.stderr.decode('utf-8')
-        except:
-            error = ans.stderr
-        if debug:
-            self.logger.debug(f'{ans},result={result},error={error}')
-        
-        if type(PV) is list:
-            resultarray = result.split()
-        
-        if error == '':
-            # auto select format
-            if format == 'Auto':
-                if type(PV) is list:
-                    info = self.cainfo(str(PV[0]))
-                else:    
-                    info = self.cainfo(str(PV))
-                # print(info['PVtype'])
-                if info['Num'] > 1:
-                    array = True
-                if info['PVtype'] == 'DBR_CHAR' or info['PVtype'] == 'DBR_STRING':
-                    format = str
-                elif info['PVtype'] == 'DBR_INT' or info['PVtype'] == 'DBR_SHORT' or info['PVtype'] == 'DBR_ENUM' or info['PVtype'] == 'DBR_LONG':
-                    format = int
-                else:
-                    format = float
-            
             if type(PV) is list:
-                resultarray = result.split()
-                
-                data = []
-                for item in resultarray:
-                    tempdata = self.returndata(array,item,format)
-                    data.append(tempdata)
+                data = [self._caget_one(item,format,array) for item in PV]
             else:
-                data = self.returndata(array,result,format)
-
-
-            if debug:
-                self.logger.debug(f'caget {PV} ok, take time {time.time()-t0}')
-            return data
-            
-        else:
-            self.logger.warning(f"caget {PV} fail, take time {time.time()-t0}")
-            # return None
+                data = self._caget_one(PV,format,array)
+        except Exception as e:
+            self.logger.warning(f"caget {PV} fail={e}, take time {time.time()-t0}")
             return None
-
-    def returndata(self,array,result,format):
-        if array:
-            result_split = result.split("_")
-            if format == str:
-                data=[]
-                for i,item in enumerate(result_split):
-                    if i == 0:
-                        pass
-                    elif item == '':
-                        pass
-                    elif item == '\n':
-                        pass
-                    else:
-                        data.append(item.rstrip())
-            elif format == int:
-                data=[]
-                for i,item in enumerate(result_split):
-                    if i == 0:
-                        pass
-                    elif item == '':
-                        pass
-                    elif item == '\n':
-                        pass
-                    else:
-                        data.append(int(item))
-                data = numpy.array(data)
-            elif format == float:
-                data=[]
-                for i,item in enumerate(result_split):
-                    if i == 0:
-                        pass
-                    elif item == '':
-                        pass
-                    elif item == '\n':
-                        pass
-                    else:
-                        try:
-                            data.append(float(item))
-                        except:
-                            
-                            pass
-                data = numpy.array(data)
-            else:
-                data = None
-        else:
-            data = format(result)
+        if debug:
+            self.logger.debug(f'caget {PV} = {data}, take time {time.time()-t0}')
         return data
+
+    def _caget_one(self,name,format,array=False):
+        pv = self._pv(name)
+        if format == str and not array:
+            value = pv.get(as_string=True, timeout=2)
+        else:
+            value = pv.get(timeout=2)
+        if value is None:
+            raise RuntimeError(f'PV {name} no response')
+        if array:
+            value = numpy.atleast_1d(value)
+            if format == int:
+                return value.astype(int)
+            if format == float:
+                return value.astype(float)
+            if format == str:
+                return [str(item) for item in value]
+            return value
+        if format == int:
+            return int(value)
+        if format == float:
+            return float(value)
+        if format == str:
+            return str(value)
+        #'Auto': native pyepics value (waveforms come back as numpy arrays)
+        return value
 class workroundmd3moving():
     def __init__(self,Q = None,logger=None) -> None:
         self.Par = Config.Par

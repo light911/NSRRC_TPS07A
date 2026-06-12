@@ -16,6 +16,7 @@ import logsetup
   
 from multiprocessing import  Queue,Process
 import queue
+import threading
 # from PyQt5.QtCore import QObject,QThread,pyqtSignal,pyqtSlot,QMutex,QMutexLocker
 import subprocess
 from DetectorCoverV2 import MOXA
@@ -356,11 +357,10 @@ class epicsdev():
         elif dcsstype == "quickmotor" :
             if guiname == "camera_zoom":
                 #delay report , make sure zoom_scale_y zoom_scale_x report frist
-                delaytime = 0.1
+                #Timer thread instead of fork: forking the CA process per zoom
+                #change is expensive and unsafe with libca
                 command = ('endmove',dcssname,value,'normal')
-                report = Process(target=self.delaysendQcommand , args=(delaytime,command,))
-                report.start()
-                # self.sendQ.put(('endmove',dcssname,value,'normal'))
+                threading.Timer(0.1, self.sendQ.put, args=(command,)).start()
             else:
             # time.sleep(0.1)   
                 self.sendQ.put(('endmove',dcssname,value,'normal'))
@@ -445,8 +445,9 @@ class epicsdev():
                     # closecoverP.join()
                     self.cover.askforAction('close')
                     self.sendQ.put(('operdone','startScan4DEx',opid,'normal'))
-                elif value[0] == 'Multi Axis Scan' and value[6] == "1":
-                    #todo startScan4DEx fail??
+                elif value[0] == 'Multi Axis Scan' and value[6] == "-1":
+                    #startScan4DEx fail (was "1", dead branch shadowed by the
+                    #success case above)
                     self.logger.info('close cover after startScan4DEx ')
                     # closecoverP = Process(target=self.cover.CloseCover,name='stop_close_cover')
                     # closecoverP = Process(target=self.cover.askforAction,args=('close',),name='stop_close_cover')
@@ -551,7 +552,7 @@ class epicsdev():
         self.logger.info('Clear Epics callback')
         for item in self.epicslist:
             if self.epicslist[item]["camon"] == True:
-                self.epicslist[item]["PVname"].disconnect()
+                self.epicslist[item]["PVID"].disconnect()
     
     def clear_epics_Motor_callback(self):
         self.logger.info('Clear Epics Motor callback')
@@ -1013,7 +1014,7 @@ class epicsdev():
                     self.caputarray(PVname,value)
                 elif command[0] == "centerLoop" :
                     opid= command[1]
-                    pcenter = Process(target=self.centerLoop , args=(opid,))
+                    pcenter = threading.Thread(target=self.centerLoop , args=(opid,), daemon=True)
                     pcenter.start()
 
                 elif command[0] == "stoh_abort_all" :
@@ -1222,42 +1223,37 @@ class epicsdev():
         time.sleep(0.1)
         
     def caput(self,PV,value):
+        #pyepics instead of caput CLI subprocess: the channel is created once
+        #and cached, no fork + CA reconnect per put
         self.logger.warning(f'caput PV={PV},value={value}')
-        command = ['caput',str(PV),str(value)]
-        ans = subprocess.run(command,capture_output=True)
-        result = ans.stdout.decode('utf-8')
+        if isinstance(value,str):
+            #the caput CLI converted numeric strings itself, keep that behavior
+            #(string values like '__EMPTY__' or 'CRYSTAL_CENTRING' stay strings)
+            try:
+                value = float(value)
+            except ValueError:
+                pass
         try:
-            error = ans.stderr.decode('utf-8')       
-        except:
-            error = ans.stderr
-        self.logger.debug(f'{ans}')
-        if error == '':
-            print(f'caput PV={PV},value={value} OK!')
-            return True
-        else:
-            self.logger.critical(f"Caput {PV} value {value} Fail={error}")
+            state = caput(str(PV), value, wait=False, timeout=5)
+        except Exception as e:
+            self.logger.critical(f"Caput {PV} value {value} Fail={e}")
             return False
-        # print(ans)
+        if state == 1:
+            return True
+        self.logger.critical(f"Caput {PV} value {value} Fail,state={state}")
+        return False
+
     def caputarray(self,PV,array):
         self.logger.warning(f'caput PV={PV},value={array}')
-        # caput -a 07a:md3:startRasterScanEx 14 1 0.2 0.1 90 -1.51537 -0.00978 1.45155 0.57271 10 10 0.1 1 1 1
-        arraylen = len(array)
-        command1 = ['caput','-a',str(PV),str(arraylen)]
-        srtarray =[]
-        for item in array:
-            srtarray.append(str(item))
-
-        command = command1 + srtarray
-        ans = subprocess.run(command,capture_output=True)
-        result = ans.stdout.decode('utf-8')
-        error = ans.stderr.decode('utf-8')       
-        self.logger.debug(f'{ans}')
-        if error == '':
-            print(f'caput PV={PV},value={array} OK!')
-            return True
-        else:
-            self.logger.critical(f"Caput {PV} value {array} Fail={error}")
+        try:
+            state = caput(str(PV), array, wait=False, timeout=5)
+        except Exception as e:
+            self.logger.critical(f"Caput {PV} value {array} Fail={e}")
             return False
+        if state == 1:
+            return True
+        self.logger.critical(f"Caput {PV} value {array} Fail,state={state}")
+        return False
     #Detector distance interolck
     def updateMD3Ylimits(self,usingVAL=False) :
         #usingVAL = True for just start moving
