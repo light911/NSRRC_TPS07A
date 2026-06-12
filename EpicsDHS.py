@@ -12,6 +12,7 @@ import socket,time,signal,sys,os,subprocess
 # import multiprocessing as mp
 from multiprocessing import Process, Queue, Manager
 import multiprocessing as mp
+from threading import Thread
 from epicsinit import epicsdev
 import logsetup
 # import epicsfile
@@ -317,16 +318,26 @@ class DCSDHS():
         # self.logger.warning(f"fileindex:{fileindex},nimages:{nimages},Par:{Par}")
         
     def reciver(self,Par,Q,tcpclient) :
-        #recive message from dcss
+        #recive message from dcss, decode it and dispatch to a handler
         reciveQ = Q['Queue']['reciveQ']
         sendQ = Q['Queue']['sendQ']
-        epicsQ = Q['Queue']['epicsQ']
-        ContrlQ = Q['Queue']['ControlQ']
         DetctorQ = Q['Queue']['DetectorQ']
-        AttenQ = Q['Queue']['attenQ']
-        CvlsQ = Q['Queue']['CVLSQ']
         msg = ""
-        abort_timeer = time.time()
+        self._abort_timer = time.time()
+        handlers = {
+            "stoh_abort_all":             self._cmd_abort_all,
+            "stoh_start_motor_move":      self._cmd_start_motor_move,
+            "stoh_set_shutter_state":     self._cmd_set_shutter_state,
+            "stoh_start_oscillation":     self._cmd_start_oscillation,
+            "stoh_register_operation":    self._cmd_ignore,
+            "stoh_start_operation":       self._cmd_start_operation,
+            "stoh_read_ion_chambers":     self._cmd_read_ion_chambers,
+            "stoh_register_string":       self._cmd_register_string,
+            "stoh_register_real_motor":   self._cmd_register_real_motor,
+            "stoh_configure_real_motor":  self._cmd_ignore,
+            "stoh_register_shutter":      self._cmd_register_shutter,
+            "stoh_register_pseudo_motor": self._cmd_register_pseudo_motor,
+        }
         while True:
             #check command
             try:
@@ -341,7 +352,6 @@ class DCSDHS():
             #recive data
             try:
                 data = self.client.recv(40960)
-#                print(f'data:{data}')
             except socket.timeout:
                 # self.logger.debug ("socket.timeout")
                 pass
@@ -350,17 +360,15 @@ class DCSDHS():
                 # Something else happened, handle error, exit, etc.
                 self.logger.warning ("Error for socket error")
                 sendQ.put("exit")
-                # epicsQ.put("exit")
                 DetctorQ.put("exit")
                 break
             except Exception as e:
-                self.logger.warning ("Error on socket: {e}")
-                
+                self.logger.warning (f"Error on socket: {e}")
+
             else:
                 if len(data) == 0:
                     self.logger.warning ("orderly shutdown on DCSS server end")
                     sendQ.put("exit")
-                    # epicsQ.put("exit")
                     DetctorQ.put("exit")
                     break
                 else:
@@ -370,331 +378,183 @@ class DCSDHS():
                     msg = msg + data.decode()
                     index = msg.find('\x00')
                     while index != -1:
-                        
-#                        print(f'msg:{msg.encode()}')
-#                        print(f'index:{index}')
                         processdata=msg[0:index]
-                        
                         msg = msg [index+1:]
-                        # print(f'new msg:{msg}')
-
                         command = self.processrecvice(processdata).split(" ")
                         self.logger.debug(f"Got message from dcss : {command}")
-                        if command[0] == "stoh_abort_all" and time.time()-abort_timeer >5:
-                            abort_timeer = time.time()
-                            self.logger.warning(f"Got {command}")
-                            epicsQ.put(("stoh_abort_all",''))
-                            DetctorQ.put(("stoh_abort_all",''))
-                            AttenQ.put(("stoh_abort_all",''))
-                            # self.logger.warning(f"debug {self.Par['operationRecord']=}")
-                            for item in self.Par['operationRecord']:
-                                operdoneCommand = ['operdone']
-                                #note: do not name the loop variable 'command',
-                                #it would overwrite the dcss command being processed
-                                for op_field in item:
-                                    operdoneCommand.append(op_field)
-                                self.logger.info(f"send {item} for opdone")
-                                sendQ.put(tuple(operdoneCommand))#('operdone',command[0],command[1],command[3])
-                            toDcsscommand = 'htos_set_string_completed system_status normal {Abort!} black #d0d000'
-                            sendQ.put(toDcsscommand)
-                            pass
-                        elif command[0] == "stoh_start_motor_move":
-                            #"stoh_start_motor_move motorName destination
-                            
-                            #check motor state
-                            if command[1] == 'camera_zoom':
-                                epicsQ.put(("stoh_start_motor_move",command[1],command[2]))
-                            elif command[1] == 'attenuation':
-                                AttenQ.put(("stoh_start_motor_move",command[1],command[2]))
-                            elif command[1] == 'FluoDetectorBack':
-                                #todo
-                                PV = '07a:md3:FluoDetectorIsBack'
-                                # state = self.pipecaput(PV,int(float(command[2])))
-                                state = self.ca.caput(PV,int(float(command[2])))
-                                
-                                # if state != 1:
-                                #     self.logger.critical(f"Caput {PV} value {command[2]} Fail!")
-
-                                sendQ.put(('endmove',command[1],command[2],'normal'), block=False)
-                                pass
-                            elif command[1] == 'robotmove':
-                                pass#fake one
-                                sendQ.put(('endmove',command[1],command[2],'normal'), block=False)
-                            else:
-                                try:
-                                    GUIname, = self.FindEpicsMotorInfo(command[1],'dcssname','GUIname')
-                                    MoveDone = self.Par[f'EPICS.{GUIname}.DMOV']
-                                    Pos = self.Par[f'EPICS.{GUIname}.RBV']
-                                    TargetPos = self.Par[f'EPICS.{GUIname}.VAL']
-                                    if MoveDone:
-                                        # not move
-                                        epicsQ.put(("stoh_start_motor_move",command[1],command[2]),timeout=1)
-                                        time.sleep(0.05)
-                                    else:
-                                        sendQ.put(('warning',f"{GUIname} is already moving"))
-                                        
-                                except :
-                                    #todo if not inthe list
-                                    self.logger.warning(f"command : {command} has problem")
-                                    self.logger.debug(f"GUIname = {GUIname},Par: {self.Par} ")
-                                    epicsQ.put(("stoh_start_motor_move",command[1],command[2]),timeout=1)
-                            
-                            
-                            
-                            # epicsQ.put(("stoh_start_motor_move",command[1],command[2]))
-                            
-                            pass
-                        elif command[0] == "stoh_set_shutter_state":
-                            #stoh_set_shutter_state shutterName state (state is open or closed.)
-                            epicsQ.put((command[0],command[1],command[2]))
-                            pass
-                        elif command[0] == "stoh_start_oscillation":
-                            #stoh_start_oscillation gonio_phi shutter 3.0 1.0 45.000018
-                            #stoh_start_oscillation motorName shutter deltaMotor deltaTime startAngle
-                            self.logger.info(f'Ask MD3 to start oscillation')
-                            p = Process(target=self.start_oscillation, args=(self.Par,self.Q,command))
-                            p.start()
-                            pass
-                        elif command[0] == "stoh_register_operation":
-                            
-                            pass
-                        elif command[0] == "stoh_start_operation":
-                            #stoh_start_operation operationName operationHandle [arg1 [arg2 [arg3 [...]]]]
-                            #operationName is the name of the operation to be started.
-                            #operationHandle is a unique handle currently constructed by calling the create_operation_handle procedure in BLU-ICE. This currently creates a handle in the following format:
-                            #clientNumber.operationCounter
-                            #where clientNumber is the number provided to the BLU-ICE by DCSS via the stog_login_complete message. DCSS will reject an operation message if the clientNumber does not match the client. The operationCounter is a number that the client should increment with each new operation that is started.
-                            #arg1 [arg2 [arg3 [...]]] is the list of arguments that should be passed to the operation. It is recommended that the list of arguments continue to follow the general format of the DCS message structure (space separated tokens). However, this requirement can only be enforced by the writer of the operation handlers.
-
-                            unknownFlag = False
-                            pass
-                            if command[1] == "detector_collect_image" :
-                                command.pop(0)
-                                pass
-                            elif command[1] == "detector_collect_shutterless" :
-                                command.pop(0)
-                                # print(command)
-                                DetctorQ.put(tuple(command))
-                            elif command[1] == "detector_ratser_setup" :
-                                command.pop(0)
-                                # print(command)
-                                DetctorQ.put(tuple(command))
-                            elif command[1] == "detector_transfer_image" :
-                                command.pop(0)
-                                pass
-                            elif command[1] == "detector_oscillation_ready" :
-                                command.pop(0)
-                                pass
-                            elif command[1] == "detector_stop" :
-                                # ['stoh_start_operation', 'detector_stop', '1.17', '']
-                                command.pop(0)
-                        
-                                DetctorQ.put(tuple(command))
-                                
-                                # command = command[1:-1]
-                                # newcommand = ('operdone',) + tuple(command)
-                                
-                                # sendQ.put(newcommand)
-                            elif command[1] == "detector_reset_run" :
-                                command.pop(0)
-                                pass
-                            elif command[1] == "detector_oscillation_ready" :
-                                command.pop(0)
-                                pass
-                            elif command[1] == "getMD2Motor" :
-                                #bypass it
-                                #['stoh_start_operation', 'getMD2Motor', '1.1', 'CurrentApertureDiameterIndex']
-                                #['stoh_start_operation', 'getMD2Motor', '1.2', 'change_mode']
-                                sendQ.put(('operdone',command[1],command[2],command[3]))
-                                command.pop(0)
-                                 # self.logger.warning(f"operation from dcss : {command}")
-                            elif command[1] == "startRasterScanEx" :
-                                # ['stoh_start_operation', 'startRasterScanEx', '2.5', '1', '0.2', '0.1', '90', '-1.51537', '-0.00978', '1.45155', '0.57271', '10', '10', '0.1', '1', '1', '1']
-                                self.logger.warning(f"startRasterScanEx operation from dcss : {command}")
-                                command.pop(0)
-                                epicsQ.put(tuple(command))
-                            elif command[1] == "startRasterScan" :
-                                # ['stoh_start_operation', 'startRasterScanEx', '2.5', '1', '0.2', '0.1', '90', '-1.51537', '-0.00978', '1.45155', '0.57271', '10', '10', '0.1', '1', '1', '1']
-                                # ['stoh_start_operation', 'startRasterScan', '7.6', '0.05', '-0.2', '2', '5', '0', '269.999792', '0.5', '0', '']
-                                self.logger.warning(f"startRasterScan operation from dcss : {command}")
-                                command.pop(0)
-                                epicsQ.put(tuple(command))
-                            elif command[1] == "startScan4DEx" :
-                                #['stoh_start_operation', 'startScan4DEx', '1.855', '0.00', '1.0', '0.2', '-0.013060', '-1.080313', '-0.027390', '-1.251581', '0.576619', '-0.013060', '-1.017883', '-0.027390', '-1.295141', '0.684219']                                  
-                                self.logger.warning(f"startScan4DEx operation from dcss : {command}")
-                                command.pop(0)
-                                epicsQ.put(tuple(command))
-                            elif command[1] == "centerLoop":
-                                # ['stoh_start_operation', 'centerLoop', '116.2', '']
-                                self.logger.warning(f"centerLoop operation from dcss : {command}")
-                                command.pop(0)
-                                epicsQ.put(tuple(command))                                  
-                                
-                            elif command[1] == "changeBeamSize":
-                                self.logger.warning(f"changeBeamSize operation from dcss : {command}")
-                                command.pop(0)
-                                DetctorQ.put(tuple(command))
-                                pass
-                            elif command[1] == "displayBeamSize":
-                                self.logger.warning(f"displayBeamSize operation from dcss : {command}")
-                                command.pop(0)
-                                DetctorQ.put(tuple(command))
-                                pass
-                            elif command[1] == "overlapBeamImage":
-                                self.logger.warning(f"overlapBeamImage operation from dcss : {command}")
-                                command.pop(0)
-                                DetctorQ.put(tuple(command))
-                                pass
-                            elif command[1] == "mutiPosCollect":
-                                self.logger.warning(f"mutiPosCollect operation from dcss : {command}")
-                                command.pop(0)
-                                DetctorQ.put(tuple(command))
-                                pass
-                            
-                            elif command[1] == "detector_close_cover":
-                                self.logger.warning(f"detector_close_cover operation from dcss : {command}")
-                                command.pop(0)
-                                DetctorQ.put(tuple(command))
-                                pass
-                            elif command[1] == "detector_open_cover":
-                                self.logger.warning(f"detector_open_cover operation from dcss : {command}")
-                                command.pop(0)
-                                DetctorQ.put(tuple(command))
-                                pass
-                            #SSXCollect
-                            elif command[1] == "SSXCollect":
-                                self.logger.warning(f"SSXCollect operation from dcss : {command}")
-                                command.pop(0)
-                                DetctorQ.put(tuple(command))
-                                pass
-                            #SSXStopCollect
-                            elif command[1] == "SSXStopCollect":
-                                self.logger.warning(f"SSXStopCollect operation from dcss : {command}")
-                                command.pop(0)
-                                DetctorQ.put(tuple(command))
-                                pass
-                            #setBackLightColor
-                            elif command[1] == "setBackLightColor":
-                                self.logger.warning(f"setBackLightColor operation from dcss : {command}")
-                                command.pop(0)
-                                CvlsQ.put(tuple(command))
-                                pass
-                            #switchSampleEnvironment
-                            elif command[1] == "switchSampleEnvironment":
-                                self.logger.warning(f"switchSampleEnvironment operation from dcss : {command}")
-                                command.pop(0)
-                                CvlsQ.put(tuple(command))
-                                pass
-                            else:
-                                 self.logger.warning(f"Unkonw operation from dcss : {command}")
-                                 unknownFlag = True
-
-                            if unknownFlag:
-                                pass
-                            else:
-                                #need record operation id for abort return correct state
-                                self.logger.debug(f"Add op {command} to operationRecord")
-                                self.Par['operationRecord'].append(command)
-                                self.logger.debug(f"after add {self.Par['operationRecord'][:]=}")
-
-                        elif command[0] == "stoh_read_ion_chambers":
-                            #stoh_read_ion_chambers time repeat ch1 [ch2 [ch3 [...]]]
-                            AttenQ.put(tuple(command))
-                            pass
-                        elif command[0] == "stoh_register_string":
-                            if command[1] == 'currentBeamsize':
-                                command.pop(0)
-                                DetctorQ.put(tuple(command))
-                            pass
-                        elif command[0] == "stoh_register_real_motor":
-                            #['stoh_register_real_motor', 'detector_z', 'detector_'z] 
-                            #should update current motor state
-                            #if not move report move htos_motor_move_completed and POS(VAL or RBV?
-                            #if moving report htos_motor_move_started with VAL
-                            #note if send move_completed seem will have abort on dcss so goback to update
-                            if command[1] == 'attenuation':
-                                AttenQ.put(("stoh_register_real_motor",command[1]))
-                            elif command[1] == 'attenuation':
-                                pass
-                            else:
-                                
-                                try:
-                                    GUIname, = self.FindEpicsMotorInfo(command[1],'dcssname','GUIname')
-                                    MoveDone = self.Par[f'EPICS.{GUIname}.DMOV']
-                                    Pos = self.Par[f'EPICS.{GUIname}.RBV']
-                                    TargetPos = self.Par[f'EPICS.{GUIname}.VAL']
-                                    # sendQ.put(f'htos_send_configuration {GUIname}')#not in our version
-                                    #  htos_configure_device 
-                                    # stoh_configure_real_motor detector_z EPICS detector_z 400.000000 900.100000 139.000000 78.740000 1000 350 -238 1 1 0 0 0 0 
-                                    sendQ.put(f'htos_configure_device {command[1]}')#not in our version
-                                    sendQ.put(('updatevalue',command[1],Pos,'motor','Normal'))
-                                    if MoveDone:
-                                        # self.logger.warning(f'motor {command[1]} at {Pos}')
-                                        # sendQ.put(('endmove',command[1],Pos,'Normal'))
-                                        # sendQ.put(('updatevalue',command[1],Pos,'motor','Normal'))
-                                        pass
-                                    else:
-                                        # sendQ.put(('updatevalue',command[1],Pos,'motor','Normal'))
-                                        sendQ.put(('startmove',command[1],TargetPos,'motor','Normal'))
-                                except :
-                                    self.logger.warning(f"command : {command} has problem")
-                                    self.logger.debug(f"GUIname = {GUIname},Par: {self.Par} ")
-                            
-
-
-                                
-                            # epicsQ.put((command[0],))
-                            pass
-                        elif command[0] == "stoh_configure_real_motor":
-                            #ex ['stoh_configure_real_motor', 'gonio_phi', 'EPICS', 'gonio_phi', '119.000000', '1000.000000', '-1000.000000', '2500.000000', '325000', '50', '625', '0', '0', '0', '0', '0', '0']
-                            # stoh_configure_real_motor
-                            
-                            # The format of the message is                            
-                            # stoh_configure_real_motor motoName position upperLimit lowerLimit scaleFactor speed acceleration backlash lowerLimitOn upperLimitOn motorLockOn backlashOn reverseOn
-                            # where                            
-                            #     motor is the name of the motor to configure                            
-                            #     position is the scaled position of the motor                            
-                            #     upperLimit is the upper limit for the motor in scaled units                            
-                            #     lowerLimit is the lower limit for the motor in scaled units                            
-                            #     scaleFactor is the scale factor relating scaled units to steps for the motor                            
-                            #     speed is the slew rate for the motor in steps/sec                            
-                            #     acceleration is the acceleration time for the motor in seconds                            
-                            #     backlash	is the backlash amount for the motor in steps                            
-                            #     lowerLimitOn is a boolean (0 or 1) indicating if the lower limit is enabled                            
-                            #     upperLimitOn is a boolean (0 or 1) indicating if the upper limit is enabled                            
-                            #     motorLockOn	is a boolean (0 or 1) indicating if the motor is software locked                            
-                            #     backlashOn is a boolean (0 or 1) indicating if backlash correction is enabled                            
-                            #     reverseOn is a boolean (0 or 1) indicating if the motor direction is reversed                            
-                            # This command requests that the hardware server change the configuration of a real motor. 
-                            pass
-                        
-                        elif command[0] == "stoh_register_shutter":
-                            #['stoh_register_shutter', 'shutter', 'closed', 'shutter\n']
-                            epicsQ.put((command[0],command[1],command[2]))
-                        elif command[0] == "stoh_register_pseudo_motor" :
-                            #stoh_register_pseudo_motor energy standardVirtualMotor
-                            if command[1] == 'attenuation':
-                                AttenQ.put(("stoh_register_pseudo_motor",command[1]))
-                            else:
-                                GUIname, = self.FindEpicsMotorInfo(command[1],'dcssname','GUIname')
-                                MoveDone = self.Par[f'EPICS.{GUIname}.DMOV']
-                                Pos = self.Par[f'EPICS.{GUIname}.RBV']
-                                TargetPos = self.Par[f'EPICS.{GUIname}.VAL']
-                                if command[1] == 'energy':
-                                    Pos = Pos*1000
-                                    TargetPos = TargetPos*1000
-                                    # print(f'Pos={Pos},TargetPos={TargetPos}')
-                                if MoveDone:
-                                    # sendQ.put(('endmove',command[1],Pos,'Normal'))
-                                    sendQ.put(('updatevalue',command[1],Pos,'motor','Normal'))
-                                else:
-                                    sendQ.put(('updatevalue',command[1],Pos,'motor','Normal'))
-                                    sendQ.put(('startmove',command[1],TargetPos,'motor','Normal'))
+                        handler = handlers.get(command[0])
+                        if handler:
+                            handler(command)
                         else:
                             self.logger.warning(f"Unknown command:{command[0]}")
-                            # print(f'Unknown command:{command[0]}')
                         index = msg.find('\x00')
-                    self.logger.debug(f'Remind str = {msg}')    
+                    self.logger.debug(f'Remind str = {msg}')
+
+#dcss command handlers, they run inside the reciver process
+    def _cmd_ignore(self,command):
+        #stoh_register_operation / stoh_configure_real_motor : nothing to do
+        pass
+
+    def _cmd_abort_all(self,command):
+        #dcss may repeat abort, only react once per 5 sec
+        if time.time() - self._abort_timer < 5:
+            return
+        self._abort_timer = time.time()
+        sendQ = self.Q['Queue']['sendQ']
+        self.logger.warning(f"Got {command}")
+        self.Q['Queue']['epicsQ'].put(("stoh_abort_all",''))
+        self.Q['Queue']['DetectorQ'].put(("stoh_abort_all",''))
+        self.Q['Queue']['attenQ'].put(("stoh_abort_all",''))
+        for item in self.Par['operationRecord']:
+            operdoneCommand = ['operdone'] + list(item)
+            self.logger.info(f"send {item} for opdone")
+            sendQ.put(tuple(operdoneCommand))
+        toDcsscommand = 'htos_set_string_completed system_status normal {Abort!} black #d0d000'
+        sendQ.put(toDcsscommand)
+
+    def _cmd_start_motor_move(self,command):
+        #stoh_start_motor_move motorName destination
+        epicsQ = self.Q['Queue']['epicsQ']
+        sendQ = self.Q['Queue']['sendQ']
+        if command[1] == 'camera_zoom':
+            epicsQ.put(("stoh_start_motor_move",command[1],command[2]))
+        elif command[1] == 'attenuation':
+            self.Q['Queue']['attenQ'].put(("stoh_start_motor_move",command[1],command[2]))
+        elif command[1] == 'FluoDetectorBack':
+            PV = '07a:md3:FluoDetectorIsBack'
+            state = self.ca.caput(PV,int(float(command[2])))
+            sendQ.put(('endmove',command[1],command[2],'normal'), block=False)
+        elif command[1] == 'robotmove':
+            #fake one
+            sendQ.put(('endmove',command[1],command[2],'normal'), block=False)
+        else:
+            GUIname = None
+            try:
+                GUIname, = self.FindEpicsMotorInfo(command[1],'dcssname','GUIname')
+                MoveDone = self.Par[f'EPICS.{GUIname}.DMOV']
+                if MoveDone:
+                    # not move
+                    epicsQ.put(("stoh_start_motor_move",command[1],command[2]),timeout=1)
+                    time.sleep(0.05)
+                else:
+                    sendQ.put(('warning',f"{GUIname} is already moving"))
+            except Exception as e:
+                #not in the motor list, let epicsQ try anyway (old behavior)
+                self.logger.warning(f"command : {command} has problem ({e})")
+                self.logger.debug(f"GUIname = {GUIname}")
+                epicsQ.put(("stoh_start_motor_move",command[1],command[2]),timeout=1)
+
+    def _cmd_set_shutter_state(self,command):
+        #stoh_set_shutter_state shutterName state (state is open or closed.)
+        self.Q['Queue']['epicsQ'].put((command[0],command[1],command[2]))
+
+    def _cmd_start_oscillation(self,command):
+        #stoh_start_oscillation motorName shutter deltaMotor deltaTime startAngle
+        #thread instead of fork: forking the CA-connected reciver per scan is
+        #expensive and unsafe with libca
+        self.logger.info(f'Ask MD3 to start oscillation')
+        t = Thread(target=self.start_oscillation, args=(self.Par,self.Q,command), daemon=True)
+        t.start()
+
+    #operation name -> queue that executes it (None = accepted but nothing to do)
+    OPERATION_ROUTES = {
+        "detector_collect_image":       None,
+        "detector_collect_shutterless": "DetectorQ",
+        "detector_ratser_setup":        "DetectorQ",
+        "detector_transfer_image":      None,
+        "detector_oscillation_ready":   None,
+        "detector_stop":                "DetectorQ",
+        "detector_reset_run":           None,
+        "detector_close_cover":         "DetectorQ",
+        "detector_open_cover":          "DetectorQ",
+        "changeBeamSize":               "DetectorQ",
+        "displayBeamSize":              "DetectorQ",
+        "overlapBeamImage":             "DetectorQ",
+        "mutiPosCollect":               "DetectorQ",
+        "SSXCollect":                   "DetectorQ",
+        "SSXStopCollect":               "DetectorQ",
+        "startRasterScanEx":            "epicsQ",
+        "startRasterScan":              "epicsQ",
+        "startScan4DEx":                "epicsQ",
+        "centerLoop":                   "epicsQ",
+        "setBackLightColor":            "CVLSQ",
+        "switchSampleEnvironment":      "CVLSQ",
+    }
+
+    def _cmd_start_operation(self,command):
+        #stoh_start_operation operationName operationHandle [arg1 [arg2 [...]]]
+        #operationHandle format: clientNumber.operationCounter
+        sendQ = self.Q['Queue']['sendQ']
+        opname = command[1]
+        if opname == "getMD2Motor":
+            #bypass it, just reply operation completed
+            #['stoh_start_operation', 'getMD2Motor', '1.2', 'change_mode']
+            sendQ.put(('operdone',command[1],command[2],command[3]))
+            command.pop(0)
+        elif opname in self.OPERATION_ROUTES:
+            qname = self.OPERATION_ROUTES[opname]
+            self.logger.warning(f"{opname} operation from dcss : {command}")
+            command.pop(0)
+            if qname:
+                self.Q['Queue'][qname].put(tuple(command))
+        else:
+            self.logger.warning(f"Unkonw operation from dcss : {command}")
+            return
+        #need record operation id for abort return correct state
+        self.logger.debug(f"Add op {command} to operationRecord")
+        self.Par['operationRecord'].append(command)
+
+    def _cmd_read_ion_chambers(self,command):
+        #stoh_read_ion_chambers time repeat ch1 [ch2 [ch3 [...]]]
+        self.Q['Queue']['attenQ'].put(tuple(command))
+
+    def _cmd_register_string(self,command):
+        if command[1] == 'currentBeamsize':
+            command.pop(0)
+            self.Q['Queue']['DetectorQ'].put(tuple(command))
+
+    def _cmd_register_real_motor(self,command):
+        #['stoh_register_real_motor', 'detector_z', 'detector_z']
+        #report current state: position update, plus move_started when moving
+        #(sending move_completed here triggers an abort on dcss, so don't)
+        sendQ = self.Q['Queue']['sendQ']
+        if command[1] == 'attenuation':
+            self.Q['Queue']['attenQ'].put(("stoh_register_real_motor",command[1]))
+            return
+        GUIname = None
+        try:
+            GUIname, = self.FindEpicsMotorInfo(command[1],'dcssname','GUIname')
+            MoveDone = self.Par[f'EPICS.{GUIname}.DMOV']
+            Pos = self.Par[f'EPICS.{GUIname}.RBV']
+            TargetPos = self.Par[f'EPICS.{GUIname}.VAL']
+            sendQ.put(f'htos_configure_device {command[1]}')#not in our version
+            sendQ.put(('updatevalue',command[1],Pos,'motor','Normal'))
+            if not MoveDone:
+                sendQ.put(('startmove',command[1],TargetPos,'motor','Normal'))
+        except Exception as e:
+            self.logger.warning(f"command : {command} has problem ({e})")
+            self.logger.debug(f"GUIname = {GUIname}")
+
+    def _cmd_register_shutter(self,command):
+        #['stoh_register_shutter', 'shutter', 'closed', 'shutter\n']
+        self.Q['Queue']['epicsQ'].put((command[0],command[1],command[2]))
+
+    def _cmd_register_pseudo_motor(self,command):
+        #stoh_register_pseudo_motor energy standardVirtualMotor
+        sendQ = self.Q['Queue']['sendQ']
+        if command[1] == 'attenuation':
+            self.Q['Queue']['attenQ'].put(("stoh_register_pseudo_motor",command[1]))
+            return
+        GUIname, = self.FindEpicsMotorInfo(command[1],'dcssname','GUIname')
+        MoveDone = self.Par[f'EPICS.{GUIname}.DMOV']
+        Pos = self.Par[f'EPICS.{GUIname}.RBV']
+        TargetPos = self.Par[f'EPICS.{GUIname}.VAL']
+        if command[1] == 'energy':
+            Pos = Pos*1000
+            TargetPos = TargetPos*1000
+        sendQ.put(('updatevalue',command[1],Pos,'motor','Normal'))
+        if not MoveDone:
+            sendQ.put(('startmove',command[1],TargetPos,'motor','Normal'))
     def processrecvice(self,string):
         '''
         ex"           46            0 stoh_register_string tps_current tps_current\n\x00"
