@@ -7,7 +7,7 @@ Created on Fri Apr  9 14:35:20 2021
 for colored log
 https://stackoverflow.com/questions/384076/how-can-i-color-python-logging-output
 """
-import logging,time
+import logging,time,queue
 from logging import handlers #this is need for tun in term
 import coloredlogs
 
@@ -97,7 +97,13 @@ def getloger2(logname='Main',LOG_FILENAME='/home/blctl/Desktop/log/log.txt',leve
             conn = psycopg.connect(loginstr())
             log_cursor = conn.cursor()
             logdb = LogDBHandler(conn, log_cursor, db_tbl_log,loginstr())
-            logger.addHandler(logdb)
+            logdb.setLevel(logging.DEBUG)
+            #DB insert is synchronous, run it in a background thread via queue
+            #so CA callback threads never wait for the database
+            logq = queue.SimpleQueue()
+            logger.addHandler(logging.handlers.QueueHandler(logq))
+            dblistener = logging.handlers.QueueListener(logq, logdb, respect_handler_level=True)
+            dblistener.start()
             #print(logdb)
         except:
             pass
@@ -277,10 +283,11 @@ class LineNotifyHandler(logging.Handler):
         jsondata['nosound'] = nosound
         jsondata['stickerPackageId'] = stickerPackageId
         jsondata['stickerId'] = stickerId
-        response = requests.post(self.server , json=jsondata)
+        #timeout to avoid blocking the logging thread when notify server is down
+        response = requests.post(self.server , json=jsondata, timeout=2)
         # print(response)
         return response
-    
+
 if __name__ == "__main__":
     # fh,ch=logsetup()
     # logger = logging.getLogger('Main2')

@@ -107,8 +107,10 @@ class epicsdev():
         command=["","","","","",""]
         # self.logger.debug(f'PV,GUI name: {pv},{guiname} ={value} ')
         # For RBV check within dead band
+        # Par is a Manager DictProxy: writing into a nested dict only changes a
+        # local copy, so motor fields are stored as flat keys 'EPICS.<gui>.<field>'
         if field == "RBV":
-            self.Par['EPICS'][guiname]['RBV'] = value
+            self.Par[f'EPICS.{guiname}.RBV'] = value
             if abs(float(self.epicsmotors[guiname]["old_value"]) - float(value) ) < self.epicsmotors[guiname]["deadband"]:
                 
                 pass
@@ -134,7 +136,7 @@ class epicsdev():
                     self.sendQ.put((command[0],command[1],command[2],command[3],command[4]))
                     self.logger.debug(f'send command to dcss: {command} ')        
         elif field == "DMOV" :
-            self.Par['EPICS'][guiname]['DMOV'] = value
+            self.Par[f'EPICS.{guiname}.DMOV'] = value
             self.logger.debug(f'PV value changed: {pvname}={value} guiname={guiname}')
             #motor move done or moving
             if guiname == "MD3Y" or guiname == "DetY":
@@ -229,7 +231,7 @@ class epicsdev():
                     pos = self.epicsmotors[guiname]['PVID'].get('RBV')
                     self.sendQ.put(('endmove',dcssname,pos,'normal'), block=False)
         elif field == "VAL" :
-            self.Par['EPICS'][guiname][field] = value
+            self.Par[f'EPICS.{guiname}.{field}'] = value
             if guiname == "MD3Y" and self.MD3Ystartmoving :
                 self.MD3Ystartmoving = False
                 #MD3Y start moving should update DetY LLM
@@ -243,7 +245,7 @@ class epicsdev():
                 self.updateDetYlimits()
                 self.updateMD3Ylimits()        
         else:
-            self.Par['EPICS'][guiname][field] = value
+            self.Par[f'EPICS.{guiname}.{field}'] = value
             self.logger.debug(f'PV value changed: {pvname}={value} ')
             
             
@@ -260,6 +262,9 @@ class epicsdev():
                           }
 
             temp[motor]=detailinfo
+            #flat keys are the ones other processes read back, see onMotorValueChange
+            for field in detailinfo:
+                self.Par[f'EPICS.{motor}.{field}'] = detailinfo[field]
         self.Par['EPICS'] = temp
         self.logger.debug(f"PID : {os.getpid()} EPICS initINFO, Par= {self.Par} TYPE:{type(self.Par)}")
         # self.logger.warning(f"PID : {os.getpid()} EPICS initINFO, Par= {self.Par} TYPE:{type(self.Par)}")
@@ -328,7 +333,7 @@ class epicsdev():
         guiname = self.epicslist[pvname]["GUIname"]
         dcssname = self.epicslist[pvname]["dcssname"]
         dcsstype = self.epicslist[pvname]["dcsstype"]
-        self.Par['EPICS'][guiname] = value
+        self.Par[f'EPICS.{guiname}'] = value
         self.epicslist[pvname]["valueupdated"] = True
         self.epicslist[pvname]["current_value"] = value
         if dcsstype == "par":

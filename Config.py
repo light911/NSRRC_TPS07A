@@ -8,7 +8,7 @@ Created on Mon Apr 12 09:49:13 2021
 
 Par={
     "Beamline":"TPS07A",
-    "Debuglevel":"DEBUG",#ERROR,WARNING,INFO,DEBUG
+    "Debuglevel":"INFO",#ERROR,WARNING,INFO,DEBUG
     "MinDistance":139,
     "fakedistancename":"07a:Det:Dis",
     "calfactorname":'07a-ES:DetectorDistance:OFF',
@@ -31,7 +31,7 @@ Par={
               'evtogap':'07a:IU22:cvtE2Gap_able',
               },
     'Detector':{'ip':"10.7.1.98",
-                'ip2':"192.168.31.98",
+                'ip2':"10.7.3.98",#remove 192.168.31.98
                 'port':80,
                 'nimages':0,
                 'Filename':"Filename",

@@ -1,0 +1,6 @@
+# SCHOTT ColdVision Light Source Control Library Requirements
+
+# For USB/UART serial connection support
+# 如果只使用網路連接，則不需要安裝此套件
+# If only using Ethernet connection, this package is not required
+pyserial>=3.5

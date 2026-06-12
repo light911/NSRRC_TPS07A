@@ -248,7 +248,7 @@ class DCSDHS():
         number_of_passes = int(1)
         # nimages = int(Par['Detector']['nimages'])
         nimages = self.ca.caget('07a-ES:timing:nimage',format=int)
-        Timeout = 30 + exposure_time
+        Timeout = 60 + exposure_time #for 2ms 2deg exp. this time need more(~42sec)
         
         LastTaskInfoPV = Par['collect']['LastTaskInfoPV']
         PV = Par['collect']['start_oscillationPV']
@@ -418,9 +418,9 @@ class DCSDHS():
                             else:
                                 try:
                                     GUIname, = self.FindEpicsMotorInfo(command[1],'dcssname','GUIname')
-                                    MoveDone = self.Par['EPICS'][GUIname]['DMOV']
-                                    Pos = self.Par['EPICS'][GUIname]['RBV']
-                                    TargetPos = self.Par['EPICS'][GUIname]['VAL']
+                                    MoveDone = self.Par[f'EPICS.{GUIname}.DMOV']
+                                    Pos = self.Par[f'EPICS.{GUIname}.RBV']
+                                    TargetPos = self.Par[f'EPICS.{GUIname}.VAL']
                                     if MoveDone:
                                         # not move
                                         epicsQ.put(("stoh_start_motor_move",command[1],command[2]),timeout=1)
@@ -615,9 +615,9 @@ class DCSDHS():
                                 
                                 try:
                                     GUIname, = self.FindEpicsMotorInfo(command[1],'dcssname','GUIname')
-                                    MoveDone = self.Par['EPICS'][GUIname]['DMOV']
-                                    Pos = self.Par['EPICS'][GUIname]['RBV']
-                                    TargetPos = self.Par['EPICS'][GUIname]['VAL']
+                                    MoveDone = self.Par[f'EPICS.{GUIname}.DMOV']
+                                    Pos = self.Par[f'EPICS.{GUIname}.RBV']
+                                    TargetPos = self.Par[f'EPICS.{GUIname}.VAL']
                                     # sendQ.put(f'htos_send_configuration {GUIname}')#not in our version
                                     #  htos_configure_device 
                                     # stoh_configure_real_motor detector_z EPICS detector_z 400.000000 900.100000 139.000000 78.740000 1000 350 -238 1 1 0 0 0 0 
@@ -672,9 +672,9 @@ class DCSDHS():
                                 AttenQ.put(("stoh_register_pseudo_motor",command[1]))
                             else:
                                 GUIname, = self.FindEpicsMotorInfo(command[1],'dcssname','GUIname')
-                                MoveDone = self.Par['EPICS'][GUIname]['DMOV']
-                                Pos = self.Par['EPICS'][GUIname]['RBV']
-                                TargetPos = self.Par['EPICS'][GUIname]['VAL']
+                                MoveDone = self.Par[f'EPICS.{GUIname}.DMOV']
+                                Pos = self.Par[f'EPICS.{GUIname}.RBV']
+                                TargetPos = self.Par[f'EPICS.{GUIname}.VAL']
                                 if command[1] == 'energy':
                                     Pos = Pos*1000
                                     TargetPos = TargetPos*1000
