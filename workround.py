@@ -1,6 +1,6 @@
 from multiprocessing import Process, Queue, Manager
 import multiprocessing as mp
-import logsetup,time,subprocess
+import logsetup,time,subprocess,os
 import threading
 from epics import caput,CAProcess,caget,ca
 from epics import PV as EpicsPV
@@ -45,9 +45,19 @@ class myepics():
         #created before fork() is still safe in the child process
         self._pvcache = {}
         self._pvlock = threading.Lock()
+        self._pid = os.getpid()
 
     def _pv(self,name):
         name = str(name)
+        if os.getpid() != self._pid:
+            #we are in a forked child: the inherited libca state is dead (CA
+            #network threads do not survive fork), reset like CAProcess does
+            #and let the first access build a fresh context in this process
+            ca.initial_context = None
+            ca.clear_cache()
+            self._pvcache = {}
+            self._pvlock = threading.Lock()
+            self._pid = os.getpid()
         #a thread without a CA context must join the context that owns the
         #cached channels, otherwise the chids are unusable in this thread
         if ca.current_context() is None and ca.initial_context is not None:
