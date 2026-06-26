@@ -1875,8 +1875,10 @@ class Eiger2X16M(Detector):
                
                 futures.append(executor.submit(setFileWriterConfig, 'mode',"enabled",self.detectorip,self.detectorport))
 
-                for future in concurrent.futures.as_completed(futures):            
-                    pass
+                for future in concurrent.futures.as_completed(futures):
+                    #surface setDetectorConfig/setMonitor/setFileWriter failures
+                    #instead of silently arming with the wrong settings
+                    future.result()
                     # print(time.time()-tstart,future.result())
                 self.logger.debug(f'done for setting some basic info to detector now = {time.time()-t0}') 
                     
@@ -1896,8 +1898,15 @@ class Eiger2X16M(Detector):
                 # caput(NumberOfFramesPV,self.TotalFrames)
                 self.ca.caput(NumberOfFramesPV,self.TotalFrames)
                 print(f'time = { time.time()-t0}')
-                write_headerP.join()
-                header_appendix = que.get()
+                write_headerP.join(30)
+                if write_headerP.is_alive():
+                    raise TimeoutError('write_header thread did not finish in 30s')
+                try:
+                    header_appendix = que.get(timeout=5)
+                except queue.Empty:
+                    raise RuntimeError('write_header produced no header (queue empty)')
+                if header_appendix is None:
+                    raise RuntimeError('write_header failed (see earlier log)')
                 header_appendix['TotalFrames'] = self.TotalFrames
                 header_appendix['stream_name'] = generate_timestamp_string()
                 text = json.dumps(header_appendix)
@@ -1980,6 +1989,18 @@ class Eiger2X16M(Detector):
                 pass
         self.logger.info(f'setup  = {time.time()-t0}')
     def write_header(self,raster,Filename,que:queue.Queue,collectype):
+        #wrapper: guarantee the consumer's que.get() always receives something.
+        #write_header runs in a Thread, so if header building raises the thread
+        #just dies and que stays empty -> basesetup would block on que.get()
+        #forever. Push a None sentinel on failure so the consumer fails fast
+        #(and the setup process exits -> watchdog retries) instead of hanging.
+        try:
+            self._write_header_impl(raster,Filename,que,collectype)
+        except Exception as e:
+            self.logger.warning(f'write_header failed, push sentinel: {e}')
+            que.put(None)
+
+    def _write_header_impl(self,raster,Filename,que:queue.Queue,collectype):
         self.logger.debug(f'ask for asking beamline info')
 
         #handle ecpis on mutiprocess problem,but not work
