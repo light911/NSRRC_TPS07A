@@ -25,6 +25,8 @@ from CVLS_dhs.cvls_control import CVLSController
 class DCSDHS():
     def __init__(self,par:dict=None,m:Manager=None) :
 #        super(self.__class__,self).__init__(parent)
+        #set before installing the handler: SIGINT can fire any time after this
+        self._shutting_down = False
         signal.signal(signal.SIGINT, self.quit)
         signal.signal(signal.SIGTERM, self.quit)
         #load config
@@ -122,6 +124,9 @@ class DCSDHS():
         if self.coverP_ is not None:
             services['coverP_'] = (self.cover.run, ())
         for attr,(target,args) in services.items():
+            #shutdown in progress: dead children are intentional, do not revive
+            if self._shutting_down:
+                return
             proc = getattr(self,attr)
             if not proc.is_alive():
                 #CRITICAL also pushes a LINE notify
@@ -847,6 +852,8 @@ class DCSDHS():
 
 
     def quit(self,signum,frame):
+        #stop the supervisor from reviving children we are about to kill
+        self._shutting_down = True
         self.logger.critical(f'EPICS DHS Offline')
         self.Q['Queue']['reciveQ'].put('exit')
         self.Q['Queue']['sendQ'].put('exit')
@@ -983,8 +990,10 @@ if __name__ == "__main__":
     print('*************************')
 
     #supervise: respawn dead service processes while the DCSS loop runs
-    while p.is_alive():
+    while p.is_alive() and not EpicsDHS._shutting_down:
         time.sleep(2)
+        if EpicsDHS._shutting_down:
+            break
         EpicsDHS.checkservers()
 
     print ("end")
