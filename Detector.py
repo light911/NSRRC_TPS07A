@@ -30,6 +30,14 @@ import numpy as np
 import datetime
 # from TranferData_EPU_RAM_NFS_HTTP import genDatasetNames
 
+# socket timeout (sec) for the DHS control/status DEigerClient. These calls are
+# all sub-second normally (slowest single call ~1s for arm), so a stuck DCU
+# request that blocks longer is a hang -> fail fast and let DEigerClient's retry
+# loop reconnect, instead of blocking basesetup until the 30s watchdog kills it.
+# (kept << the 30s checkandretryDetectorSetupProcess timeout; do NOT use for the
+# TranferData download clients, which need the long default.)
+DET_HTTP_TIMEOUT = 15
+
 def genDatasetNames(totalimage:int,nimages_per_file:int=1000,Filename:str='Test'):
     maxfileset = totalimage // nimages_per_file
     if  totalimage % nimages_per_file ==0:
@@ -204,7 +212,7 @@ class Eiger2X16M(Detector):
         super().__init__(Par,Q,coverdhs)#get Detector att
         self.roi_mode = False
         self.trigger_mode ="ints"
-        self.det = DEigerClient(self.detectorip,self.detectorport,verbose=False)
+        self.det = DEigerClient(self.detectorip,self.detectorport,verbose=False,connectionTimeout=DET_HTTP_TIMEOUT)
         self.det.setStreamConfig('header_detail','all')
         self.det.setStreamConfig('mode','enabled')
         self.det.setFileWriterConfig('mode','enabled')
@@ -242,7 +250,7 @@ class Eiger2X16M(Detector):
         expctedlist.append(masterfile)
         expctedlist.extend(genDatasetNames(self.TotalFrames,1000,Filename))
         #det = self.det
-        det = DEigerClient(self.detectorip,self.detectorport,verbose=False)
+        det = DEigerClient(self.detectorip,self.detectorport,verbose=False,connectionTimeout=DET_HTTP_TIMEOUT)
         Filename = self.filename + "_" + str(self.fileindex).zfill(4)
         masterfile = Filename + "_master.h5"
         masterpath = f'{self.directory }/{masterfile}'
@@ -385,16 +393,24 @@ class Eiger2X16M(Detector):
         self.logger.info(f'command: {command[1:]}')
         toDcsscommand = 'htos_set_string_completed system_status normal {Wating For Download Image} black #d0d000'
         self.sendQ.put(toDcsscommand)
-        
+
         expctedlist =[]
         Filename = self.filename + "_" + str(self.fileindex).zfill(4)
         masterfile = Filename + "_master.h5"
         expctedlist.append(masterfile)
         expctedlist.extend(genDatasetNames(self.TotalFrames,1000,Filename))
-        
+
         currentfile = self.det.fileWriterFiles()
         self.logger.info(f'Check for detector download data: file count :{currentfile}')
         # while type(currentfile) != type(None):
+        # TODO: add a timeout to this wait loop. No timeout today -> if the DCU
+        #   never clears the expected files (download/transfer stuck) the whole
+        #   Detector command monitor blocks here and stops serving any further
+        #   command (new collect / abort), so DCSS gets no response. (seen
+        #   2026-06-26 16:52-16:57: stuck ~4.5 min on test_0_0058_*.h5)
+        #   Plan: derive the timeout from fileWriter + detector state plus the
+        #   expected download time; on timeout, break out AND send a message to
+        #   DCSS so the user knows it bailed. (remaining details TBD)
         try:
             # while len(currentfile) != 0:
             while bool(set(currentfile) & set(expctedlist)):
@@ -870,7 +886,7 @@ class Eiger2X16M(Detector):
         pass
 
     def check_SSX_done(self):
-        det = DEigerClient(self.detectorip,self.detectorport,verbose=False)
+        det = DEigerClient(self.detectorip,self.detectorport,verbose=False,connectionTimeout=DET_HTTP_TIMEOUT)
         _check = True
         init = True
         while _check:
@@ -944,7 +960,7 @@ class Eiger2X16M(Detector):
     def mutiPosCollect(self,command):
         # ans =  [runIndex,filename,directory,userName,axisName,exposureTime,oscillationStart,detosc,TotalFrames,distance,wavelength,detectoroffX,detectoroffY,sessionId,fileindex,unknow,beamsize,atten]
         t0=time.time()
-        det = DEigerClient(self.detectorip,self.detectorport,verbose=False)
+        det = DEigerClient(self.detectorip,self.detectorport,verbose=False,connectionTimeout=DET_HTTP_TIMEOUT)
         self.operationHandle = command[1]
         self.runIndex = command[2]# will be 0
         self.filename = command[3]
@@ -1300,7 +1316,7 @@ class Eiger2X16M(Detector):
             #     pass
             # else:
             #     #newconnect
-            #     # self.det = DEigerClient(self.detectorip,self.detectorport,verbose=False)
+            #     # self.det = DEigerClient(self.detectorip,self.detectorport,verbose=False,connectionTimeout=DET_HTTP_TIMEOUT)
             #     self.det = detconn
             #make a new conn,avoid mutiprocess problem
             # det = DEigerClient(self.detectorip,self.detectorport,verbose=True)
@@ -1666,7 +1682,7 @@ class Eiger2X16M(Detector):
                 #pairing when both sides talk to the DCU at the same time
                 #(GET then receives the list reply of a previous PUT ->
                 #"list indices must be integers" errors)
-                det = DEigerClient(self.detectorip,self.detectorport,verbose=False)
+                det = DEigerClient(self.detectorip,self.detectorport,verbose=False,connectionTimeout=DET_HTTP_TIMEOUT)
             self.logger.debug(f'TotalFrames =  {self.TotalFrames},exposureTime = {self.exposureTime} ')
             self.logger.debug(f'oscillationStart =  {self.oscillationStart},framewidth = {self.detosc}')
             self.logger.debug(f'directory =  {self.directory},filename = {self.filename},fileindex={self.fileindex}')
@@ -2195,7 +2211,7 @@ class Eiger2X16M(Detector):
             detectorprocess.kill()
             #try to close again
             self.logger.warning(f'Try to resetup detector again!')
-            self.det = DEigerClient(self.detectorip,self.detectorport,verbose=False)#ask for new client
+            self.det = DEigerClient(self.detectorip,self.detectorport,verbose=False,connectionTimeout=DET_HTTP_TIMEOUT)#ask for new client
             # time.sleep(0.2)
             a = list(args)
             a[-2] = self.det

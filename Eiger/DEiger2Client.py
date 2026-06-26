@@ -39,7 +39,7 @@ class DEigerClient(object):
     class DEigerClient provides a low level interface to the EIGER API
     """
 
-    def __init__(self, host = '127.0.0.1', port = 80, verbose = False, urlPrefix = None, user = None):
+    def __init__(self, host = '127.0.0.1', port = 80, verbose = False, urlPrefix = None, user = None, connectionTimeout = 24*3600):
         """
         Create a client object to talk to the EIGER API.
         Args:
@@ -48,6 +48,10 @@ class DEigerClient(object):
             verbose: bool value
             urlPrefix: String prepended to the urls. Should be None. Added for future convenience.
             user: "username:password". Should be None. Added for future convenience.
+            connectionTimeout: socket timeout (sec) for every request. Default is
+                24h to stay safe for large file downloads (TranferData); control
+                clients (Detector DHS) should pass a small value so a stuck DCU
+                call fails fast and the retry loop reconnects instead of blocking.
         """
         super(DEigerClient,self).__init__()
         self._host = host
@@ -56,7 +60,7 @@ class DEigerClient(object):
         self._verbose = verbose
         self._urlPrefix = ""
         self._user = None
-        self._connectionTimeout = 24*3600
+        self._connectionTimeout = connectionTimeout
         self._connection = httplibClient.HTTPConnection(self._host,self._port, timeout = self._connectionTimeout)
         self._serializer = None
 
@@ -315,6 +319,7 @@ class DEigerClient(object):
             with open(targetPath, 'wb') as fp:
                 self._log('Writing ', targetPath)
                 shutil.copyfileobj(req, fp, 512*1024)
+                # shutil.copyfileobj(req, fp, 16 * 1024 * 1024)
             # self._getRequest(url = '/{0}data/{1}'.format(self._urlPrefix, filename), dataType = 'hdf5',fileId = targetFile)
             # targetFile.write(self.fileWriterFiles(filename))
             assert os.access(targetPath,os.R_OK)
