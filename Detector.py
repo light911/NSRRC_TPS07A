@@ -28,7 +28,7 @@ from myeigerclient import EigerClient,setDetectorConfig,setMonitorConfig,sendDet
 import concurrent.futures
 import numpy as np
 import datetime
-import faulthandler,os
+import faulthandler,os,gc
 # from TranferData_EPU_RAM_NFS_HTTP import genDatasetNames
 
 # socket timeout (sec) for the DHS control/status DEigerClient. These calls are
@@ -1673,6 +1673,13 @@ class Eiger2X16M(Detector):
             
     def basesetup(self,raster=False,roi=False,beamwithdis=False,movebeasize=True,detconn=None,collectype='test image'):
         #mutithread version
+        #SIGSEGV (exitcode -11) root cause, confirmed by faulthandler:
+        #cyclic GC running in a ThreadPoolExecutor worker thread finalizes a
+        #pyepics PV (PV.__del__ -> disconnect -> ca.clear_subscription) from a
+        #thread with no CA context -> libca segfaults. This forked child is
+        #short-lived (does basesetup then exits, OS reclaims memory), so just
+        #turn off cyclic GC for its lifetime to stop finalizers firing mid-run.
+        gc.disable()
         #faulthandler: this runs in a forked child that drives libca/libffi +
         #requests under threads, which intermittently SIGSEGVs (exitcode -11,
         #~40x/day). Dump every thread's Python traceback to a dedicated file on
