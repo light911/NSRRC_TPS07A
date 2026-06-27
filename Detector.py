@@ -28,6 +28,7 @@ from myeigerclient import EigerClient,setDetectorConfig,setMonitorConfig,sendDet
 import concurrent.futures
 import numpy as np
 import datetime
+import faulthandler,os
 # from TranferData_EPU_RAM_NFS_HTTP import genDatasetNames
 
 # socket timeout (sec) for the DHS control/status DEigerClient. These calls are
@@ -1672,6 +1673,19 @@ class Eiger2X16M(Detector):
             
     def basesetup(self,raster=False,roi=False,beamwithdis=False,movebeasize=True,detconn=None,collectype='test image'):
         #mutithread version
+        #faulthandler: this runs in a forked child that drives libca/libffi +
+        #requests under threads, which intermittently SIGSEGVs (exitcode -11,
+        #~40x/day). Dump every thread's Python traceback to a dedicated file on
+        #fault so we can see which call crashed. _fault_fp is held in this frame
+        #so its fd stays open through the (possibly crashing) run.
+        try:
+            _fault_fp = open('/home/blctl/Desktop/log/faulthandler.txt','a')
+            _fault_fp.write(f'\n===== basesetup pid={os.getpid()} {datetime.datetime.now()} '
+                            f'file={self.filename}_{str(self.fileindex).zfill(4)} =====\n')
+            _fault_fp.flush()
+            faulthandler.enable(file=_fault_fp, all_threads=True)
+        except Exception as _fe:
+            self.logger.warning(f'faulthandler setup failed: {_fe}')
         try:
             t0 = time.time()
             if detconn is not None:
