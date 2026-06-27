@@ -39,6 +39,14 @@ import faulthandler,os,gc
 # TranferData download clients, which need the long default.)
 DET_HTTP_TIMEOUT = 15
 
+# feature flag: route detector basesetup through a long-lived "setup worker"
+# forked once at CommandMon start (before any CA channel exists -> clean fork,
+# empty inherited PV cache) instead of fork-per-collect. Kills the root of both
+# the -11 PV-finalizer segfault and the -None fork-while-multithreaded deadlock.
+# Default OFF: behaviour is identical to the old per-collect CAProcess path
+# until this is flipped and the DHS restarted.
+USE_SETUP_WORKER = False
+
 def genDatasetNames(totalimage:int,nimages_per_file:int=1000,Filename:str='Test'):
     maxfileset = totalimage // nimages_per_file
     if  totalimage % nimages_per_file ==0:
@@ -138,6 +146,11 @@ class Detector():
         self.abort = False
     def CommandMon(self) :
         self.logger.warning('Detector MON start!')
+        if USE_SETUP_WORKER:
+            #clean fork point: __init__ created no CA channel yet (myepics/dbpm
+            #are lazy), so the parent has no libca threads here -> safe one-time
+            #fork, and the worker inherits an empty PV cache.
+            self._start_setup_worker()
         while True:
             command = self.CommandQ.get()
             if isinstance(command,str):
@@ -240,6 +253,11 @@ class Eiger2X16M(Detector):
         self.dbpm6 = dbpm07a("6",self.ca)
         
         self.errorcount = 0
+        #setup worker plumbing (only used when USE_SETUP_WORKER). Queues are
+        #cheap; create them unconditionally so references always exist.
+        self.setupReqQ = Queue()
+        self.setupRespQ = Queue()
+        self.setupWorker = None
         self.logger.warning(f'Eiger2X 16M DHS init Time: {time.time()-t0}')
     def updatefilestring(self):
         t0 = time.time()
@@ -517,6 +535,87 @@ class Eiger2X16M(Detector):
         self.logger.warning(f'new_scanrange={new_scanrange},new_exposure_time={new_exposure_time},new_start_angle={new_start_angle},true_start_angle={true_start_angle}')
         return new_scanrange,new_exposure_time,new_start_angle,nimages,true_start_angle
         pass
+    #---- setup worker (USE_SETUP_WORKER) -------------------------------------
+    #per-collect self.* that basesetup/write_header read. The worker's self is a
+    #snapshot from the startup fork, so these are snapshotted in the parent AFTER
+    #parse+post_tri compute (e.g. oscillationStart is adjusted) and re-applied on
+    #the worker's self before each basesetup. getattr default None: rasterinfo is
+    #only set on raster paths and only read when raster=True.
+    _SETUP_ATTRS = ('operationHandle','runIndex','filename','directory','userName',
+                    'axisName','exposureTime','oscillationStart','detosc','TotalFrames',
+                    'distance','wavelength','detectoroffX','detectoroffY','detmode',
+                    'sessionId','fileindex','unknow','beamsize','atten','rasterinfo')
+
+    def _start_setup_worker(self):
+        #fork the long-lived setup worker. MUST be called before the parent
+        #creates any CA channel: no libca threads yet -> clean fork, and the
+        #inherited myepics PV cache is empty -> no orphan-PV finalizer segfault.
+        #Not daemonic: basesetup spawns child Processes (sendtoAutostra etc.).
+        self.setupWorker = CAProcess(target=self.setup_worker_loop,name='Detector_SetupWorker')
+        self.setupWorker.start()
+        self.logger.warning(f'setup worker started pid={self.setupWorker.pid}')
+
+    def setup_worker_loop(self):
+        #long-lived: run one basesetup at a time, mirroring the old per-collect
+        #child. basesetup calls sys.exit(-1) on its own errors, so SystemExit is
+        #caught here to keep the worker alive and report failure instead.
+        self.logger.warning('setup worker loop start')
+        while True:
+            req = self.setupReqQ.get()
+            if req == 'exit':
+                self.logger.warning('setup worker got exit')
+                break
+            try:
+                for k,v in req['attrs'].items():
+                    setattr(self,k,v)
+                self.basesetup(*req['args'])
+                self.setupRespQ.put({'id':req['id'],'ok':True,'err':None})
+            except SystemExit as e:
+                self.setupRespQ.put({'id':req['id'],'ok':False,'err':f'basesetup sys.exit {e.code}'})
+            except Exception as e:
+                self.logger.critical(f'setup worker basesetup error: {e}')
+                self.setupRespQ.put({'id':req['id'],'ok':False,'err':str(e)})
+
+    def _send_setup_request(self,args):
+        reqid = time.time()
+        attrs = {a:getattr(self,a,None) for a in self._SETUP_ATTRS}
+        self.setupReqQ.put({'id':reqid,'args':args,'attrs':attrs})
+        return reqid
+
+    def _wait_setup_result(self,reqid,args,timeout=30):
+        #mirror checkandretryDetectorSetupProcess: wait for the worker's result;
+        #on timeout (worker hung) kill+respawn and retry once; on a reported
+        #failure the worker is still alive so just resend once.
+        attempt = 1
+        while attempt <= 2:
+            try:
+                resp = self.setupRespQ.get(timeout=timeout)
+            except queue.Empty:
+                self.logger.critical(f'setup worker timeout ({timeout}s), kill+respawn (attempt {attempt})')
+                try:
+                    self.setupWorker.kill()
+                except Exception as e:
+                    self.logger.warning(f'kill setup worker fail: {e}')
+                self._start_setup_worker()
+                attempt += 1
+                if attempt > 2:
+                    return False
+                reqid = self._send_setup_request(args)
+                continue
+            if resp.get('id') != reqid:
+                self.logger.warning('setup resp id mismatch, ignoring stale result')
+                continue
+            if resp.get('ok'):
+                self.logger.info('setup worker OK')
+                return True
+            self.logger.critical(f"setup worker reported fail: {resp.get('err')} (attempt {attempt})")
+            attempt += 1
+            if attempt > 2:
+                return False
+            reqid = self._send_setup_request(args)
+            continue
+        return False
+
     def detector_collect_shutterless(self,command):
     #    ('detector_collect_shutterless', '1.24', '1', 'test_1', '/data/blctl/test', 'blctl', 'gonio_phi', '0.1', '0.000009', '1.0', '10', '750.000060', '0.976226127404', '0.000231', '50.000000', '0', '0', 'PRIVATEA03F6ADA6F19A8DA1DEE6BFC325F4DCE', '1', '10', '50.000000', '0.0')
     #['stoh_start_operation', 'detector_collect_shutterless', '1.2', '0', 'test_0', '/data/blctl/test', 'blctl', 'gonio_phi', '0.1', '0.000000', '1.0', '1', '750.000080', '0.976226127404', '0.000071', '50.000000', '0', '0', 'PRIVATEA03F6ADA6F19A8DA1DEE6BFC325F4DCE', '3', '1', '50.000000', '0.0']
@@ -624,17 +723,29 @@ class Eiger2X16M(Detector):
             roi = True
             pass
         args=(False,roi,False,False,None,collectype,)
-        
-        #CAProcess: child uses CA, must not inherit the parent's dead libca state
-        detectorsetupP = CAProcess(target=self.basesetup,args=args,name='Detector_Setup')
-        detectorsetupP.start()
-        self.logger.debug('start to setup_beamsize_cover_distance')
-        self.setup_beamsize_cover_distance(False,False,False,False,False)
-        self.logger.debug('End to setup_beamsize_cover_distance')
-        _oscillationTime = self.TotalFrames * self.exposureTime
-        Filename = self.filename + "_" + str(self.fileindex).zfill(4)
-        _filename = Filename + '.h5'
-        self.checkandretryDetectorSetupProcess(detectorsetupP,args,30)#orignal 10 may be not enought set to 30sec
+
+        if USE_SETUP_WORKER:
+            #worker runs basesetup; parent runs setup_beamsize in parallel (same
+            #DCU||motor overlap as before), then waits for the worker's result.
+            reqid = self._send_setup_request(args)
+            self.logger.debug('start to setup_beamsize_cover_distance')
+            self.setup_beamsize_cover_distance(False,False,False,False,False)
+            self.logger.debug('End to setup_beamsize_cover_distance')
+            _oscillationTime = self.TotalFrames * self.exposureTime
+            Filename = self.filename + "_" + str(self.fileindex).zfill(4)
+            _filename = Filename + '.h5'
+            self._wait_setup_result(reqid,args,30)
+        else:
+            #CAProcess: child uses CA, must not inherit the parent's dead libca state
+            detectorsetupP = CAProcess(target=self.basesetup,args=args,name='Detector_Setup')
+            detectorsetupP.start()
+            self.logger.debug('start to setup_beamsize_cover_distance')
+            self.setup_beamsize_cover_distance(False,False,False,False,False)
+            self.logger.debug('End to setup_beamsize_cover_distance')
+            _oscillationTime = self.TotalFrames * self.exposureTime
+            Filename = self.filename + "_" + str(self.fileindex).zfill(4)
+            _filename = Filename + '.h5'
+            self.checkandretryDetectorSetupProcess(detectorsetupP,args,30)#orignal 10 may be not enought set to 30sec
         
         
 
