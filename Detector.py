@@ -616,6 +616,28 @@ class Eiger2X16M(Detector):
             continue
         return False
 
+    def _run_basesetup(self,args,beamsize_args,timeout):
+        #shared setup launch for every collect type. Worker mode: hand basesetup
+        #to the long-lived worker and run setup_beamsize in the parent in parallel
+        #(same DCU||motor overlap as before), then wait for the result. Old mode:
+        #per-collect CAProcess + checkandretry. beamsize_args = this collect type's
+        #setup_beamsize_cover_distance args. self.* the worker needs must already
+        #be set on self before calling (snapshotted in _send_setup_request).
+        if USE_SETUP_WORKER:
+            reqid = self._send_setup_request(args)
+            self.logger.debug('start to setup_beamsize_cover_distance')
+            self.setup_beamsize_cover_distance(*beamsize_args)
+            self.logger.debug('End to setup_beamsize_cover_distance')
+            self._wait_setup_result(reqid,args,timeout)
+        else:
+            #CAProcess: child uses CA, must not inherit the parent's dead libca state
+            detectorsetupP = CAProcess(target=self.basesetup,args=args,name='Detector_Setup')
+            detectorsetupP.start()
+            self.logger.debug('start to setup_beamsize_cover_distance')
+            self.setup_beamsize_cover_distance(*beamsize_args)
+            self.logger.debug('End to setup_beamsize_cover_distance')
+            self.checkandretryDetectorSetupProcess(detectorsetupP,args,timeout)
+
     def detector_collect_shutterless(self,command):
     #    ('detector_collect_shutterless', '1.24', '1', 'test_1', '/data/blctl/test', 'blctl', 'gonio_phi', '0.1', '0.000009', '1.0', '10', '750.000060', '0.976226127404', '0.000231', '50.000000', '0', '0', 'PRIVATEA03F6ADA6F19A8DA1DEE6BFC325F4DCE', '1', '10', '50.000000', '0.0')
     #['stoh_start_operation', 'detector_collect_shutterless', '1.2', '0', 'test_0', '/data/blctl/test', 'blctl', 'gonio_phi', '0.1', '0.000000', '1.0', '1', '750.000080', '0.976226127404', '0.000071', '50.000000', '0', '0', 'PRIVATEA03F6ADA6F19A8DA1DEE6BFC325F4DCE', '3', '1', '50.000000', '0.0']
@@ -723,29 +745,10 @@ class Eiger2X16M(Detector):
             roi = True
             pass
         args=(False,roi,False,False,None,collectype,)
-
-        if USE_SETUP_WORKER:
-            #worker runs basesetup; parent runs setup_beamsize in parallel (same
-            #DCU||motor overlap as before), then waits for the worker's result.
-            reqid = self._send_setup_request(args)
-            self.logger.debug('start to setup_beamsize_cover_distance')
-            self.setup_beamsize_cover_distance(False,False,False,False,False)
-            self.logger.debug('End to setup_beamsize_cover_distance')
-            _oscillationTime = self.TotalFrames * self.exposureTime
-            Filename = self.filename + "_" + str(self.fileindex).zfill(4)
-            _filename = Filename + '.h5'
-            self._wait_setup_result(reqid,args,30)
-        else:
-            #CAProcess: child uses CA, must not inherit the parent's dead libca state
-            detectorsetupP = CAProcess(target=self.basesetup,args=args,name='Detector_Setup')
-            detectorsetupP.start()
-            self.logger.debug('start to setup_beamsize_cover_distance')
-            self.setup_beamsize_cover_distance(False,False,False,False,False)
-            self.logger.debug('End to setup_beamsize_cover_distance')
-            _oscillationTime = self.TotalFrames * self.exposureTime
-            Filename = self.filename + "_" + str(self.fileindex).zfill(4)
-            _filename = Filename + '.h5'
-            self.checkandretryDetectorSetupProcess(detectorsetupP,args,30)#orignal 10 may be not enought set to 30sec
+        self._run_basesetup(args,(False,False,False,False,False),30)
+        _oscillationTime = self.TotalFrames * self.exposureTime
+        Filename = self.filename + "_" + str(self.fileindex).zfill(4)
+        _filename = Filename + '.h5'
         
         
 
@@ -926,18 +929,10 @@ class Eiger2X16M(Detector):
         # raster,roi=False,beamwithdis,movebeasize=True,detconn=None,collectype='test image')
         args=(False,roi,False,False,None,collectype,)
 
-        #CAProcess: child uses CA, must not inherit the parent's dead libca state
-        detectorsetupP = CAProcess(target=self.basesetup,args=args,name='Detector_Setup')
-        detectorsetupP.start()
-        self.logger.debug('start to setup_cover_distance (not 2nd slit)')
-        # raster=False,roi=False,beamwithdis=False,movebeasize=True,bypassslit):
-        # move beam size but not 2nd slit
-        self.setup_beamsize_cover_distance(False,False,False,False,True)
-        self.logger.debug('End to setup_cover_distance  (not 2nd slit)')
-        
+        #SSX: move beam size but not 2nd slit (bypassslit=True)
+        self._run_basesetup(args,(False,False,False,False,True),30)
         Filename = self.filename + "_" + str(self.fileindex).zfill(4)
         _filename = Filename + '.h5'
-        self.checkandretryDetectorSetupProcess(detectorsetupP,args,30)#orignal 10 may be not enought set to 30sec
 
 
 
@@ -1115,14 +1110,10 @@ class Eiger2X16M(Detector):
         # raster=False,roi=False,beamwithdis=False,movebeasize=True
         args=(False,self.roi,True,True,None,collectype,)
         
-        #CAProcess: child uses CA, must not inherit the parent's dead libca state
-        detectorsetupP = CAProcess(target=self.basesetup,args=args,name='Detector_Setup')
-        detectorsetupP.start()
-        self.setup_beamsize_cover_distance(False,self.roi,True,True,False)
+        self._run_basesetup(args,(False,self.roi,True,True,False),30)#need to move beam size take longer time
         _oscillationTime = self.TotalFrames * self.exposureTime
         Filename = self.filename + "_" + str(self.fileindex).zfill(4)
         _filename = Filename + '.h5'
-        self.checkandretryDetectorSetupProcess(detectorsetupP,args,timeout=30)#need to move beam size take longer time
         
         
         self.logger.warning(f'mutiPosCollect detector setup take {time.time()-t0} sec')
@@ -1377,15 +1368,9 @@ class Eiger2X16M(Detector):
         # raster=False,roi=False,beamwithdis=False,movebeasize=True
         args=(True,self.roi,True,True,None,collectype,)
         
-        #CAProcess: child uses CA, must not inherit the parent's dead libca state
-        detectorsetupP = CAProcess(target=self.basesetup,args=args,name='Detector_Setup')
-        detectorsetupP.start()
-        self.setup_beamsize_cover_distance(True,self.roi,True,True,False)
-        # _oscillationTime = self.TotalFrames * self.exposureTime
-        # Filename = self.filename + "_" + str(self.fileindex).zfill(4)
-        # _filename = Filename + '.h5'
-        
-        self.checkandretryDetectorSetupProcess(detectorsetupP,args,timeout=120)#need to move beam size take longer time
+        #raster: raster=True -> basesetup reads self.rasterinfo (set earlier at
+        #~line 1243, so it is captured by _send_setup_request)
+        self._run_basesetup(args,(True,self.roi,True,True,False),120)#need to move beam size take longer time
         
         
         self.logger.debug('start to updatefilestring check')
