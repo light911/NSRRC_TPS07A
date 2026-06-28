@@ -173,6 +173,16 @@ class Detector():
     def exit(self):
         #exit
         print('Detector class EXIT')
+        #stop the long-lived setup worker (non-daemon, so it won't die on its own)
+        worker = getattr(self,'setupWorker',None)
+        if worker is not None and worker.is_alive():
+            try:
+                self.setupReqQ.put('exit')
+                worker.join(2)
+                if worker.is_alive():
+                    worker.kill()
+            except Exception as e:
+                self.logger.warning(f'stop setup worker fail: {e}')
         pass
     
     def HandleCommand(self,command):
@@ -559,6 +569,16 @@ class Eiger2X16M(Detector):
         #long-lived: run one basesetup at a time, mirroring the old per-collect
         #child. basesetup calls sys.exit(-1) on its own errors, so SystemExit is
         #caught here to keep the worker alive and report failure instead.
+        #Forked clean (empty PV cache) so GC stays on; enable faulthandler once
+        #(_fp lives for the whole loop, so its fd stays open) to still capture any
+        #unexpected native crash.
+        try:
+            _fp = open('/home/blctl/Desktop/log/faulthandler.txt','a')
+            _fp.write(f'\n===== setup worker start pid={os.getpid()} {datetime.datetime.now()} =====\n')
+            _fp.flush()
+            faulthandler.enable(file=_fp, all_threads=True)
+        except Exception as e:
+            self.logger.warning(f'worker faulthandler enable failed: {e}')
         self.logger.warning('setup worker loop start')
         while True:
             req = self.setupReqQ.get()
@@ -1769,26 +1789,23 @@ class Eiger2X16M(Detector):
             
     def basesetup(self,raster=False,roi=False,beamwithdis=False,movebeasize=True,detconn=None,collectype='test image'):
         #mutithread version
-        #SIGSEGV (exitcode -11) root cause, confirmed by faulthandler:
-        #cyclic GC running in a ThreadPoolExecutor worker thread finalizes a
-        #pyepics PV (PV.__del__ -> disconnect -> ca.clear_subscription) from a
-        #thread with no CA context -> libca segfaults. This forked child is
-        #short-lived (does basesetup then exits, OS reclaims memory), so just
-        #turn off cyclic GC for its lifetime to stop finalizers firing mid-run.
-        gc.disable()
-        #faulthandler: this runs in a forked child that drives libca/libffi +
-        #requests under threads, which intermittently SIGSEGVs (exitcode -11,
-        #~40x/day). Dump every thread's Python traceback to a dedicated file on
-        #fault so we can see which call crashed. _fault_fp is held in this frame
-        #so its fd stays open through the (possibly crashing) run.
-        try:
-            _fault_fp = open('/home/blctl/Desktop/log/faulthandler.txt','a')
-            _fault_fp.write(f'\n===== basesetup pid={os.getpid()} {datetime.datetime.now()} '
-                            f'file={self.filename}_{str(self.fileindex).zfill(4)} =====\n')
-            _fault_fp.flush()
-            faulthandler.enable(file=_fault_fp, all_threads=True)
-        except Exception as _fe:
-            self.logger.warning(f'faulthandler setup failed: {_fe}')
+        #Old per-collect fork path only: that child is short-lived and forks from
+        #a CA-active parent, so it hits the -11 PV-finalizer-during-GC segfault
+        #(cyclic GC runs PV.__del__ -> ca.clear_subscription from a no-CA-context
+        #thread). gc.disable() stops it; faulthandler dumps any crash. The setup
+        #worker is forked once from a clean state with an empty PV cache -> no
+        #orphan PVs, so GC must stay ON (long-lived process) and faulthandler is
+        #enabled once in setup_worker_loop instead.
+        if not USE_SETUP_WORKER:
+            gc.disable()
+            try:
+                _fault_fp = open('/home/blctl/Desktop/log/faulthandler.txt','a')
+                _fault_fp.write(f'\n===== basesetup pid={os.getpid()} {datetime.datetime.now()} '
+                                f'file={self.filename}_{str(self.fileindex).zfill(4)} =====\n')
+                _fault_fp.flush()
+                faulthandler.enable(file=_fault_fp, all_threads=True)
+            except Exception as _fe:
+                self.logger.warning(f'faulthandler setup failed: {_fe}')
         try:
             t0 = time.time()
             if detconn is not None:
