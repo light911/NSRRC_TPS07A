@@ -45,7 +45,7 @@ DET_HTTP_TIMEOUT = 15
 # the -11 PV-finalizer segfault and the -None fork-while-multithreaded deadlock.
 # Default OFF: behaviour is identical to the old per-collect CAProcess path
 # until this is flipped and the DHS restarted.
-USE_SETUP_WORKER = False
+USE_SETUP_WORKER = True
 
 def genDatasetNames(totalimage:int,nimages_per_file:int=1000,Filename:str='Test'):
     maxfileset = totalimage // nimages_per_file
