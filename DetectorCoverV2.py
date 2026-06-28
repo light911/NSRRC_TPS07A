@@ -15,9 +15,13 @@ class State(Enum):
 
 class MOXA():
     def __init__(self,m:Manager=None) -> None:
-        signal.signal(signal.SIGINT, self.quit)
-        signal.signal(signal.SIGTERM, self.quit)
         if not m:
+            #standalone: we own the process, so handle ctrl+c ourselves.
+            #embedded under EpicsDHS (m is passed in) DCSDHS owns SIGINT -- do NOT
+            #install here or we clobber its handler and shut down the shared
+            #Manager on ctrl+c (the FileNotFoundError cascade).
+            signal.signal(signal.SIGINT, self.quit)
+            signal.signal(signal.SIGTERM, self.quit)
             self.m = Manager()
         else:
             self.m = m
@@ -90,6 +94,9 @@ class MOXA():
                 command = commandQ.get(block=False)
             except:
                 command = None
+            #default: state unchanged. a str command (e.g. 'exit') used to skip
+            #every newstate assignment and crash the tail with UnboundLocalError.
+            newstate = self.Coverstate
             if isinstance(command,str):
                 if command == "exit" :
                     self.stop = True

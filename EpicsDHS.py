@@ -25,8 +25,14 @@ from CVLS_dhs.cvls_control import CVLSController
 class DCSDHS():
     def __init__(self,par:dict=None,m:Manager=None) :
 #        super(self.__class__,self).__init__(parent)
-        #set before installing the handler: SIGINT can fire any time after this
+        #set before installing the handler: SIGINT can fire any time after this.
+        #only this pid may run quit(); forked workers inherit the handler but
+        #must ignore it (ctrl+c hits the whole process group). keep the manager
+        #pid so the shutdown SIGKILL sweep can spare it and let __main__ shut it
+        #down cleanly.
         self._shutting_down = False
+        self._main_pid = os.getpid()
+        self._manager_pid = m._process.pid if m is not None else None
         signal.signal(signal.SIGINT, self.quit)
         signal.signal(signal.SIGTERM, self.quit)
         #load config
@@ -851,28 +857,65 @@ class DCSDHS():
         return ans
 
 
+    def _descendant_pids(self,root_pid):
+        #walk /proc to collect every descendant pid of root_pid (linux only).
+        #mp.active_children() only sees direct children, so it leaks grandchildren
+        #(cover's asking_state, Detector's CAProcess) on shutdown.
+        children = {}
+        for entry in os.listdir('/proc'):
+            if not entry.isdigit():
+                continue
+            try:
+                with open(f'/proc/{entry}/stat') as f:
+                    #comm may contain ')'; ppid is the field right after the last ')'
+                    ppid = int(f.read().rsplit(')',1)[1].split()[1])
+            except (OSError,IndexError,ValueError):
+                continue
+            children.setdefault(ppid,[]).append(int(entry))
+        out,stack = [],[root_pid]
+        while stack:
+            for child in children.get(stack.pop(),[]):
+                out.append(child)
+                stack.append(child)
+        return out
+
     def quit(self,signum,frame):
+        #ctrl+c is delivered to the whole process group, so every forked worker
+        #runs this handler. only the supervisor pid may shut down; a child that
+        #ran the full quit would cross-kill its siblings, tear down the shared
+        #Manager, and sys.exit() through libca teardown -- exactly the
+        #FileNotFoundError / exitcode -9 cascade we are fixing. children just
+        #ignore the signal and wait to be drained or killed by us.
+        if os.getpid() != self._main_pid:
+            return
         #stop the supervisor from reviving children we are about to kill
         self._shutting_down = True
         self.logger.critical(f'EPICS DHS Offline')
-        self.Q['Queue']['reciveQ'].put('exit')
-        self.Q['Queue']['sendQ'].put('exit')
-        self.Q['Queue']['epicsQ'].put('exit')
-        self.Q['Queue']['ControlQ'].put('exit')
-        self.Q['Queue']['DetectorQ'].put('exit')
-        self.Q['Queue']['attenQ'].put('exit')
-        self.client.close()
-        
-        # self.logger.debug(f"PID : {os.getpid()} DHS closed, Par= {self.Par}")
+        #ask the queue-driven workers to stop cleanly first
+        for q in ('reciveQ','sendQ','epicsQ','ControlQ','DetectorQ','attenQ'):
+            try:
+                self.Q['Queue'][q].put('exit')
+            except Exception:
+                pass
+        try:
+            self.client.close()
+        except Exception:
+            pass
+        #let workers drain 'exit' while the Manager is still alive
+        time.sleep(1)
+        #SIGKILL is the safe way to drop the libca/HTTP children (no interpreter
+        #teardown -> no fork+libca segfault); reap the whole tree, not just direct
+        #children, so cover/asking_state/CAProcess grandchildren go too. spare the
+        #Manager so __main__ can shut it down cleanly.
+        for pid in self._descendant_pids(os.getpid()):
+            if pid == self._manager_pid:
+                continue
+            self.logger.warning(f'Last try to kill {pid}')
+            try:
+                os.kill(pid,signal.SIGKILL)
+            except ProcessLookupError:
+                pass
         self.logger.debug(f"PID : {os.getpid()} DHS closed")
-        # self.logger.info(f'PID : {os.getpid()} DHS closed') 
-        # self.logger.critical(f'm pid={self.m._process.ident}')
-        # self.m.shutdown()
-        active_children = mp.active_children()
-        if len(active_children)>0:
-            for item in active_children:
-                self.logger.warning(f'Last try to kill {item.pid}')
-                os.kill(item.pid,signal.SIGKILL)
         sys.exit()
 ####test section
 def serverTCP(port):
@@ -999,4 +1042,7 @@ if __name__ == "__main__":
     print ("end")
     ToLineNotify(beamline='TPS07A',msg="EPICS DHS Closed",nosound=True)
 
-    m.shutdown()
+    try:
+        m.shutdown()
+    except Exception:
+        pass
