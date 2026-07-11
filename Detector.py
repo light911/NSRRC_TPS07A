@@ -268,6 +268,8 @@ class Eiger2X16M(Detector):
         self.setupReqQ = Queue()
         self.setupRespQ = Queue()
         self.setupWorker = None
+        #header the worker hands back for the parent's exactly-once /tranfer POST
+        self._setup_header = None
         self.logger.warning(f'Eiger2X 16M DHS init Time: {time.time()-t0}')
     def updatefilestring(self):
         t0 = time.time()
@@ -588,13 +590,20 @@ class Eiger2X16M(Detector):
             try:
                 for k,v in req['attrs'].items():
                     setattr(self,k,v)
+                #cleared before each run so a failed setup never returns a stale
+                #header from a previous collect. basesetup sets it once the header
+                #is built (worker mode does NOT POST /tranfer itself).
+                self._setup_header = None
                 self.basesetup(*req['args'])
-                self.setupRespQ.put({'id':req['id'],'ok':True,'err':None})
+                #hand the header back so the PARENT POSTs /tranfer exactly once:
+                #retries are parent-controlled -> no duplicate; only on success
+                #-> no phantom job. see _run_basesetup / _notify_download_server.
+                self.setupRespQ.put({'id':req['id'],'ok':True,'err':None,'header':getattr(self,'_setup_header',None)})
             except SystemExit as e:
-                self.setupRespQ.put({'id':req['id'],'ok':False,'err':f'basesetup sys.exit {e.code}'})
+                self.setupRespQ.put({'id':req['id'],'ok':False,'err':f'basesetup sys.exit {e.code}','header':None})
             except Exception as e:
                 self.logger.critical(f'setup worker basesetup error: {e}')
-                self.setupRespQ.put({'id':req['id'],'ok':False,'err':str(e)})
+                self.setupRespQ.put({'id':req['id'],'ok':False,'err':str(e),'header':None})
 
     def _send_setup_request(self,args):
         reqid = time.time()
@@ -606,6 +615,8 @@ class Eiger2X16M(Detector):
         #mirror checkandretryDetectorSetupProcess: wait for the worker's result;
         #on timeout (worker hung) kill+respawn and retry once; on a reported
         #failure the worker is still alive so just resend once.
+        #returns (ok, header): header is the write_header appendix the parent
+        #POSTs to /tranfer exactly once on success (None on any failure).
         attempt = 1
         while attempt <= 2:
             try:
@@ -619,7 +630,7 @@ class Eiger2X16M(Detector):
                 self._start_setup_worker()
                 attempt += 1
                 if attempt > 2:
-                    return False
+                    return False, None
                 reqid = self._send_setup_request(args)
                 continue
             if resp.get('id') != reqid:
@@ -627,14 +638,14 @@ class Eiger2X16M(Detector):
                 continue
             if resp.get('ok'):
                 self.logger.info('setup worker OK')
-                return True
+                return True, resp.get('header')
             self.logger.critical(f"setup worker reported fail: {resp.get('err')} (attempt {attempt})")
             attempt += 1
             if attempt > 2:
-                return False
+                return False, None
             reqid = self._send_setup_request(args)
             continue
-        return False
+        return False, None
 
     def _run_basesetup(self,args,beamsize_args,timeout):
         #shared setup launch for every collect type. Worker mode: hand basesetup
@@ -648,7 +659,14 @@ class Eiger2X16M(Detector):
             self.logger.debug('start to setup_beamsize_cover_distance')
             self.setup_beamsize_cover_distance(*beamsize_args)
             self.logger.debug('End to setup_beamsize_cover_distance')
-            self._wait_setup_result(reqid,args,timeout)
+            #ok only if the worker actually finished basesetup (armed). callers
+            #MUST honor False and abort: on failure the detector is not armed.
+            #the /tranfer notify is sent HERE (parent), exactly once, only on
+            #success -> no duplicate on worker retry, no phantom job on failure.
+            ok, header = self._wait_setup_result(reqid,args,timeout)
+            if ok and header:
+                self._notify_download_server(header)
+            return ok
         else:
             #CAProcess: child uses CA, must not inherit the parent's dead libca state
             detectorsetupP = CAProcess(target=self.basesetup,args=args,name='Detector_Setup')
@@ -657,6 +675,32 @@ class Eiger2X16M(Detector):
             self.setup_beamsize_cover_distance(*beamsize_args)
             self.logger.debug('End to setup_beamsize_cover_distance')
             self.checkandretryDetectorSetupProcess(detectorsetupP,args,timeout)
+            #old path has no success signal; preserve prior behavior (proceed)
+            return True
+
+    def _setup_failed(self,command):
+        #detector setup did not complete (worker timed out twice, e.g. MD3 stuck):
+        #the detector is not armed and the download/transfer server was never told
+        #about this dataset. do NOT proceed as if it succeeded. surface it in DCSS
+        #(red status) and close the operation so DCSS unblocks instead of hanging.
+        self.logger.critical(f'detector setup FAILED, abort collect {command[0]} handle={self.operationHandle}')
+        self.sendQ.put('htos_set_string_completed system_status normal {Detector setup FAILED} white #d00000')
+        self.sendQ.put(('operdone',command[0],self.operationHandle))
+
+    def _notify_download_server(self,header):
+        #tell the download/transfer server (10.7.1.108:64444) a dataset is coming.
+        #runs in the PARENT: use a Thread, NOT a Process — the parent holds live CA
+        #channels and forking here risks the orphan-PV finalizer segfault (see the
+        #reason the setup worker is forked early). short POST timeout keeps
+        #CommandMon responsive if the server is down; a lost notify is non-fatal.
+        def _post():
+            try:
+                url = 'http://10.7.1.108:64444/tranfer'
+                r = requests.post(url,json=header,timeout=5)
+                self.logger.info(f'notify download server: {r.status_code} {r.text}')
+            except Exception as e:
+                self.logger.warning(f'Notify Download server has error {e}')
+        Thread(target=_post,daemon=True,name='NotifyDownload').start()
 
     def detector_collect_shutterless(self,command):
     #    ('detector_collect_shutterless', '1.24', '1', 'test_1', '/data/blctl/test', 'blctl', 'gonio_phi', '0.1', '0.000009', '1.0', '10', '750.000060', '0.976226127404', '0.000231', '50.000000', '0', '0', 'PRIVATEA03F6ADA6F19A8DA1DEE6BFC325F4DCE', '1', '10', '50.000000', '0.0')
@@ -709,9 +753,9 @@ class Eiger2X16M(Detector):
         self.unknow = int(command[19]) #1
         self.beamsize = command[20] # 50
         self.atten = command[21] #0
-        print("##########")
-        print(self.detmode)
-        print("##########")
+        # print("##########")
+        # print(self.detmode)
+        # print("##########")
         #  sscanf(commandBuffer.textInBuffe
         # self.logger.info(f'Default action for {command[0]}:{command[1:]}')
         self.logger.info(f'command: {command[1:]}')
@@ -765,7 +809,12 @@ class Eiger2X16M(Detector):
             roi = True
             pass
         args=(False,roi,False,False,None,collectype,)
-        self._run_basesetup(args,(False,False,False,False,False),30)
+        #watchdog (60s) must stay > basesetup's internal worst case
+        #(waitMD3Ready 15s + write_header join 30s); was 30s and equal to the
+        #MD3 wait, which killed the worker before it could notify /tranfer.
+        if not self._run_basesetup(args,(False,False,False,False,False),60):
+            self._setup_failed(command)
+            return
         _oscillationTime = self.TotalFrames * self.exposureTime
         Filename = self.filename + "_" + str(self.fileindex).zfill(4)
         _filename = Filename + '.h5'
@@ -950,7 +999,9 @@ class Eiger2X16M(Detector):
         args=(False,roi,False,False,None,collectype,)
 
         #SSX: move beam size but not 2nd slit (bypassslit=True)
-        self._run_basesetup(args,(False,False,False,False,True),30)
+        if not self._run_basesetup(args,(False,False,False,False,True),60):
+            self._setup_failed(command)
+            return
         Filename = self.filename + "_" + str(self.fileindex).zfill(4)
         _filename = Filename + '.h5'
 
@@ -1130,7 +1181,9 @@ class Eiger2X16M(Detector):
         # raster=False,roi=False,beamwithdis=False,movebeasize=True
         args=(False,self.roi,True,True,None,collectype,)
         
-        self._run_basesetup(args,(False,self.roi,True,True,False),30)#need to move beam size take longer time
+        if not self._run_basesetup(args,(False,self.roi,True,True,False),60):#need to move beam size take longer time
+            self._setup_failed(command)
+            return
         _oscillationTime = self.TotalFrames * self.exposureTime
         Filename = self.filename + "_" + str(self.fileindex).zfill(4)
         _filename = Filename + '.h5'
@@ -1390,9 +1443,11 @@ class Eiger2X16M(Detector):
         
         #raster: raster=True -> basesetup reads self.rasterinfo (set earlier at
         #~line 1243, so it is captured by _send_setup_request)
-        self._run_basesetup(args,(True,self.roi,True,True,False),120)#need to move beam size take longer time
-        
-        
+        if not self._run_basesetup(args,(True,self.roi,True,True,False),120):#need to move beam size take longer time
+            self._setup_failed(command)
+            return
+
+
         self.logger.debug('start to updatefilestring check')
         monP = CAProcess(target=self.updatefilestring,name='Monfile')
         monP.start()
@@ -2025,8 +2080,12 @@ class Eiger2X16M(Detector):
             
                 
                 #update to md3
-                #wait md3 ready
-                self.waitMD3Ready(30)
+                #wait md3 ready. keep this STRICTLY shorter than the setup-worker
+                #watchdog (_run_basesetup timeout): if they are equal, a stuck MD3
+                #makes this wait burn the whole watchdog budget and the worker gets
+                #killed right before it can arm + POST the /tranfer notify, so the
+                #dataset is never announced to the download/transfer server.
+                self.waitMD3Ready(15)
                 self.logger.info(f'update to MD3 NumberOfFramesPV {self.TotalFrames}')
                 NumberOfFramesPV = self.Par['collect']['NumberOfFramesPV']
                 # caput(NumberOfFramesPV,self.TotalFrames)
@@ -2043,6 +2102,10 @@ class Eiger2X16M(Detector):
                     raise RuntimeError('write_header failed (see earlier log)')
                 header_appendix['TotalFrames'] = self.TotalFrames
                 header_appendix['stream_name'] = generate_timestamp_string()
+                #worker mode: stash it so setup_worker_loop can return it to the
+                #parent, which POSTs /tranfer exactly once on success (below is
+                #only used by the legacy non-worker path).
+                self._setup_header = header_appendix
                 text = json.dumps(header_appendix)
                 print(f'after get header que time = { time.time()-t0}')
                 det.setStreamConfig('header_appendix',text)
@@ -2065,14 +2128,18 @@ class Eiger2X16M(Detector):
             # monP = Process(target=self.updatefilestring,name='Monfile')
             # monP.start()
 
-            #Notify Download server
-            try:
-                url = 'http://10.7.1.108:64444/tranfer'
-                # response = requests.post(url , json=header_appendix)
-                p = Process(target=self.sendtoAutostra,args=(url,header_appendix))
-                p.start()
-            except Exception as e:
-                self.logger.warning(f'Notify Download server has error {e}')
+            #Notify Download server.
+            #worker mode: the PARENT sends this (see _run_basesetup) exactly once
+            #on success, so DON'T send it here or a worker retry would duplicate.
+            #legacy non-worker mode: no parent hand-back, so send from the child.
+            if not USE_SETUP_WORKER:
+                try:
+                    url = 'http://10.7.1.108:64444/tranfer'
+                    # response = requests.post(url , json=header_appendix)
+                    p = Process(target=self.sendtoAutostra,args=(url,header_appendix))
+                    p.start()
+                except Exception as e:
+                    self.logger.warning(f'Notify Download server has error {e}')
 
             self.logger.info(f'setup time = {t1-t0}')
             # return TotalTime,Filename
