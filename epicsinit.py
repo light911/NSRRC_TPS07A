@@ -1088,7 +1088,7 @@ class epicsdev():
             else:
                 pass
         pass
-    def waitMD3Ready(self,timeout=15):
+    def waitMD3Ready(self,timeout=20):
         t0 = time.time()
         check = True
         while check:
