@@ -240,10 +240,14 @@ class workroundmd3moving():
                                     elif caget('07a:md3:Status') == 'Setting Transfer phase':
                                         pass
                                         counterlist[i] = 0
+                                    elif caget('07a:md3:Status') == 'Centring':
+                                        pass
+                                        counterlist[i] = 0
                                     else:
                                         # counter += 1
+                                        status  = caget('07a:md3:Status') 
                                         self.logger.warning(f'MD3 {self.mon[i]}:{targetvalue[i]=},{currentvalue[i]=},{diffwithtarget=}>{self.difth[i]}, {diffwithold=},state={item}goto target')
-                                        self.logger.error(f'Try to fix MD3 {self.mon[i]} problem')
+                                        self.logger.error(f'Try to fix MD3 {self.mon[i]} problem,status={status}')
                                         self.ca.caput(self.TruePosname[i],targetvalue[i])
                                         counterlist[i] = 0
                                 
