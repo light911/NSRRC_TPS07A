@@ -56,6 +56,7 @@ class epicsdev():
         self.sendQ = Q['Queue']['sendQ']
         self.controlQ = Q['Queue']['ControlQ']
         self.AttenQ = Q['Queue']['attenQ']
+        self.cvlsQ = Q['Queue']['CVLSQ']
         
         self.init_update=True
         #used to a Flag for update limits @motor start moving
@@ -361,6 +362,13 @@ class epicsdev():
                 self.sendQ.put(('updatevalue',dcssname,value,"motor","normal"))
             else:
                 self.sendQ.put(('endmove',dcssname,value,'normal'))
+            #backlight follows MD3 phase: on for Centring, off for the rest,
+            #Unknown(4) is transient so leave the light as-is
+            self.logger.debug(f"MD3 phase changed to {value}, backlight {'on' if value == 0 else 'off'}")
+            if value == 0:
+                self.cvlsQ.put(("master_on",))
+            elif value != 4:
+                self.cvlsQ.put(("master_off",))
         elif dcsstype == "quickmotor" :
             if guiname == "camera_zoom":
                 #delay report , make sure zoom_scale_y zoom_scale_x report frist
@@ -789,6 +797,11 @@ class epicsdev():
                     elif dcsstype == "change_mode":
                             self.sendQ.put(("startmove",command[1],command[2],"Normal"))
                             value = int(float(command[2]))
+                            #heading to Centring: turn the backlight on now so it
+                            #is ready before MD3 finishes the phase change; the
+                            #off side stays with the CurrentPhase callback
+                            if value == 0:
+                                self.cvlsQ.put(("master_on",))
                             # PVname, = self.FindEpicsListInfo('change_mode','GUIname','PVname')
                             if int(self.epicslist[PVname]["current_value"]) == int(value):
                                 dcssname = command[1]
@@ -1121,6 +1134,7 @@ class epicsdev():
         else:
             self.logger.info('move to center mode before Auto center')
             PVname, = self.FindEpicsListInfo('centerLoop','GUIname','PVname')
+            self.cvlsQ.put(("master_on",))#make sure light is on
             self.caput('07a:md3:CurrentPhase',0)
             time.sleep(0.5)
             wait = True

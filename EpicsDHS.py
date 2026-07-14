@@ -114,7 +114,9 @@ class DCSDHS():
         self.epcisPV_.start()
         self.Atten_ = Process(target=self.Attenserver, args=(self.Par,self.Q,))
         self.Atten_.start()
-        
+        self.CVLS_ = Process(target=self.CVLSserver, args=(self.Par,self.Q,))
+        self.CVLS_.start()
+
         self.workroundmd3moving_ = Process(target=self.workroundmd3moving, args=(self.Par,self.Q,))
         self.workroundmd3moving_.start()
         time.sleep(3)
@@ -126,6 +128,7 @@ class DCSDHS():
         services = {
             'epcisPV_':            (self.epicsPVP,           (self.Par,self.Q,self.cover,)),
             'Atten_':              (self.Attenserver,        (self.Par,self.Q,)),
+            'CVLS_':               (self.CVLSserver,         (self.Par,self.Q,)),
             'workroundmd3moving_': (self.workroundmd3moving, (self.Par,self.Q,)),
         }
         if self.coverP_ is not None:
@@ -256,15 +259,16 @@ class DCSDHS():
                     q.get(block=False)
                 except Exception:
                     break
-    def CVLScontrol(self,Par,Q,tcpclient):
-        reciveQ = Q['Queue']['reciveQ']
-        sendQ = Q['Queue']['sendQ']
-        epicsQ = Q['Queue']['epicsQ']
-        ContrlQ = Q['Queue']['ControlQ']
-        DetctorQ = Q['Queue']['DetectorQ']
-        CvlsQ = Q['Queue']['CVLSQ']
-        CVLS = CVLSController(Par,Q)
-        CVLS.run()
+    #no used
+    # def CVLScontrol(self,Par,Q,tcpclient):
+    #     reciveQ = Q['Queue']['reciveQ']
+    #     sendQ = Q['Queue']['sendQ']
+    #     epicsQ = Q['Queue']['epicsQ']
+    #     ContrlQ = Q['Queue']['ControlQ']
+    #     DetctorQ = Q['Queue']['DetectorQ']
+    #     CvlsQ = Q['Queue']['CVLSQ']
+    #     CVLS = CVLSController(Par,Q)
+    #     CVLS.run()
     def detector(self,Par,Q,tcpclient,coverdhs):
         reciveQ = Q['Queue']['reciveQ']
         sendQ = Q['Queue']['sendQ']
@@ -830,8 +834,6 @@ class DCSDHS():
         a = atten(Par)
         a.monitor(Q)
     def CVLSserver(self,Par,Q):
-        
-
         c = CVLSController(Par,Q)
         c.monitor(Q)
     def workroundmd3moving(self,Par,Q):
@@ -934,7 +936,7 @@ class DCSDHS():
         self._shutting_down = True
         self.logger.critical(f'EPICS DHS Offline')
         #ask the queue-driven workers to stop cleanly first
-        for q in ('reciveQ','sendQ','epicsQ','ControlQ','DetectorQ','attenQ'):
+        for q in ('reciveQ','sendQ','epicsQ','ControlQ','DetectorQ','attenQ','CVLSQ'):
             try:
                 self.Q['Queue'][q].put('exit')
             except Exception:

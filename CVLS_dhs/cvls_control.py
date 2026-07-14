@@ -44,19 +44,27 @@ class CVLSController:
     methods to control LED channels, query device status, and manage settings.
     """
 
-    def __init__(self, connection_type: ConnectionType = ConnectionType.ETHERNET,
+    def __init__(self, Par=None, Q=None,
+                 connection_type: ConnectionType = ConnectionType.ETHERNET,
                  host: str = "10.7.1.111", port: int = 50811,
                  serial_port: Optional[str] = None, timeout: float = 2.0):
         """
         Initialize CV-LS controller
 
         Args:
+            Par: EpicsDHS shared config dict; host/port come from Par['CVLS']
+            Q: EpicsDHS queue dict (CVLSQ/reciveQ/sendQ)
             connection_type: Type of connection (ETHERNET, USB, or UART)
             host: IP address for Ethernet connection (default: 10.7.1.111)
             port: Port number for Ethernet connection (default: 50811)
             serial_port: Serial port path for USB/UART (e.g., '/dev/ttyUSB0', 'COM3')
             timeout: Communication timeout in seconds (default: 2.0)
         """
+        self.Par = Par
+        self.Q = Q
+        if Par is not None:
+            host = Par['CVLS']['host']
+            port = Par['CVLS']['commandprot']
         self.connection_type = connection_type
         self.host = host
         self.port = port
@@ -65,7 +73,8 @@ class CVLSController:
         self.socket = None
         self.serial = None
         self.connected = False
-        self.logger = logsetup.getloger2('CVLSController',LOG_FILENAME='/home/blctl/Desktop/log/CVLSControllerlog.txt',level = self.Par['Debuglevel'],bypassline=False)
+        level = Par['Debuglevel'] if Par is not None else 'DEBUG'
+        self.logger = logsetup.getloger2('CVLSController',LOG_FILENAME='/home/blctl/Desktop/log/CVLSControllerlog.txt',level = level,bypassline=False)
         self.logger.info("init CVLSController logging")
         self.connect()
 
@@ -115,11 +124,16 @@ class CVLSController:
             print(f"Connection failed: {e}")
             self.connected = False
             return False
-    def run(self):
+    def monitor(self,Que):
         """Main loop to keep connection alive and handle communication"""
-        # self.logger.warning('CVLSController MON start!')
+        self.logger.warning('CVLSController MON start!')
+        self.CommandQ = Que['Queue']['CVLSQ']
+        self.reciveQ = Que['Queue']['reciveQ']
+        self.sendQ = Que['Queue']['sendQ']
+        
         while True:
             command = self.CommandQ.get()
+            self.logger.info(f'CVLSController got str command: {command}')
             if isinstance(command,str):
                 if command == "exit" :
                     self.logger.warning('CVLSController DHS Get Exit Command!')
@@ -133,9 +147,31 @@ class CVLSController:
             #from reviceQ (DCSS),update or move some thing for it
             elif isinstance(command,tuple):
                 # self.HandleCommand(command)
-                pass
+                if command[0] == "setBackLightColor" :
+                    # this is a op
+                    # self.sendQ.put(("startmove",command[1],command[2],"Normal"))
+                    # new_Attenuation = self.Target(float(command[2]),select='lower')
+                    # self.sendQ.put(('endmove',command[1] ,str(new_Attenuation),'normal'))
+                    pass
+                elif command[0] == "switchSampleEnvironment" :
+                    pass
+                elif command[0] == "master_off" :
+                    self.master_off()
+                    pass
+                elif command[0] == "master_on" :
+                    self.master_on()
+                    pass
+                else:
+                    self.logger.warning(f'CVLSController DHS Get undefine Command! {command}')
             else:
                 self.logger.warning('CVLSController DHS Get undefine Command! {command}')
+
+    def exit(self):
+        """Clean shutdown for the monitor loop 'exit' command"""
+        try:
+            self.disconnect()
+        except Exception as e:
+            self.logger.warning(f'CVLS disconnect on exit fail: {e}')
 
     def disconnect(self):
         """Close connection to the CV-LS device"""
@@ -296,7 +332,12 @@ class CVLSController:
         Returns:
             True if successful
         """
-        return self.set_output_enable(Channel.COMMON, True)
+        ok = self.set_output_enable(Channel.COMMON, True)
+        if ok:
+            self.logger.info('CVLS master ON')
+        else:
+            self.logger.warning('CVLS master ON fail')
+        return ok
 
     def master_off(self) -> bool:
         """
@@ -305,7 +346,12 @@ class CVLSController:
         Returns:
             True if successful
         """
-        return self.set_output_enable(Channel.COMMON, False)
+        ok = self.set_output_enable(Channel.COMMON, False)
+        if ok:
+            self.logger.info('CVLS master OFF')
+        else:
+            self.logger.warning('CVLS master OFF fail')
+        return ok
 
     def set_all_channels_power(self, power: int) -> bool:
         """
