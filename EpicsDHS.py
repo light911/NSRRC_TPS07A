@@ -11,6 +11,7 @@ from workround import myepics,workroundmd3moving
 import socket,time,signal,sys,os,subprocess
 # import multiprocessing as mp
 from multiprocessing import Process, Queue, Manager
+from multiprocessing.connection import wait as mp_wait
 import multiprocessing as mp
 from threading import Thread
 from epicsinit import epicsdev
@@ -203,17 +204,58 @@ class DCSDHS():
         '''one DCSS session: workers run until the connection dies'''
         self.Par['operationRecord'][:] = []#clear operationRecord
 
-        reciver_ = Process(target=self.reciver, args=(self.Par,self.Q,self.client,))
-        sender_ = Process(target=self.sender, args=(self.Par,self.Q,self.client,))
-        Detector_ = Process(target=self.detector, args=(self.Par,self.Q,self.client,self.cover))
+        reciver_ = Process(target=self.reciver, args=(self.Par,self.Q,self.client,), name='reciver')
+        sender_ = Process(target=self.sender, args=(self.Par,self.Q,self.client,), name='sender')
+        Detector_ = Process(target=self.detector, args=(self.Par,self.Q,self.client,self.cover), name='detector')
 
-        reciver_.start()
-        sender_.start()
-        Detector_.start()
+        workers = (reciver_, sender_, Detector_)
+        for w in workers:
+            w.start()
 
-        reciver_.join()
-        sender_.join()
-        Detector_.join()
+        #the session is over as soon as ANY worker process dies: the reciver
+        #breaks on a dead socket and forwards 'exit' to the others, so at
+        #least one worker always exits promptly even if a sibling gets stuck
+        mp_wait([w.sentinel for w in workers])
+        self.logger.warning('a session worker died, tear down this DCSS session')
+
+        #repeat the exits in case the reciver crashed before sending them
+        for qname in ('sendQ','DetectorQ'):
+            try:
+                self.Q['Queue'][qname].put('exit')
+            except Exception:
+                pass
+
+        #bounded join: a worker can hang at interpreter exit (queue feeder
+        #flush / non-daemon child join) -- the old unbounded join here blocked
+        #the reconnect forever until a manual ctrl+c (2026-07-13 incident:
+        #workers got 'exit' at 13:22:59 but the session never ended)
+        deadline = time.time() + 10
+        for w in workers:
+            w.join(max(0.1, deadline - time.time()))
+        for w in workers:
+            if not w.is_alive():
+                continue
+            self.logger.warning(f'{w.name} still alive after session end, SIGKILL it and its children')
+            #SIGKILL, not terminate(): skip interpreter teardown so libca
+            #children cannot segfault; reap descendants (setup worker, cover,
+            #CAProcess) too -- the next session re-forks fresh ones
+            for pid in self._descendant_pids(w.pid):
+                try:
+                    os.kill(pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+            w.kill()
+            w.join(5)
+
+        #drain leftovers so the next session cannot eat a stale 'exit'
+        #(the extra 'Send Q get Exit' right after a reconnect was exactly that)
+        for qname in ('reciveQ','sendQ','DetectorQ'):
+            q = self.Q['Queue'][qname]
+            while True:
+                try:
+                    q.get(block=False)
+                except Exception:
+                    break
     def CVLScontrol(self,Par,Q,tcpclient):
         reciveQ = Q['Queue']['reciveQ']
         sendQ = Q['Queue']['sendQ']
