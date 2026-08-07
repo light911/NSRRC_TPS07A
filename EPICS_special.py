@@ -409,21 +409,38 @@ class Beamsize():
                     runtime = time.time() - t1
                     self.logger.info(f'Moving All MOTOR Done,take {runtime}sec')
                 elif detMove == 0 and detDisMove != 0:
-                    #TODO(review): added 2026-08-06 for the "detector still flying"
-                    #raster bug. same beamsize (detMove==0) + distance change only
-                    #(detDisMove!=0) used to fall through to the else below, which
-                    #neither moved nor waited; the post-check at the bottom then
-                    #caput'd Det:Y and returned immediately, so target() came back
-                    #in ~0.5s while Det:Y still had 210mm to travel -> DHS armed and
-                    #sent operdone, DCSS started startRasterScan with the detector
-                    #~170mm out of position (13:49:35 -> in position only 13:50:09).
-                    #back then MoveTogether was False purely because of the
-                    #hardcoded `targetDetY < 40` guard (since removed, see the
-                    #collisionDetY comment above), so this branch was unreachable
-                    #by accident. it is still needed on its own: MD3Y does not move
-                    #in this case, only the distance does, and it MUST wait for the
-                    #motors before returning.
-                    self.logger.info(f'Moving det MOTOR only (distance change,same beamsize)')
+                    #TODO(review): DEAD IN PRACTICE, AND MOVING HERE IS NOT SAFE.
+                    #
+                    #history: added 2026-08-06 for the "detector still flying" raster
+                    #bug. same beamsize (detMove==0) + distance change only
+                    #(detDisMove!=0) fell through to the else below, which neither
+                    #moved nor waited; the post-check at the bottom then caput'd
+                    #Det:Y and returned immediately, so target() came back in ~0.5s
+                    #while Det:Y still had 210mm to travel -> DHS armed and sent
+                    #operdone, DCSS started startRasterScan with the detector ~170mm
+                    #out of position (13:49:35 -> in position only 13:50:09).
+                    #
+                    #what actually fixed that was removing the hardcoded
+                    #`targetDetY < 40` guard (see the collisionDetY comment above).
+                    #with it gone the normal short-distance case gets collisionDetY
+                    #False -> MoveTogether True -> the `MoveTogether and detMove ==
+                    #0` branch above, which already waits. verified 2026-08-07 09:24
+                    #(350mm -> 140mm raster at the same beamsize): the log line was
+                    #'Moving det MOTOR only', setup took 40.9s, operdone went out
+                    #0.4s after Det:Y arrived. THIS branch did not run.
+                    #
+                    #so getting here now means detMove==0 AND MoveTogether is False,
+                    #i.e. collisionDetY (targetDetY < DetYLLM) or collisionMD3Y is
+                    #genuinely True - a real interlock violation, not a false alarm
+                    #from a stale constant. blindly moving is the wrong answer:
+                    #today the caput is simply rejected by the EPICS soft limit, so
+                    #the motor never moves, check_allmotorstop returns at once and
+                    #the post-check below reports 'not in position' - it does not
+                    #hang, but it also does not tell the caller the setup failed.
+                    #keep it as a net that at least WAITS instead of returning early,
+                    #but the right behaviour is probably to abort and report to DCSS
+                    #rather than move. decide that before trusting this path.
+                    self.logger.warning(f'Moving det MOTOR only (distance change,same beamsize) - MoveTogether=False,collision risk,should not normally reach here')
                     self.opencover(opencover)
                     del movinglist[self.MD3YMotor]
                     movinglist[self.DetYMotor] = targetDetY
