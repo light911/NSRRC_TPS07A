@@ -1306,6 +1306,12 @@ class epicsdev():
             DetYPOS = DetYPVID.VAL
         else:
             DetYPOS = DetYPVID.RBV
+        #tell the reader WHEN this update happened: usingVAL means we were called as
+        #the move started, so the only position available is the target (VAL);
+        #otherwise the move has finished and we use the real readback (RBV).
+        #the 'DetYPVID.VAL='/'DetYPVID.RBV=' text is kept so old greps still match.
+        movephase = 'move START(target)' if usingVAL else 'move END(readback)'
+        possrc = 'DetYPVID.VAL' if usingVAL else 'DetYPVID.RBV'
         NewMD3YHLM = DetYPOS + DisPVID.OFF - DisPVID.LLM
         oldHLM = MD3YPVID.HLM
         if NewMD3YHLM < 200:
@@ -1316,11 +1322,7 @@ class epicsdev():
             # p = CAProcess(target=self.oldCAPUT, args=('07a:MD3:Y.HLM',NewMD3YHLM,))
             # p.start()
             # p.join()
-            self.logger.warning(f'New High limits cal for MD3Y is :{NewMD3YHLM} and updated(old limits is {oldHLM})')
-            if usingVAL :
-                self.logger.warning(f'New High limits cal baseon DetYPVID.VAL={DetYPOS}, DisPVID.OFF={DisPVID.OFF}, DisPVID.LLM={DisPVID.LLM}')
-            else:
-                self.logger.warning(f'New High limits cal baseon DetYPVID.RBV={DetYPOS}, DisPVID.OFF={DisPVID.OFF}, DisPVID.LLM={DisPVID.LLM}')
+            self.logger.warning(f'New High limits cal for MD3Y is :{NewMD3YHLM} and updated(old limits is {oldHLM}),on {movephase}')
         else:
             # MD3YPVID.HLM = 200
             # MD3YPVID.put('HLM', 200, wait=True, timeout=1)
@@ -1328,11 +1330,8 @@ class epicsdev():
             # p = CAProcess(target=self.oldCAPUT, args=('07a:MD3:Y.HLM',200.1,))
             # p.start()
             # p.join()
-            self.logger.warning(f'New High limits cal for MD3Y is :{NewMD3YHLM} Higher than 200,updated to 200.1(old limits is {oldHLM})')
-            if usingVAL :
-                self.logger.warning(f'New High limits cal baseon DetYPVID.VAL={DetYPOS}, DisPVID.OFF={DisPVID.OFF}, DisPVID.LLM={DisPVID.LLM}')
-            else:
-                self.logger.warning(f'New High limits cal baseon DetYPVID.RBV={DetYPOS}, DisPVID.OFF={DisPVID.OFF}, DisPVID.LLM={DisPVID.LLM}')
+            self.logger.warning(f'New High limits cal for MD3Y is :{NewMD3YHLM} Higher than 200,updated to 200.1(old limits is {oldHLM}),on {movephase}')
+        self.logger.warning(f'New High limits cal baseon {movephase},{possrc}={DetYPOS}, DisPVID.OFF={DisPVID.OFF}, DisPVID.LLM={DisPVID.LLM}')
         # ca.poll()
         self.logger.warning(f'recheck MD3Y HLM is :{MD3YPVID.HLM}')
         
@@ -1347,36 +1346,35 @@ class epicsdev():
             MD3YPOS = MD3YPVID.VAL
         else :
             MD3YPOS = MD3YPVID.RBV
+        #tell the reader WHEN this update happened: usingVAL means we were called as
+        #the move started, so the only position available is the target (VAL);
+        #otherwise the move has finished and we use the real readback (RBV).
+        #the 'MD3YPVID.VAL='/'MD3YPVID.RBV=' text is kept so old greps still match.
+        movephase = 'move START(target)' if usingVAL else 'move END(readback)'
+        possrc = 'MD3YPVID.VAL' if usingVAL else 'MD3YPVID.RBV'
         NewDetYLLM = MD3YPOS - DisPVID.OFF + DisPVID.LLM
         oldLLM = DetYPVID.LLM
         # self.logger.debug(f'New limits cal for DetY is :{NewDetYLLM}')
-        #40 is measured at MD3Y = -6, Lowest limit for  
-        if 40 < NewDetYLLM :
-            # DetYPVID.LLM = NewDetYLLM
-            # state = DetYPVID.put('LLM', NewDetYLLM, wait=True, timeout=1)
-            # print(f'state={state}')
-            self.caput('07a:Det:Y.LLM',NewDetYLLM)
-            # p = CAProcess(target=self.oldCAPUT, args=('07a:Det:Y.LLM',NewDetYLLM,))
-            # p.start()
-            # p.join()
-            self.logger.warning(f'New Low limits cal for DetY is :{NewDetYLLM} and updated(old limits is {oldLLM})')
-            if usingVAL:
-                self.logger.warning(f'New Low limits cal baseon MD3YPVID.VAL={MD3YPOS}, DisPVID.OFF={DisPVID.OFF}, DisPVID.LLM={DisPVID.LLM}')
-            else:
-                self.logger.warning(f'New Low limits cal baseon MD3YPVID.RBV={MD3YPOS}, DisPVID.OFF={DisPVID.OFF}, DisPVID.LLM={DisPVID.LLM}')
-        else:
-            # DetYPVID.LLM = 40
-            # DetYPVID.put('LLM', 40, wait=True, timeout=1)
-            self.caput('07a:Det:Y.LLM',NewDetYLLM)
-            # p = CAProcess(target=self.oldCAPUT, args=('07a:Det:Y.LLM',40,))
-            # p.start()
-            # p.join()
-            self.logger.warning(f'New Low limits cal for DetY is :{NewDetYLLM} lower than 40,updated to 40(old limits is {oldLLM})')
-            if usingVAL:
-                self.logger.warning(f'New Low limits cal baseon MD3YPVID.VAL={MD3YPOS}, DisPVID.OFF={DisPVID.OFF}, DisPVID.LLM={DisPVID.LLM}')
-            else:
-                self.logger.warning(f'New Low limits cal baseon MD3YPVID.RBV={MD3YPOS}, DisPVID.OFF={DisPVID.OFF}, DisPVID.LLM={DisPVID.LLM}')
-        # ca.poll()    
+        #no clamp here, unlike updateMD3Ylimits' 200.1 ceiling. there used to be an
+        #`if 40 < NewDetYLLM` / else pair, but BOTH branches caput NewDetYLLM - the
+        #else only claimed "updated to 40" in its log while writing the same value,
+        #so the 40 floor was never actually applied (removed 2026-08-06). the 40 came
+        #from an old calibration measured at MD3Y=-6; with the current OFF/LLM
+        #(e.g. 18.0 - 137.28748 + 139.6 = 20.3125 at beamsize 10) every call lands
+        #below 40, so re-introducing that clamp would push DetY LLM up to 40 and make
+        #any distance under ~159mm unreachable - it would break 140mm collection.
+        #NewDetYLLM is already the physical floor: it is derived from the distance
+        #motor's own LLM, so write it as-is.
+        # DetYPVID.LLM = NewDetYLLM
+        # state = DetYPVID.put('LLM', NewDetYLLM, wait=True, timeout=1)
+        # print(f'state={state}')
+        self.caput('07a:Det:Y.LLM',NewDetYLLM)
+        # p = CAProcess(target=self.oldCAPUT, args=('07a:Det:Y.LLM',NewDetYLLM,))
+        # p.start()
+        # p.join()
+        self.logger.warning(f'New Low limits cal for DetY is :{NewDetYLLM} and updated(old limits is {oldLLM}),on {movephase}')
+        self.logger.warning(f'New Low limits cal baseon {movephase},{possrc}={MD3YPOS}, DisPVID.OFF={DisPVID.OFF}, DisPVID.LLM={DisPVID.LLM}')
+        # ca.poll()
         self.logger.warning(f'recheck DetY LLM is :{DetYPVID.LLM}')
     def handleCommand(self,value):
         # decode command

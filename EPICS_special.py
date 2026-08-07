@@ -251,8 +251,17 @@ class Beamsize():
                 detMove = movinglist[self.MD3YMotor] - self.CurrentMD3Y 
                 self.logger.debug(f'detMove = {detMove}')        
                 #check if safe to move both?
-                #check DetY
-                #case1 lower than DetYLLM,case2 lower than MinDistance in cinfig, case3 lower than 40mm (impossbilie)
+                #check DetY: only DetYLLM. it is maintained by the distance
+                #interlock (epicsinit.updateDetYlimits) from MD3Y + Dis.OFF +
+                #Dis.LLM, so it already encodes the real minimum distance.
+                #update 2026-08-06: dropped the hardcoded 40mm limit, it made
+                #every short-distance move (140mm => targetDetY ~20.7) look like
+                #a collision and pushed the caller into the dead 'Something wired'
+                #branch. that 40 came from an old calibration (measured at
+                #MD3Y=-6) and was never enforced on the PV either - see the
+                #same-numbered dead branch removed from updateDetYlimits.
+                #self.MinDistance is NOT checked here (it never was, the line
+                #below has always been commented out); DetYLLM is the only guard.
                 DetYLLM =  self.ca.caget(self.DetYMotor + ".LLM")
                 if checkdis:
                     detDist = current_dis - Targetdistance
@@ -260,7 +269,8 @@ class Beamsize():
                 else:
                     targetDetY = (self.CurrentDetY + detMove)
                 # collisionDetY = targetDetY < DetYLLM or targetDetY < 40 or targetDetY < self.MinDistance
-                collisionDetY = targetDetY < DetYLLM or targetDetY < 40 
+                # collisionDetY = targetDetY < DetYLLM or targetDetY < 40 
+                collisionDetY = targetDetY < DetYLLM
                 #check MD3Y
                 MD3YHLM =  self.ca.caget(self.MD3YMotor + ".HLM")
                 targetMD3Y = movinglist[self.MD3YMotor]
@@ -397,10 +407,39 @@ class Beamsize():
                         time.sleep(0.1)
                     self.wait_opencover(opencover)
                     runtime = time.time() - t1
-                    self.logger.info(f'Moving All MOTOR Done,take {runtime}sec') 
+                    self.logger.info(f'Moving All MOTOR Done,take {runtime}sec')
+                elif detMove == 0 and detDisMove != 0:
+                    #TODO(review): added 2026-08-06 for the "detector still flying"
+                    #raster bug. same beamsize (detMove==0) + distance change only
+                    #(detDisMove!=0) used to fall through to the else below, which
+                    #neither moved nor waited; the post-check at the bottom then
+                    #caput'd Det:Y and returned immediately, so target() came back
+                    #in ~0.5s while Det:Y still had 210mm to travel -> DHS armed and
+                    #sent operdone, DCSS started startRasterScan with the detector
+                    #~170mm out of position (13:49:35 -> in position only 13:50:09).
+                    #back then MoveTogether was False purely because of the
+                    #hardcoded `targetDetY < 40` guard (since removed, see the
+                    #collisionDetY comment above), so this branch was unreachable
+                    #by accident. it is still needed on its own: MD3Y does not move
+                    #in this case, only the distance does, and it MUST wait for the
+                    #motors before returning.
+                    self.logger.info(f'Moving det MOTOR only (distance change,same beamsize)')
+                    self.opencover(opencover)
+                    del movinglist[self.MD3YMotor]
+                    movinglist[self.DetYMotor] = targetDetY
+                    t1 = time.time()
+                    for motor in movinglist :
+                        self.logger.debug(f'Set {motor} move to {movinglist[motor]}')
+                        print(self.ca.caput(motor,movinglist[motor]))
+                    time.sleep(0.1)
+                    while not self.check_allmotorstop(movinglist.keys()):
+                        time.sleep(0.1)
+                    self.wait_opencover(opencover)
+                    runtime = time.time() - t1
+                    self.logger.info(f'Moving All MOTOR Done,take {runtime}sec')
                 else:
                     #no move
-                    self.logger.info(f'Something wired, i should not goto here') 
+                    self.logger.error(f'Something wired, i should not goto here')
                     pass
                 #check motor pos again,in case md3 ver or hor has some problem
                 time.sleep(0.2)
