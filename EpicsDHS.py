@@ -490,6 +490,18 @@ class DCSDHS():
         toDcsscommand = 'htos_set_string_completed system_status normal {Abort!} black #d0d000'
         sendQ.put(toDcsscommand)
 
+    def _drop_operation_record(self,handle):
+        #operationRecord entries are 'operationName operationHandle [arg ...]'
+        #and exist so abort_all can complete whatever is still outstanding. Once
+        #an operation has been reported completed it must come off the list.
+        removeitem = None
+        for item in self.Par['operationRecord']:
+            if item[1] == handle:
+                removeitem = item
+        if removeitem:
+            self.logger.debug(f'remove {removeitem} from operationRecord')
+            self.Par['operationRecord'].remove(removeitem)
+
     def _cmd_start_motor_move(self,command):
         #stoh_start_motor_move motorName destination
         epicsQ = self.Q['Queue']['epicsQ']
@@ -590,6 +602,10 @@ class DCSDHS():
         if command[1] == 'currentBeamsize':
             command.pop(0)
             self.Q['Queue']['DetectorQ'].put(tuple(command))
+        elif command[1] == 'backlight_status':
+            #dcss just (re)registered the string, so push what the light is
+            #really doing instead of leaving bluice on the config default
+            self.Q['Queue']['CVLSQ'].put(("report_status",))
 
     def _cmd_register_real_motor(self,command):
         #['stoh_register_real_motor', 'detector_z', 'detector_z']
@@ -685,6 +701,9 @@ class DCSDHS():
                         elif command[3] == "operation_completed" :   
                             #htos_operation_completed operationName operationHandle status arguments
                             echo = "htos_operation_completed " + str(command[1]) + " " + str(command[4])+ " " + str(command[2])
+                            #same bookkeeping the operdone branch does, else an
+                            #abort would complete this handle a second time
+                            self._drop_operation_record(command[4])
                         elif command[3] == "string" :
                             #htos_set_string_completed strname status arguments
                             echo = "htos_set_string_completed " + str(command[1]) + " " + str(command[4]) + " " + str(command[2])
@@ -748,16 +767,7 @@ class DCSDHS():
                     
                         echo = "htos_operation_completed " + str(command[1]) + " " + str(command[2])+ " " + "normal" + args
                         # REMOVE operation id form list
-                        removeitem = None
-                        for item in self.Par['operationRecord']:
-                            #operation command 
-                            # operationName operationHandle [arg1 [arg2 [arg3 [...]]]]
-                            if item[1] == command[2]:
-                                removeitem = item
-                        if removeitem:
-                            self.logger.debug(f'remove {removeitem} from operationRecord')
-                            self.Par['operationRecord'].remove(removeitem)
-                        # self.logger.warning(f"{removeitem=},{command=},{self.Par['operationRecord'][:]=}")
+                        self._drop_operation_record(command[2])
                     elif command[0] == "operupdate" :
                         #command[1] = operationName
                         #command[2] = operationHandle

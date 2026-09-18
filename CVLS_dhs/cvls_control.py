@@ -36,6 +36,17 @@ class ConnectionType(IntEnum):
     UART = 2
 
 
+#The unit at 07A is an RGBW model (A20980/RGBW): channel 1 red, 2 green,
+#3 blue, 4 white. Colours are exclusive, only one channel is ever enabled.
+COLOR_ORDER = ('red', 'green', 'blue', 'white')
+COLOR_CHANNEL = {
+    'red':   Channel.CHANNEL_1,
+    'green': Channel.CHANNEL_2,
+    'blue':  Channel.CHANNEL_3,
+    'white': Channel.CHANNEL_4,
+}
+
+
 class CVLSController:
     """
     Controller class for SCHOTT ColdVision Light Source
@@ -62,9 +73,12 @@ class CVLSController:
         """
         self.Par = Par
         self.Q = Q
+        self.max_power = 1000
+        self.sendQ = Q['Queue']['sendQ'] if Q is not None else None
         if Par is not None:
             host = Par['CVLS']['host']
             port = Par['CVLS']['commandprot']
+            self.max_power = Par['CVLS'].get('max_power', 1000)
         self.connection_type = connection_type
         self.host = host
         self.port = port
@@ -115,6 +129,10 @@ class CVLSController:
             product = self.get_product_name()
             if product:
                 print(f"Device: {product}")
+                #&L#,# and &I#,# are silently ignored while the driver is in
+                #single channel mode, which would make colour selection look
+                #like it worked and do nothing. Pin it to quad every connect.
+                self.set_single_channel_mode(False)
                 return True
             else:
                 self.disconnect()
@@ -130,7 +148,10 @@ class CVLSController:
         self.CommandQ = Que['Queue']['CVLSQ']
         self.reciveQ = Que['Queue']['reciveQ']
         self.sendQ = Que['Queue']['sendQ']
-        
+        #get the real state out before anyone asks, so backlight_status is never
+        #left showing the placeholder from the dcss config file
+        self.publish_status()
+
         while True:
             command = self.CommandQ.get()
             self.logger.info(f'CVLSController got str command: {command}')
@@ -149,22 +170,218 @@ class CVLSController:
                 # self.HandleCommand(command)
                 if command[0] == "setBackLightColor" :
                     # this is a op
-                    # self.sendQ.put(("startmove",command[1],command[2],"Normal"))
-                    # new_Attenuation = self.Target(float(command[2]),select='lower')
-                    # self.sendQ.put(('endmove',command[1] ,str(new_Attenuation),'normal'))
-                    pass
+                    self.set_back_light_color(command)
                 elif command[0] == "switchSampleEnvironment" :
                     pass
+                elif command[0] == "set_intensity" :
+                    #internal request, not a dcss operation
+                    self.set_intensity(command)
+                elif command[0] == "report_status" :
+                    #dcss (re)registered backlight_status and wants the live
+                    #values, not the placeholder from the config file
+                    self.publish_status()
                 elif command[0] == "master_off" :
                     self.master_off()
-                    pass
+                    self.publish_status()
                 elif command[0] == "master_on" :
                     self.master_on()
-                    pass
+                    self.publish_status()
                 else:
                     self.logger.warning(f'CVLSController DHS Get undefine Command! {command}')
             else:
                 self.logger.warning('CVLSController DHS Get undefine Command! {command}')
+
+    # Back Light Operation (dcss setBackLightColor)
+
+    def _intensity_to_power(self, intensity):
+        """Map a 0-100 bluice intensity onto a raw 0-max_power channel power"""
+        power = int(round(float(intensity) * self.max_power / 100.0))
+        return max(0, min(power, 1000))
+
+    def _power_to_intensity(self, power):
+        """Inverse of _intensity_to_power, for reporting back to bluice"""
+        if not self.max_power:
+            return 0
+        return int(round(float(power) * 100.0 / self.max_power))
+
+    def _operation_done(self, opname, handle, *args):
+        """Complete an operation normally, optionally echoing arguments back"""
+        self.sendQ.put(('operdone', opname, handle) + tuple(str(a) for a in args))
+
+    def _operation_failed(self, opname, handle, reason):
+        """
+        Complete an operation with a failed status.
+
+        The 'operdone' route in EpicsDHS hardcodes the status to normal, so a
+        real failure has to go out through the operation_completed route, which
+        sends the status we pass here. Keep the reason to plain words, it is
+        concatenated straight into the dcss message.
+        """
+        self.logger.warning(f'{opname} {handle} failed: {reason}')
+        self.sendQ.put(
+            ('updatevalue', opname, f'failed {reason}', 'operation_completed', handle))
+
+    def read_state(self):
+        """
+        Read back what the light is actually doing.
+
+        Returns (colour, intensity, master, powers), where colour names the one
+        enabled channel ('off' when none are, 'mixed' if something outside this
+        code turned on more than one), master is 'on'/'off' and powers holds the
+        raw per-channel values in COLOR_ORDER. Returns None if the device does
+        not answer, so callers can tell "dark" from "not talking to us".
+        """
+        master = self.get_output_enable(Channel.COMMON)
+        if master is None:
+            return None
+
+        powers = []
+        enabled = []
+        for name in COLOR_ORDER:
+            channel = COLOR_CHANNEL[name]
+            power = self.get_output_power(channel)
+            state = self.get_output_enable(channel)
+            if power is None or state is None:
+                return None
+            powers.append(power)
+            if state:
+                enabled.append(name)
+
+        if not enabled:
+            colour = 'off'
+        elif len(enabled) == 1:
+            colour = enabled[0]
+        else:
+            colour = 'mixed'
+
+        #intensity describes the live channel; with none lit there is no live
+        #channel, so report the brightest one to keep the slider somewhere sane
+        if colour in COLOR_CHANNEL:
+            intensity = self._power_to_intensity(powers[COLOR_ORDER.index(colour)])
+        else:
+            intensity = self._power_to_intensity(max(powers))
+
+        return colour, intensity, ('on' if master else 'off'), powers
+
+    def publish_status(self):
+        """
+        Push backlight_status to dcss as
+        "<colour> <intensity> <master> <red> <green> <blue> <white>"
+
+        The four trailing fields are the per-colour intensities, so bluice can
+        restore the slider to the level each colour was last used at instead of
+        dragging one intensity across every colour change. They are intensities
+        rather than raw power on purpose: max_power lives here, and bluice
+        should not need a second copy of it to read this string.
+        """
+        state = self.read_state()
+        if state is None:
+            contents = 'unknown 0 disconnected 0 0 0 0'
+        else:
+            colour, intensity, master, powers = state
+            per_colour = [str(self._power_to_intensity(p)) for p in powers]
+            contents = '{} {} {} {}'.format(
+                colour, intensity, master, ' '.join(per_colour))
+        self.logger.debug(f'publish backlight_status: {contents}')
+        self.sendQ.put(
+            ('updatevalue', 'backlight_status', contents, 'string', 'normal'))
+
+        #the CV-LS lives in its own process, so anything outside it (centerLoop
+        #checking the light is white) reads the state from the shared Par dict
+        if self.Par is not None:
+            colour, intensity, master = contents.split()[0:3]
+            self.Par['CVLS.color'] = colour
+            self.Par['CVLS.intensity'] = int(intensity)
+            self.Par['CVLS.master'] = master
+
+    def apply_color(self, colour, intensity):
+        """
+        Drive the channels for a colour at an intensity, master enable untouched.
+
+        Returns True when every command was acknowledged. Assumes the arguments
+        have already been validated.
+        """
+        ok = True
+        if colour == 'off':
+            #leave the powers alone so each colour keeps the level it was last
+            #used at when it is switched back on
+            for name in COLOR_ORDER:
+                ok &= self.set_output_enable(COLOR_CHANNEL[name], False)
+            return ok
+
+        channel = COLOR_CHANNEL[colour]
+        ok &= self.set_output_power(channel, self._intensity_to_power(intensity))
+        #drop the other colours before lighting this one so two are never on
+        #together, even briefly
+        for name in COLOR_ORDER:
+            if name != colour:
+                ok &= self.set_output_enable(COLOR_CHANNEL[name], False)
+        ok &= self.set_output_enable(channel, True)
+        return ok
+
+    def set_intensity(self, command):
+        """
+        ('set_intensity', colour, intensity) -- the same effect as the operation
+        but raised from inside the DHS, so there is no handle to report against.
+        Used by centerLoop to force the auto center brightness.
+        """
+        try:
+            colour = str(command[1]).strip().lower()
+            intensity = float(command[2])
+        except (IndexError, ValueError):
+            self.logger.warning(f'CVLS bad set_intensity {command}')
+            return
+        if colour != 'off' and colour not in COLOR_CHANNEL:
+            self.logger.warning(f'CVLS bad set_intensity colour {colour}')
+            return
+        if not 0 <= intensity <= 100:
+            self.logger.warning(f'CVLS bad set_intensity level {intensity}')
+            return
+
+        self.logger.info(f'set_intensity {colour} {intensity}%')
+        self.apply_color(colour, intensity)
+        self.publish_status()
+
+    def set_back_light_color(self, command):
+        """
+        setBackLightColor <colour> <intensity>
+
+        colour is one of red/green/blue/white/off and intensity is 0-100, applied
+        to the selected channel only. The master enable (&L0) is deliberately left
+        alone: it follows the MD3 phase, so a colour and intensity picked here
+        survive a phase change and come back with the light.
+
+        command arrives as (opname, handle, colour, intensity) -- EpicsDHS strips
+        the leading 'stoh_start_operation' before queueing it.
+        """
+        handle = command[1]
+        try:
+            colour = str(command[2]).strip().lower()
+            intensity = float(command[3])
+        except (IndexError, ValueError):
+            self._operation_failed('setBackLightColor', handle,
+                                   f'bad arguments {list(command[2:])}')
+            return
+
+        if colour != 'off' and colour not in COLOR_CHANNEL:
+            self._operation_failed('setBackLightColor', handle,
+                                   f'unknown colour {colour}')
+            return
+        if not 0 <= intensity <= 100:
+            self._operation_failed('setBackLightColor', handle,
+                                   f'intensity {intensity} outside 0-100')
+            return
+
+        self.logger.info(f'setBackLightColor {colour} {intensity}%')
+        ok = self.apply_color(colour, intensity)
+
+        if ok:
+            self._operation_done('setBackLightColor', handle, colour, intensity)
+        else:
+            self._operation_failed('setBackLightColor', handle,
+                                   'CV-LS did not answer')
+        #report either way: on a partial failure the readback is what is true
+        self.publish_status()
 
     def exit(self):
         """Clean shutdown for the monitor loop 'exit' command"""

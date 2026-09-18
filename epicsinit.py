@@ -1119,7 +1119,51 @@ class epicsdev():
         self.logger.info(f'MD3 is Ready')     
         return True
 
+    def prepareBackLightForAutoCenter(self,opid,timeout=3):
+        """
+        Auto center matches the sample against a background reference image
+        taken under white back light at a fixed intensity, so a user who has
+        changed the colour or the level would silently get bad centring.
+
+        Refuses outright on any colour but white, and normalises the intensity
+        when it is white. Returns True when it is safe to centre; on refusal the
+        operation has already been reported completed, so the caller just stops.
+
+        The CV-LS runs in its own process, so the colour is read from the shared
+        Par dict that CVLSController publishes into, not from the device.
+        """
+        colour = self.Par.get('CVLS.color','unknown')
+        if colour != 'white':
+            msg = f'auto center needs white back light, it is currently {colour}'
+            self.logger.warning(msg)
+            self.sendQ.put(("warning",msg))
+            self.sendQ.put(('updatevalue','centerLoop',f'failed {msg}',
+                            'operation_completed',opid))
+            return False
+
+        wanted = self.Par['CVLS']['autocenter_intensity']
+        if self.Par.get('CVLS.intensity') == wanted:
+            return True
+
+        self.logger.info(f'force back light to auto center intensity {wanted}%')
+        self.cvlsQ.put(("set_intensity","white",wanted))
+        #wait for the CVLS process to confirm through Par rather than guessing a
+        #sleep, so centring never starts against the old brightness
+        t0 = time.time()
+        while (time.time()-t0) < timeout:
+            if self.Par.get('CVLS.intensity') == wanted:
+                return True
+            time.sleep(0.05)
+        #the light is still white, only the level is unconfirmed, so centre
+        #anyway rather than blocking the user on a slow light
+        self.logger.warning(
+            f'back light did not confirm {wanted}% in {timeout}s, centring anyway')
+        return True
+
     def centerLoop(self,opid,timeout=60):
+        #auto center is only valid under the white light it was calibrated with
+        if not self.prepareBackLightForAutoCenter(opid):
+            return
         #check current md3 phase
         t0 = time.time()
         stop = False

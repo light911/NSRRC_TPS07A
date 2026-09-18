@@ -19,7 +19,19 @@ Par={
              'commandprot':10001
             },
     "CVLS":{'host':"10.7.1.111",#SCHOTT ColdVision Light Source
-             'commandprot':50811
+             'commandprot':50811,
+             #bluice sends back light intensity as 0-100%, which maps linearly
+             #onto 0-max_power raw channel power. The hardware accepts up to
+             #1000 but the beamline runs the light around 30-50, so a low
+             #ceiling keeps the whole slider travel usable. Raise it if samples
+             #need more light.
+             'max_power':100,
+             #auto center matches the sample against a background reference
+             #image taken under white light at a fixed brightness, so centerLoop
+             #forces this intensity (0-100%) before it runs and refuses to run
+             #under any colour but white. Retune this only when the background
+             #image calibration is redone at a different level.
+             'autocenter_intensity':30
             },
     'dcss':{'host':"10.7.1.1",
             'port':14242,
