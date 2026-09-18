@@ -412,7 +412,7 @@
       <div><dt>分支</dt><dd>fix/detector-distance-wait</dd></div>
       <div><dt>日期</dt><dd>2026-09-18</dd></div>
       <div><dt>硬體</dt><dd>A20980/RGBW</dd></div>
-      <div><dt>測試</dt><dd>114 項通過</dd></div>
+      <div><dt>測試</dt><dd>130 項通過</dd></div>
     </dl>
   </header>
 
@@ -441,6 +441,7 @@
       <li><strong>強度</strong>　0–100%，線性對應到 <code>0 – max_power</code> 的原始通道功率。</li>
       <li><strong>master enable 完全不碰</strong>　它跟著 MD3 phase 走。所以使用者設好的顏色與亮度可以撐過 phase 切換，燈回來的時候設定還在。</li>
       <li><strong>狀態回讀</strong>　新增 <code>backlight_status</code> 字串，BluIce 切換顏色時能把滑桿還原成該顏色上次用的亮度。</li>
+      <li><strong>MD3 前光源連動</strong>　前光源是白光。選白光時開（<code>1</code>），選其他任何顏色時關（<code>0</code>）—— 見下節。</li>
       <li><strong>auto center 保護</strong>　非白光直接拒跑，白光則先強制校正亮度。</li>
     </ul>
   </section>
@@ -634,6 +635,10 @@ off 0 off 0 0 0 0</code></pre>
             <td class="path">autocenter_intensity</td><td class="num">30</td>
             <td>auto center 執行前會強制套用的白光亮度。<strong>重新做背景影像校正時才需要改。</strong></td>
           </tr>
+          <tr>
+            <td class="path">frontlight_pv</td><td class="num">07a:md3:<wbr>FrontLightFactor</td>
+            <td>MD3 前光源的 PV。搬到別的 beamline 時改這裡；設成空字串就完全跳過這個連動。</td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -642,6 +647,54 @@ off 0 off 0 0 0 0</code></pre>
       這組值剛好讓百分比和原始功率 1:1 對應（<code>30% × 100 ÷ 100 = 30</code>），
       而 <code>30</code> 正是導入前白光通道原本的功率值 —— 也就是說 auto center 的
       亮度基準跟改動前一致。
+    </p>
+  </section>
+
+  <section>
+    <h2>前光源連動</h2>
+    <p class="sectnote">暗房實驗 · 07a:md3:FrontLightFactor</p>
+
+    <p>
+      使用者選紅綠藍，通常不是為了好看，而是要做<strong>暗房實驗</strong> ——
+      改用不會激發樣品的光源照明。但 MD3 的前光源是白光，開著就把這件事整個抵銷掉了。
+      所以前光源跟著背光顏色走：
+    </p>
+
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>背光顏色</th><th>FrontLightFactor</th><th></th></tr></thead>
+        <tbody>
+          <tr><td><span class="chip white">white</span></td><td class="num">1</td><td>一般觀察，前光源開</td></tr>
+          <tr><td><span class="chip red">red</span> <span class="chip green">green</span> <span class="chip blue">blue</span></td><td class="num">0</td><td>暗房實驗，前光源關</td></tr>
+          <tr><td><span class="chip">off</span></td><td class="num">0</td><td>見下方說明</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <details>
+      <summary>三個實作上的判斷</summary>
+      <p>
+        <strong><code>off</code> 也算成 0。</strong>
+        原始需求只講了紅綠藍與白光。我把規則收斂成「<strong>只有白光才開前光源</strong>」，
+        因為反過來（使用者沒要求白光時卻把白光前光源打開）在暗房情境下是會毀掉實驗的方向。
+        如果你希望 <code>off</code> 時保持前光源不動，跟我說，那是一個條件式的差別。
+      </p>
+      <p>
+        <strong>CV-LS 連不上時照樣關前光源。</strong>
+        要求紅光但背光沒反應的情況下，把前光源關掉仍然是安全的方向，所以這個請求不會因為
+        背光失敗而被跳過。
+      </p>
+      <p>
+        <strong>請求先送、才驅動背光通道。</strong>
+        兩件事分屬不同 process、透過 queue 非同步進行，嚴格的先後保證不了，
+        但先送至少讓前光源在切往暗房時盡早熄掉。
+      </p>
+    </details>
+
+    <p>
+      實作上 CVLS 進程<strong>沒有 channel access</strong>，所以它只是往 <code>epicsQ</code>
+      丟一個 <code>("set_front_light", 0|1)</code>，由 epics 進程查設定裡的 PV 名稱再 caput。
+      PV 名稱完全不出現在 CVLS 那邊。
     </p>
   </section>
 
@@ -791,22 +844,23 @@ off 0 off 0 0 0 0</code></pre>
 
   <section>
     <h2>測試與部署</h2>
-    <p class="sectnote">114 項 · 三個 suite</p>
+    <p class="sectnote">130 項 · 三個 suite</p>
 
     <div class="tablewrap">
       <table>
         <thead><tr><th>Suite</th><th>項數</th><th>涵蓋</th></tr></thead>
         <tbody>
-          <tr><td class="path">test_backlight.py</td><td class="num">40</td><td>對假的 CV-LS 跑：強度換算、顏色互斥、master 不被碰、<code>off</code> 保留功率、錯誤參數不碰硬體、斷線回報、<code>Par</code> 欄位型別</td></tr>
-          <tr><td class="path">test_autocenter.py</td><td class="num">41</td><td>用 <code>ast</code> 從 <code>epicsinit.py</code> 抽出真實函式原始碼執行（不需要 EPICS）：六種非白光各自被擋、白光達標不多送指令、未達標時確實在等確認而非固定 sleep、逾時放行、Par 缺 key 不炸</td></tr>
+          <tr><td class="path">test_backlight.py</td><td class="num">50</td><td>對假的 CV-LS 跑：強度換算、顏色互斥、master 不被碰、<code>off</code> 保留功率、錯誤參數不碰硬體、斷線回報、<code>Par</code> 欄位型別、<strong>前光源連動（含 CV-LS 斷線時仍要關）</strong></td></tr>
+          <tr><td class="path">test_autocenter.py</td><td class="num">47</td><td>用 <code>ast</code> 從 <code>epicsinit.py</code> 抽出真實函式原始碼執行（不需要 EPICS）：六種非白光各自被擋、白光達標不多送指令、未達標時確實在等確認而非固定 sleep、逾時放行、Par 缺 key 不炸</td></tr>
           <tr><td class="path">test_backlight.tcl</td><td class="num">33</td><td>從 <code>BackLight.tcl</code> 抽出真實 handler 原始碼當普通 proc 跑：空內容、欄位不足、非數字、clientState 四種狀態、強度 fallback</td></tr>
         </tbody>
       </table>
     </div>
 
     <p>
-      測試檔在 scratchpad 裡，不在 repo。要長期保留的話值得挪進版控 ——
-      尤其 auto center 那個 suite，它是唯一能在沒有 EPICS、沒有硬體的機器上驗證把關邏輯的東西。
+      <code>test_autocenter.py</code> 已收進 repo 根目錄，從任何目錄執行都能跑，
+      且已驗證在「白光檢查被拿掉」和「方法被改名」兩種情況下都會以清楚的訊息失敗。
+      另外兩個 suite 目前仍在 repo 外。
     </p>
 
     <h3>沒有測到的部分</h3>

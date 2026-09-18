@@ -75,6 +75,7 @@ class CVLSController:
         self.Q = Q
         self.max_power = 1000
         self.sendQ = Q['Queue']['sendQ'] if Q is not None else None
+        self.epicsQ = Q['Queue']['epicsQ'] if Q is not None else None
         if Par is not None:
             host = Par['CVLS']['host']
             port = Par['CVLS']['commandprot']
@@ -148,6 +149,7 @@ class CVLSController:
         self.CommandQ = Que['Queue']['CVLSQ']
         self.reciveQ = Que['Queue']['reciveQ']
         self.sendQ = Que['Queue']['sendQ']
+        self.epicsQ = Que['Queue']['epicsQ']
         #get the real state out before anyone asks, so backlight_status is never
         #left showing the placeholder from the dcss config file
         self.publish_status()
@@ -301,6 +303,13 @@ class CVLSController:
         Returns True when every command was acknowledged. Assumes the arguments
         have already been validated.
         """
+        #The MD3 front light is white, so it follows the back light: a colour
+        #other than white means a dark room experiment and the front light has
+        #to go dark with it. Asked for first so it goes out promptly, and done
+        #by the epics process because this one has no channel access.
+        if self.epicsQ is not None:
+            self.epicsQ.put(("set_front_light", 1 if colour == 'white' else 0))
+
         ok = True
         if colour == 'off':
             #leave the powers alone so each colour keeps the level it was last

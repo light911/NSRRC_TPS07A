@@ -31,7 +31,13 @@ Par={
              #forces this intensity (0-100%) before it runs and refuses to run
              #under any colour but white. Retune this only when the background
              #image calibration is redone at a different level.
-             'autocenter_intensity':30
+             'autocenter_intensity':30,
+             #the MD3 front light is white. Asking for a colour other than white
+             #means a dark room experiment lit by something that will not excite
+             #the sample, and a white front light would defeat that, so the front
+             #light follows the back light: on for white, off for every other
+             #colour. Set to '' on a beamline that has no such PV to skip it.
+             'frontlight_pv':'07a:md3:FrontLightFactor'
             },
     'dcss':{'host':"10.7.1.1",
             'port':14242,

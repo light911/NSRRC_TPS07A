@@ -1048,6 +1048,17 @@ class epicsdev():
                     # p.start()
                     # p.join()        
                     self.caputarray(PVname,value)
+                elif command[0] == "set_front_light" :
+                    #the MD3 front light is white, so it follows the back light
+                    #colour: on for white, off for anything else. The CVLS
+                    #process raises this because it has no channel access.
+                    PVname = self.Par['CVLS'].get('frontlight_pv','')
+                    if PVname:
+                        self.caput(PVname,command[1])
+                    else:
+                        self.logger.debug('no frontlight_pv configured, front '
+                                          'light left alone')
+
                 elif command[0] == "centerLoop" :
                     opid= command[1]
                     pcenter = threading.Thread(target=self.centerLoop , args=(opid,), daemon=True)
