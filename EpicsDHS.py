@@ -286,6 +286,7 @@ class DCSDHS():
             md3_state = self.ca.caget('07a:md3:State',format = str)
             if md3_state== 'Ready' or md3_state== 'READY'or md3_state== 'READY\n':
                 check = False
+                return True
             else:
                 self.logger.info(f'MD3 is busy:{md3_state}')  
             if (time.time()-t0)>timeout:
@@ -451,8 +452,8 @@ class DCSDHS():
                     break
                 else:
                     # got a message do something :)
-                    self.logger.debug (f'recive {data}' )
-                    self.logger.debug (f'after decode = {data.decode()}')
+                    # self.logger.debug (f'recive {data}' )
+                    # self.logger.debug (f'after decode = {data.decode()}')
                     msg = msg + data.decode()
                     index = msg.find('\x00')
                     while index != -1:
@@ -525,7 +526,7 @@ class DCSDHS():
                 if MoveDone:
                     # not move
                     epicsQ.put(("stoh_start_motor_move",command[1],command[2]),timeout=1)
-                    time.sleep(0.05)
+                    # time.sleep(0.05)
                 else:
                     sendQ.put(('warning',f"{GUIname} is already moving"))
             except Exception as e:
@@ -944,7 +945,7 @@ class DCSDHS():
             return
         #stop the supervisor from reviving children we are about to kill
         self._shutting_down = True
-        self.logger.critical(f'EPICS DHS Offline')
+        self.logger.error(f'EPICS DHS Offline')
         #ask the queue-driven workers to stop cleanly first
         for q in ('reciveQ','sendQ','epicsQ','ControlQ','DetectorQ','attenQ','CVLSQ'):
             try:
