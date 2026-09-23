@@ -12,5 +12,9 @@ TransferDataLOG.txt*
 
 #backup of CVLS_dhs standalone git history, and local claude settings
 CVLS_dhs/.git_disabled/
-.claude/settings.local.json
-CVLS_dhs/.claude/settings.local.json
+.claude/
+CVLS_dhs/.claude/
+
+#attenuator position backups, written by Flux07A/offset_att_pos.py on every
+#run (att<N>_backup.json plus a timestamped copy). machine state, not source.
+Flux07A/att*_backup*.json
