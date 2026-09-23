@@ -8,7 +8,7 @@ Created on Mon Apr 12 09:49:13 2021
 
 Par={
     "Beamline":"TPS07A",
-    "Debuglevel":"INFO",#ERROR,WARNING,INFO,DEBUG
+    "Debuglevel":"DEBUG",#ERROR,WARNING,INFO,DEBUG
     "MinDistance":139,
     "fakedistancename":"07a:Det:Dis",
     "calfactorname":'07a-ES:DetectorDistance:OFF',
