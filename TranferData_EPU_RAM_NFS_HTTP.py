@@ -14,6 +14,7 @@ import json
 from pathlib import Path
 import pathlib
 import logsetup
+os.environ["HDF5_USE_FILE_LOCKING"] = "FALSE"
 import h5py
 from subprocess import Popen, PIPE, TimeoutExpired  
 import requests
@@ -324,7 +325,7 @@ def savecurrentdata(det):
     
 def Detectormon():#not used
     os.nice(-15)
-    detforNFS = DEigerClient('192.168.31.98')
+    detforNFS = DEigerClient('10.7.1.98')#192.168.31.98 is gone now is 10.7.3.98
     detforEPU = DEigerClient('10.7.1.98')
     det = DEigerClient('10.7.1.98')
     NFSQ = Queue()
@@ -555,8 +556,8 @@ def monitor_and_download_file(header,ProcessFile: list):
     filename = header['filename']
     fileindex = header['fileindex']
     TotalFrames = header['TotalFrames']
-    detforNFS = DEigerClient('192.168.31.98')
-    detforEPU = DEigerClient('10.7.1.98')
+    detforNFS = DEigerClient('10.7.4.98')
+    detforEPU = DEigerClient('10.7.4.98')
     NFSQ = Queue()
     EPUQ = Queue()
     saveedlistNFS=[]
@@ -674,7 +675,8 @@ def monitor_and_download_file(header,ProcessFile: list):
     pass
 if __name__ == '__main__':       
     # app.run(host='0.0.0.0', port=65000,threaded=False,processes=2)
-    det = DEigerClient('10.7.1.98')
+    #det = DEigerClient('10.7.1.98')
+    det = DEigerClient('10.7.4.98')
     savecurrentdata(det)
     det.sendFileWriterCommand('clear')
     logger.warning('clear detector memory')
