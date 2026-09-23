@@ -16,7 +16,10 @@ Par={
     "minEVchangeGAP":0.01,#Kev
     "bypasscover":False,#False 
     "robot":{'host':"10.7.1.3",
-             'commandprot':10001
+             'commandprot':10001,
+             #sec. bound for the cryojet relay round trip (see askCryojetIn).
+             #normal reply is ~30 ms; without a bound a dead relay hangs collect.
+             'timeout':5
             },
     "CVLS":{'host':"10.7.1.111",#SCHOTT ColdVision Light Source
              'commandprot':50811,

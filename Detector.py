@@ -2157,7 +2157,20 @@ class Eiger2X16M(Detector):
     def setup_beamsize_cover_distance(self,raster=False,roi=False,beamwithdis=False,movebeasize=True,bypassslit=False):
         t0=time.time()
         #move cryjet in
-        askCryojetIn(self.Par['robot']['host'],self.Par['robot']['commandprot'])
+        host,port = self.Par['robot']['host'],self.Par['robot']['commandprot']
+        cryo_ok,cryo_detail = askCryojetIn(host,port,self.Par['robot'].get('timeout',5),self.logger)
+        if not cryo_ok:
+            #the collect goes on (a missing cryojet move is not worth killing a
+            #dataset over) but the user MUST be told: an un-cooled sample decays
+            #fast, and before the timeout was added this failure was invisible.
+            #htos_note is forwarded verbatim to every BlueIce client and stays in
+            #its log, unlike system_status which the next status update wipes
+            #within a second.
+            #dcss reads a hardware-client message into char[201], so the whole
+            #note must stay under that: clamp the exception text (and the result)
+            #instead of letting a chatty errno truncate the actionable half.
+            warn = f'Cryojet NOT moved in: robot relay {host}:{port} did not answer ({cryo_detail[:60]}). Check the cryojet before trusting this dataset.'
+            self.sendQ.put(('warning',warn[:190]))
 
         # old open cover, now move to beamsize
         # opcoverP = Process(target=self.cover.OpenCover,name='open_cover')
@@ -2520,18 +2533,41 @@ class dbpm07a():
         # print(ans)
         return ans
     
-def askCryojetIn(host,port):
+def askCryojetIn(host,port,timeout=5,logger=None):
+    #moving the cryojet in is a best-effort side action, it must NEVER be able
+    #to stall a collect. the relay (fakeserver.py on the robot host) can accept
+    #the TCP connection and then answer nothing: its replayserver worker dies
+    #when the ISARA PLC link drops, and from then on every client blocks in
+    #backq.get() inside handle_client. with no timeout this recv() froze the
+    #whole DetectorQ worker on the FIRST line of setup_beamsize_cover_distance
+    #(2026-09-23 16:25): the detector was armed, but the cover never opened and
+    #DCSS never got operupdate/operdone, so the collect hung with no error.
+    #timeout covers connect/send/recv; a normal relay reply takes ~30 ms.
+    #returns (ok,detail): ok False means the cryojet was NOT moved in, so the
+    #caller must tell DCSS instead of collecting silently with it still out.
+    _info = logger.info if logger is not None else print
+    _warn = logger.warning if logger is not None else print
+    t0 = time.time()
+    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    client.settimeout(timeout)
     try:
         # host = '10.7.1.3'
         # port = 10001
         command = 'movecryojetin'
-        client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         client.connect((host, port))
         sendToPLCCommand(client,command)
         ans = client.recv(4096).decode()
-        print(f'Robot relay:{ans}')
+        _info(f'Robot relay:{ans} take {time.time()-t0} sec')
+        return True,ans.strip()
     except Exception as e:
-        print(f'Error on askCryoJetBack : {e}')
+        #log it, do not raise: the collect goes on without the cryojet move
+        _warn(f'askCryojetIn failed (collect continues): {e}, take {time.time()-t0} sec')
+        return False,f'{type(e).__name__}: {e}'
+    finally:
+        try:
+            client.close()
+        except Exception:
+            pass
 def sendToPLCCommand(sockclient:socket.socket,command):
     if type(command)==str:
         #check is there has \r in the end
