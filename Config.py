@@ -96,6 +96,17 @@ Par={
                'laser_timing_arrayPV':'07a:beamline:timing:laser:pulse_timing',
                'last_detector_countPV':'07a:beamline:timing:info:last_detector_count',
                },
+    #sample snapshot: when a collect starts while MD3 is still in center mode
+    #(CurrentPhase = Centring) the backlight is on and the sample is in the
+    #camera view, so that is the last chance to record what the user is about
+    #to shoot. shared by the DHS (Detector.save_sample_snapshot) and the
+    #transfer server (/snapshot on epu), which both import this file.
+    'SampleSnapshot':{'url':'http://10.7.1.108:64444/snapshot',#DHS -> transfer server (root on epu, the only one that can chown to the data owner)
+                      'source':'http://10.7.1.4:6001/image1.cgi',#transfer server -> MD3image DHS, single JPEG
+                      'phase':'Centring',#MD3 CurrentPhase that means "center mode"; any other phase = no snapshot
+                      'timeout':10,#sec the DHS waits for the whole request before giving up and collecting anyway
+                      'fetch_timeout':5,#sec the server waits for the MD3 image; keep well under 'timeout'
+                      },
     'EPICS_special':{'BeamSize':{'BeamSizeName':'07a-ES:Table:Beamsize',
                                  'MD3YName':'07a-ES:Table:MD3Y',
                                  'MD3VerName':'07a-ES:Table:MD3Ver',

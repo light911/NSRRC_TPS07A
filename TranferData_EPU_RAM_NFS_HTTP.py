@@ -20,6 +20,11 @@ from subprocess import Popen, PIPE, TimeoutExpired
 import requests
 from flask import Flask,jsonify,request,Response
 Par = Config.Par
+#/snapshot defaults: where to grab the MD3 sample image from and how long to
+#wait for it. the DHS blocks on that request while a collect is starting, so
+#keep the fetch short. the DHS normally sends its own 'source' in the job.
+SNAPSHOT_SOURCE = Par.get('SampleSnapshot',{}).get('source','http://10.7.1.4:6001/image1.cgi')
+SNAPSHOT_FETCH_TIMEOUT = Par.get('SampleSnapshot',{}).get('fetch_timeout',5)
 rsyncP=[]
 logger = logsetup.getloger2('TransferData',LOG_FILENAME='/root/log/TransferDataLOG.txt',level = Par['Debuglevel'])
 m = Manager()
@@ -538,6 +543,56 @@ def jobPOST():
         # print('Try covert data: ',request.get_json(True))
         ans = "Got : " + str(getdata)
     return ans
+
+@app.route('/snapshot', methods=['POST'])
+def snapshotPOST():
+    #save a picture of the sample as it is right now, next to its dataset.
+    #the DHS asks for this when a data collection starts while MD3 is still in
+    #center mode (Centring phase: backlight on, sample in view). only this
+    #server runs as root, so grabbing the JPEG from the MD3image DHS and giving
+    #the file to the data owner has to happen here.
+    #answered SYNCHRONOUSLY ("OK ..."): the DHS waits for the reply before it
+    #arms the detector, so nothing here may hang or raise - bounded fetch, and
+    #every failure comes back as a short error string the DHS just logs.
+    if not request.is_json:
+        logger.warning(f'snapshot: request is not json: {request.data}')
+        return 'ERROR not json', 400
+    job = request.get_json()
+    directory = job.get('directory')
+    filename = job.get('filename')
+    if not directory or not filename:
+        logger.warning(f'snapshot: need directory and filename, got {job}')
+        return 'ERROR need directory and filename', 400
+    source = job.get('source') or SNAPSHOT_SOURCE
+    uid = job.get('uid')
+    gid = job.get('gid')
+    fullpath = os.path.join(directory,filename)
+    t0 = time.time()
+    logger.warning(f'Server got ask snapshot: {fullpath} from {source}')
+    try:
+        answer = requests.get(source,timeout=SNAPSHOT_FETCH_TIMEOUT)
+        answer.raise_for_status()
+        image = answer.content
+        if not image:
+            raise ValueError(f'empty image from {source}')
+        #the dataset directory usually does not exist yet (TransferData creates
+        #it when the first file arrives), so create it the same way
+        Path(directory).mkdir(mode=0o700,parents=True,exist_ok=True)
+        with open(fullpath,'wb') as f:
+            f.write(image)
+        if uid is not None and gid is not None:
+            try:
+                os.chown(directory,int(uid),int(gid))
+            except Exception as e:
+                #directory may already belong to the user (or be a shared parent)
+                logger.info(f'snapshot: chown {directory} skipped: {e}')
+            os.chown(fullpath,int(uid),int(gid))
+        os.chmod(fullpath,0o700)
+    except Exception as e:
+        logger.warning(f'snapshot: save {fullpath} from {source} failed: {e}')
+        return f'ERROR {e}', 500
+    logger.info(f'snapshot: saved {fullpath}, {len(image)} bytes, take {time.time()-t0} sec')
+    return f'OK saved {fullpath}'
 
 # @app.route('/job', methods=['GET'])
 # def jobGET():

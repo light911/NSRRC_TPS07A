@@ -702,6 +702,69 @@ class Eiger2X16M(Detector):
                 self.logger.warning(f'Notify Download server has error {e}')
         Thread(target=_post,daemon=True,name='NotifyDownload').start()
 
+    def _get_uid_gid(self,username):
+        #same rule as write_header: blctl is a local account, real users are in LDAP
+        if username == 'blctl':
+            pw = getpwnam(username)
+            return pw[2],pw[3]
+        uidNumber,gidNumber,passwd = self.ladp.getuserinfo(username)
+        return uidNumber,gidNumber
+
+    def save_sample_snapshot(self,timeout=None):
+        #save a picture of the sample as it is RIGHT NOW, but only if MD3 is
+        #still in center mode (CurrentPhase = Centring). that is the only phase
+        #where the backlight is on and the sample is in the camera view, so a
+        #collect starting from there is the last chance to record what the user
+        #is about to shoot. any other phase -> do nothing, return False.
+        #
+        #the DHS runs as blctl and cannot hand a file to the data owner, and the
+        #image lives on the MD3image DHS, so the work is done by the transfer
+        #server on epu (root): we POST path/filename/uid/gid, it grabs the JPEG,
+        #writes it, chowns+chmods it and answers OK. blocking on purpose (the
+        #caller wants the photo taken before the sample is moved/exposed) but
+        #ALWAYS bounded by the timeout: a snapshot is nice-to-have and must never
+        #delay or fail a data collection, so every failure is logged and returns
+        #False and the caller simply carries on.
+        #returns True only when the server confirmed the file was written.
+        t0 = time.time()
+        try:
+            cfg = self.Par['SampleSnapshot']
+            md3phase = self.ca.caget(self.Par['collect']['md3modePV'],format=str)
+            #caget returns None when the PV does not answer -> not Centring -> skip
+            if str(md3phase).strip() != cfg['phase']:
+                self.logger.info(f'sample snapshot: MD3 phase is {md3phase}, not {cfg["phase"]}, skip')
+                return False
+            if timeout is None:
+                timeout = cfg['timeout']
+            try:
+                uid,gid = self._get_uid_gid(self.userName)
+            except Exception as e:
+                #unknown user: still save the picture, the server just leaves it root-owned
+                self.logger.warning(f'sample snapshot: can not get uid/gid of {self.userName}: {e}')
+                uid,gid = None,None
+            #same base name as the dataset (filename_0001.h5 -> filename_0001.jpg)
+            #so the photo sits next to the data it belongs to
+            snapname = self.filename + "_" + str(self.fileindex).zfill(4) + '.jpg'
+            job = {'directory':self.directory,
+                   'filename':snapname,
+                   'user':self.userName,
+                   'uid':uid,
+                   'gid':gid,
+                   'source':cfg['source'],
+                   'md3phase':str(md3phase).strip(),
+                   }
+            self.logger.info(f'sample snapshot: ask {cfg["url"]} for {self.directory}/{snapname}')
+            r = requests.post(cfg['url'],json=job,timeout=(3,timeout))
+            ok = (r.status_code == 200 and r.text.startswith('OK'))
+            if ok:
+                self.logger.info(f'sample snapshot: {r.text} take {time.time()-t0} sec')
+            else:
+                self.logger.warning(f'sample snapshot: server said {r.status_code} {r.text}')
+            return ok
+        except Exception as e:
+            self.logger.warning(f'sample snapshot failed (collect continues): {e}, take {time.time()-t0} sec')
+            return False
+
     def detector_collect_shutterless(self,command):
     #    ('detector_collect_shutterless', '1.24', '1', 'test_1', '/data/blctl/test', 'blctl', 'gonio_phi', '0.1', '0.000009', '1.0', '10', '750.000060', '0.976226127404', '0.000231', '50.000000', '0', '0', 'PRIVATEA03F6ADA6F19A8DA1DEE6BFC325F4DCE', '1', '10', '50.000000', '0.0')
     #['stoh_start_operation', 'detector_collect_shutterless', '1.2', '0', 'test_0', '/data/blctl/test', 'blctl', 'gonio_phi', '0.1', '0.000000', '1.0', '1', '750.000080', '0.976226127404', '0.000071', '50.000000', '0', '0', 'PRIVATEA03F6ADA6F19A8DA1DEE6BFC325F4DCE', '3', '1', '50.000000', '0.0']
@@ -759,6 +822,17 @@ class Eiger2X16M(Detector):
         #  sscanf(commandBuffer.textInBuffe
         # self.logger.info(f'Default action for {command[0]}:{command[1:]}')
         self.logger.info(f'command: {command[1:]}')
+        #still in center mode when the collect arrived? then this is the last
+        #moment the sample is lit and in view -> record it before anything moves.
+        #no-op (and no cost) in every other MD3 phase, and never fatal: see
+        #save_sample_snapshot. must stay AFTER the command parsing above (it
+        #needs directory/filename/fileindex/userName) and BEFORE the setup below.
+        #DISABLED 2026-08-12, not tested yet (users on the beamline): DCSS very
+        #likely switches Centring -> DataCollection before it sends this command,
+        #so from here the snapshot would almost never fire. Plan is a dedicated
+        #DCSS operation that asks for it while the sample is still centered;
+        #re-enable this line (or drop it) once that is settled.
+        # self.save_sample_snapshot()
         self.ca.caput('07a-ES:timing:nimage',self.TotalFrames,format=int)
         scan_range =  self.TotalFrames * self.detosc
         post_tri_timePV = self.Par['collect']['post_tri_timePV']
