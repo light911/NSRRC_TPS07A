@@ -107,6 +107,11 @@ Par={
                       'timeout':10,#sec the DHS waits for the whole request before giving up and collecting anyway
                       'fetch_timeout':5,#sec the server waits for the MD3 image; keep well under 'timeout'
                       },
+    #following one dataset on the DCU (Eiger/serieswatch.py). shared by the DHS
+    #(check_SSX_done) and the transfer server (TransferData on epu).
+    'SeriesWatch':{'master_timeout':60,#sec a job waits for its master file to show up on the DCU before giving the dataset up
+                   'download_stall_timeout':300,#sec check_SSX_done waits with no download progress before warning the user and moving on
+                   },
     'EPICS_special':{'BeamSize':{'BeamSizeName':'07a-ES:Table:Beamsize',
                                  'MD3YName':'07a-ES:Table:MD3Y',
                                  'MD3VerName':'07a-ES:Table:MD3Ver',

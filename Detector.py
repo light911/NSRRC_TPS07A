@@ -12,6 +12,7 @@ import multiprocessing as mp
 
 import logsetup,time,subprocess
 from Eiger.DEiger2Client import DEigerClient
+from Eiger.serieswatch import SeriesWatch
 # from epics import caput,CAProcess,caget
 from epics import caput,caget,ca,CAProcess,cainfo
 import epics
@@ -1152,28 +1153,44 @@ class Eiger2X16M(Detector):
         pass
 
     def check_SSX_done(self):
+        #runs in its own CAProcess forked right after the trigger, so self.filename/
+        #fileindex/TotalFrames are this run's even after the GUI auto-repeat has
+        #started the next run in the parent. several of these can be alive at once,
+        #all looking at the same DCU.
         det = DEigerClient(self.detectorip,self.detectorport,verbose=False,connectionTimeout=DET_HTTP_TIMEOUT)
-        _check = True
-        init = True
-        while _check:
-            state = det.fileWriterStatus('state')['value']
-            #make sure collect is started,
-            # dhs   detectorstat                       filewriter
-            # arm   idle->configure->READY->acquire-ilde  ready=>acquire->ready
-            if state == 'acquire':
-                init = False
-            #when we got all except file or, fileWriterStatus from acquire to Ready Break loop
-            if init :
-                pass
-            else:
-                if state == 'ready':
-                    #fileWriterStatus from acquire to ready
-                    #if there is no file to downlaod may be detector abort
-                    _check = False
+        watchPar = self.Par.get('SeriesWatch',{})
+        master_timeout = watchPar.get('master_timeout',60)
+        stall_timeout = watchPar.get('download_stall_timeout',300)
+        Filename = self.filename + "_" + str(self.fileindex).zfill(4)
+        masterfile = Filename + "_master.h5"
+        #wait for the end of OUR series. a bare acquire->ready may be the previous
+        #run finishing (see Eiger/serieswatch.py)
+        series = SeriesWatch(masterfile)
+        while True:
+            try:
+                state = det.fileWriterStatus('state')['value']
+                currentfile = det.fileWriterFiles()
+                if series.update(state,currentfile,lambda: det.detectorStatus('state')['value']):
+                    break
+            except Exception as e:
+                self.logger.warning(f'check_SSX_done: cannot read DCU state for {Filename}, retry: {e}')
+                time.sleep(0.5)
+            if series.master_overdue(master_timeout):
+                self.logger.warning(f'{masterfile} never showed up on the DCU in {master_timeout} sec, take {Filename} as aborted')
+                break
+            time.sleep(0.1)
+        #a newer collect sets name_pattern before it arms. if that happened this run
+        #was ended by the next one (auto-repeat): the cover and the status belong to
+        #the new run now, and a 'done' from here would make the GUI auto-repeat
+        #start yet another run on top of it.
+        try:
+            superseded = det.fileWriterConfig('name_pattern')['value'] != Filename
+        except Exception as e:
+            self.logger.warning(f'check_SSX_done: cannot read name_pattern ({e}), take {Filename} as the current run')
+            superseded = False
         #collect id done
         command=["","","","","",""]
         totalframe = self.TotalFrames
-        Filename = self.filename + "_" + str(self.fileindex).zfill(4)
         lastnum = math.ceil(totalframe/1000)
         dataname = f'{Filename}_data_{lastnum:06}.h5'
         datapath = f'{self.directory }/{dataname}'
@@ -1186,36 +1203,52 @@ class Eiger2X16M(Detector):
         #send detector stop?
         #check detector data is clear
 
-        self.logger.info(f'close cover after got detector stop ({command}) ')
-        # closecoverP = Process(target=self.cover.CloseCover,name='stop_close_cover')
-        closecoverP = Process(target=self.cover.askforAction,args=('close',),name='stop_close_cover')
-        closecoverP.start()
-        
-        toDcsscommand = 'htos_set_string_completed system_status normal {Wating For Download Image} black #d0d000'
-        self.sendQ.put(toDcsscommand)
-        
+        if superseded:
+            self.logger.warning(f'{Filename} was ended by a newer collect, leave cover and ssx_state to it')
+            closecoverP = None
+        else:
+            self.logger.info(f'close cover after got detector stop ({command}) ')
+            # closecoverP = Process(target=self.cover.CloseCover,name='stop_close_cover')
+            closecoverP = Process(target=self.cover.askforAction,args=('close',),name='stop_close_cover')
+            closecoverP.start()
+
+            toDcsscommand = 'htos_set_string_completed system_status normal {Wating For Download Image} black #d0d000'
+            self.sendQ.put(toDcsscommand)
+
         expctedlist =[]
-        Filename = self.filename + "_" + str(self.fileindex).zfill(4)
-        masterfile = Filename + "_master.h5"
         expctedlist.append(masterfile)
         expctedlist.extend(genDatasetNames(self.TotalFrames,1000,Filename))
-        
-        currentfile = self.det.fileWriterFiles()
-        self.logger.info(f'Check for detector download data: file count :{currentfile}')
-        # while type(currentfile) != type(None):
-        try:
-            # while len(currentfile) != 0:
-            while bool(set(currentfile) & set(expctedlist)):
-                self.logger.info(f'wait for detector download data: file count :{set(currentfile) & set(expctedlist)}')
-                time.sleep(0.1)
-                currentfile = self.det.fileWriterFiles()
-        except Exception as e:
-            self.logger.critical(f'Error on monitor DCU file, error{e}')
-        self.logger.info(f'All data in detector is downloaded: file count :{currentfile}')
-        # if self.SSXautoreapeat == 1:
-        #     pass
-        # else:
-                
+
+        #wait for the transfer server to take our files off the DCU. bounded by
+        #progress, not by total time: a long run downloads for minutes, but nothing
+        #leaving the DCU for stall_timeout means the server lost this dataset.
+        remain = None
+        tprogress = time.time()
+        while True:
+            try:
+                currentfile = det.fileWriterFiles()
+            except Exception as e:
+                self.logger.warning(f'check_SSX_done: cannot read DCU files for {Filename}, retry: {e}')
+                currentfile = None
+            if currentfile is not None:
+                _remain = set(currentfile) & set(expctedlist)
+                if not _remain:
+                    self.logger.info(f'All data of {Filename} is downloaded: file on DCU :{currentfile}')
+                    break
+                if _remain != remain:
+                    self.logger.info(f'wait for detector download data: {sorted(_remain)}')
+                    remain = _remain
+                    tprogress = time.time()
+            if time.time() - tprogress > stall_timeout:
+                warn = f'SSX {Filename}: nothing downloaded for {stall_timeout}s, still on DCU: {",".join(sorted(remain or []))[:80]}. Check TranferData on epu.'
+                self.logger.critical(warn)
+                #htos_note: dcss reads it into char[201]
+                self.sendQ.put(('warning',warn[:190]))
+                break
+            time.sleep(0.1)
+        if superseded:
+            self.logger.info(f'Done for check_SSX_done of superseded {Filename} ({command}) ')
+            return
         self.checkandretryCoverProcess(closecoverP,'close')
         toDcsscommand = ('updatevalue','ssx_state','done','string','normal')
         self.sendQ.put(toDcsscommand)

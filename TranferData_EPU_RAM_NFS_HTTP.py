@@ -8,6 +8,7 @@ Created on Thu May 13 15:03:07 2021
 
 from multiprocessing import Process,Queue,Manager
 from Eiger.DEiger2Client import DEigerClient
+from Eiger.serieswatch import SeriesWatch
 import Config
 import time,os,re
 import json
@@ -25,6 +26,8 @@ Par = Config.Par
 #keep the fetch short. the DHS normally sends its own 'source' in the job.
 SNAPSHOT_SOURCE = Par.get('SampleSnapshot',{}).get('source','http://10.7.1.4:6001/image1.cgi')
 SNAPSHOT_FETCH_TIMEOUT = Par.get('SampleSnapshot',{}).get('fetch_timeout',5)
+#give a dataset up when its master never shows up on the DCU (series never started)
+MASTER_TIMEOUT = Par.get('SeriesWatch',{}).get('master_timeout',60)
 rsyncP=[]
 logger = logsetup.getloger2('TransferData',LOG_FILENAME='/root/log/TransferDataLOG.txt',level = Par['Debuglevel'])
 m = Manager()
@@ -57,8 +60,6 @@ def TransferData(det:DEigerClient,saveedlist,saveedpath,datareturn:Queue,header,
     expctedlist: expcted file list gen by header
     '''
     t0 = time.time()
-    init = True
-    detabort = False
     needtoDL = expctedlist
     Autoprocess = False
     bypassDownload = False
@@ -92,25 +93,15 @@ def TransferData(det:DEigerClient,saveedlist,saveedpath,datareturn:Queue,header,
         else:
             bypassDownload = True#skip download
             Autoprocess = False
+    #the filewriter state is the whole DCU's: when collects run back to back the
+    #previous run's acquire->ready lands in this job. only trust it once our own
+    #master is on the DCU (see Eiger/serieswatch.py)
+    series = SeriesWatch(filename + "_master.h5")
     while True:
-        #when we got all except file or, fileWriterStatus from acquire to Ready Break loop
+        #when we got all except file or, our series is over, Break loop
         state = det.fileWriterStatus('state')['value']
-        currentfileWriterpatten = det.fileWriterConfig('name_pattern')['value']#series_$id , test_0_0003
-        #make sure collect is started,
-        # dhs   detectorstat                       filewriter
-        # arm   idle->configure->READY->acquire-ilde  ready=>acquire->ready
-        if state == 'acquire':
-            init = False
-        #when we got all except file or, fileWriterStatus from acquire to Ready Break loop
-        if init :
-            pass
-        else:
-            if state == 'ready':
-                #fileWriterStatus from acquire to ready
-                #if there is no file to downlaod may be detector abort
-                detabort = True
-
         currentfile = det.fileWriterFiles()#['test_0_0008_data_000001.h5', 'test_0_0008_master.h5']
+        seriesdone = series.update(state,currentfile,lambda: det.detectorStatus('state')['value'])
 
         if len(needtoDL) >0:
             # check frist item can we found on detector?
@@ -238,10 +229,13 @@ def TransferData(det:DEigerClient,saveedlist,saveedpath,datareturn:Queue,header,
                         #maybe slow....
                         # recursive_chown(ramdirectory,uid,gid)
                     logger.info(f'{log}: Done for recursive_chown')
-            elif detabort:
+            elif seriesdone:
                 logger.info(f'{log}: There still has some file need to download, but not found in fileWriter. and fileWriter is ready(no new file will generate)')
                 #detect no file and fileWriter ready,maybe detector abort
-                break           
+                break
+            elif series.master_overdue(MASTER_TIMEOUT):
+                logger.warning(f'{log}: {filename}_master.h5 never showed up on the DCU in {MASTER_TIMEOUT} sec, give up {filename}')
+                break
             else:
                 # my file not on detector wait more time
                 time.sleep(0.1)
@@ -718,12 +712,19 @@ def monitor_and_download_file(header,ProcessFile: list):
         if EPUjobdone and NFSjobdone:
             logger.debug(f'Both EPU and NFS jobdone.')
             break
-    logger.info(f'Try to remove {masterfile} on DCU')
-    
-    # requests.delete(f'http://10.7.1.98/data/{masterfile}')
-    command = f'http://10.7.1.98/data/{masterfile}'
-    p2 = Process(target=requestsdelete,args=(command,))
-    p2.start()
+    #only drop the master once both copies have it. deleting it blindly when the
+    #job ended without it just 404s (it is not written yet) and the master then
+    #lands on the DCU later with nobody to pick it up (0769/0771, 2026-10-04).
+    #left on the DCU it is at least saved by savecurrentdata on the next restart
+    if masterfile in saveedlistNFS and masterfile in saveedlistEPU:
+        logger.info(f'Try to remove {masterfile} on DCU')
+
+        # requests.delete(f'http://10.7.1.98/data/{masterfile}')
+        command = f'http://10.7.1.98/data/{masterfile}'
+        p2 = Process(target=requestsdelete,args=(command,))
+        p2.start()
+    else:
+        logger.warning(f'{masterfile} was not downloaded (NFS={masterfile in saveedlistNFS},EPU={masterfile in saveedlistEPU}), leave it on DCU')
     ProcessFile.remove(filename)
     logger.info(f'Finish Download dataset {filename} , Allfile={saveedlistNFS}')
     logger.debug(f'After download dataset Current {ProcessFile[:]=}')
