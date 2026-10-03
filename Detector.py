@@ -1085,7 +1085,9 @@ class Eiger2X16M(Detector):
         #SSX: no cryojet (fixed target at room temperature, movecryojet=False).
         #movebeasize=False so bypassslit never reaches MoveBeamsize.target here;
         #it is kept True to match the other SSX paths.
-        if not self._run_basesetup(args,(False,False,False,False,True,False),60):
+        #movedistance=True: SSX is started straight from the GUI, not through
+        #DCSS moveMotorsForRun, so nobody else moves detector_z for it.
+        if not self._run_basesetup(args,(False,False,False,False,True,False,True),60):
             self._setup_failed(command)
             return
         Filename = self.filename + "_" + str(self.fileindex).zfill(4)
@@ -2240,7 +2242,7 @@ class Eiger2X16M(Detector):
             errMsg = "File \"{}\", line {}, in {}: [{}] {}".format(fileName, lineNum, funcName, error_class, detail)
             self.logger.warning(f'Setup detector has error {errMsg},{e}')
             sys.exit(-1)#for mutiprocess
-    def setup_beamsize_cover_distance(self,raster=False,roi=False,beamwithdis=False,movebeasize=True,bypassslit=False,movecryojet=True):
+    def setup_beamsize_cover_distance(self,raster=False,roi=False,beamwithdis=False,movebeasize=True,bypassslit=False,movecryojet=True,movedistance=False):
         t0=time.time()
         #move cryjet in
         #movecryojet False: this collect type does not use the cryojet at all
@@ -2294,8 +2296,45 @@ class Eiger2X16M(Detector):
             else:
                 #but we still need open cover
                 self.MoveBeamsize.opencover(True)
+                if movedistance:
+                    self.move_distance_and_wait(self.distance)
                 pass
         self.logger.info(f'setup  = {time.time()-t0}')
+    def move_distance_and_wait(self,target,timeout=180):
+        #move detector_z the same way DCSS does (caput the 07a:Det:Dis soft
+        #motor; the distance interlock drives Det:Y from it) and block until it
+        #stops, so the detector is in place before the collect is triggered.
+        disPV = self.Par['fakedistancename']
+        detYPV = self.MoveBeamsize.DetYMotor
+        current = self.ca.caget(f'{disPV}.RBV',format=float)
+        disLLM = self.ca.caget(f'{disPV}.LLM',format=float)
+        disHLM = self.ca.caget(f'{disPV}.HLM',format=float)
+        if disLLM is not None and target < disLLM:
+            self.logger.warning(f'Request distance {target} lower than LLM {disLLM}, use LLM')
+            target = disLLM
+        elif disHLM is not None and target > disHLM:
+            self.logger.warning(f'Request distance {target} higher than HLM {disHLM}, use HLM')
+            target = disHLM
+        if current is not None and abs(current-target) < 0.1:
+            self.logger.info(f'distance already at {current} (target {target}), not move')
+            return True
+        self.logger.info(f'move distance {current} -> {target}')
+        t0 = time.time()
+        self.ca.caput(disPV,target)
+        #DMOV may still read 1 for a moment after the put (motor not started
+        #yet), so only trust DMOV=1 once RBV is at target or after a 2s grace.
+        while time.time()-t0 < timeout:
+            time.sleep(0.1)
+            rbv = self.ca.caget(f'{disPV}.RBV',format=float)
+            stopped = self.MoveBeamsize.check_allmotorstop([disPV,detYPV])
+            if stopped and rbv is not None and abs(rbv-target) < 0.1:
+                self.logger.info(f'distance in position {rbv}, take {time.time()-t0:.1f}s')
+                return True
+            if stopped and time.time()-t0 > 2:
+                self.logger.warning(f'distance stopped at {rbv}, not at target {target}')
+                return False
+        self.logger.critical(f'distance move timeout ({timeout}s), still not at {target}')
+        return False
     def write_header(self,raster,Filename,que:queue.Queue,collectype):
         #wrapper: guarantee the consumer's que.get() always receives something.
         #write_header runs in a Thread, so if header building raises the thread
