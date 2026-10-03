@@ -1051,6 +1051,16 @@ class Eiger2X16M(Detector):
             #TODO
             laser_timing_array = [SSX_LassrTimeArray_1*1000000,SSX_LassrTimeArray_2*1000000,
                                 0,0,0,0,0,0,0,0]#sec to usec
+        
+        #07a:beamline:timing:laser:pulse_timing is a long waveform (time_long,
+        #count 10), so every element has to be an int. The sec->usec maths above
+        #produces floats, and pyepics then refuses the whole put with "'float'
+        #object cannot be interpreted as an integer" -- myepics.caput logs that and
+        #returns None, so the laser timing silently keeps its previous value while
+        #the collect carries on. Truncation is exact here: the times arrive as
+        #seconds with 2 decimals, and int() matches round() over that whole range.
+        laser_timing_array = [int(v) for v in laser_timing_array]
+        self.logger.info(f'SSX Laser timing array: {laser_timing_array}')
         self.ca.caput(laser_timing_arrayPV,laser_timing_array)
         #setup peaksearch server
         
