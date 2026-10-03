@@ -1072,8 +1072,10 @@ class Eiger2X16M(Detector):
         # raster,roi=False,beamwithdis,movebeasize=True,detconn=None,collectype='test image')
         args=(False,roi,False,False,None,collectype,)
 
-        #SSX: move beam size but not 2nd slit (bypassslit=True)
-        if not self._run_basesetup(args,(False,False,False,False,True),60):
+        #SSX: no cryojet (fixed target at room temperature, movecryojet=False).
+        #movebeasize=False so bypassslit never reaches MoveBeamsize.target here;
+        #it is kept True to match the other SSX paths.
+        if not self._run_basesetup(args,(False,False,False,False,True,False),60):
             self._setup_failed(command)
             return
         Filename = self.filename + "_" + str(self.fileindex).zfill(4)
@@ -2228,11 +2230,19 @@ class Eiger2X16M(Detector):
             errMsg = "File \"{}\", line {}, in {}: [{}] {}".format(fileName, lineNum, funcName, error_class, detail)
             self.logger.warning(f'Setup detector has error {errMsg},{e}')
             sys.exit(-1)#for mutiprocess
-    def setup_beamsize_cover_distance(self,raster=False,roi=False,beamwithdis=False,movebeasize=True,bypassslit=False):
+    def setup_beamsize_cover_distance(self,raster=False,roi=False,beamwithdis=False,movebeasize=True,bypassslit=False,movecryojet=True):
         t0=time.time()
         #move cryjet in
+        #movecryojet False: this collect type does not use the cryojet at all
+        #(SSX runs a fixed target at room temperature), so asking the robot to
+        #move it in is a pointless round trip to another machine -- and one that
+        #can only report problems the user cannot act on.
         host,port = self.Par['robot']['host'],self.Par['robot']['commandprot']
-        cryo_ok,cryo_detail = askCryojetIn(host,port,self.Par['robot'].get('timeout',5),self.logger)
+        cryo_ok,cryo_detail = (True,'skipped')
+        if movecryojet:
+            cryo_ok,cryo_detail = askCryojetIn(host,port,self.Par['robot'].get('timeout',5),self.logger)
+        else:
+            self.logger.info('cryojet move skipped for this collect type')
         if not cryo_ok:
             #the collect goes on (a missing cryojet move is not worth killing a
             #dataset over) but the user MUST be told: an un-cooled sample decays
