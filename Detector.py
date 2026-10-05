@@ -950,6 +950,8 @@ class Eiger2X16M(Detector):
         # command 0:command 1:motorname 2:position 3:type 4:state
         toDcsscommand = ('updatevalue','ssx_state','setup','string','normal')
         self.sendQ.put(toDcsscommand)
+        toDcsscommand = 'htos_set_string_completed system_status normal {SSX setup} black #d0d000'
+        self.sendQ.put(toDcsscommand)
         # parlist = []
         # filename = self.SSX_Prefix.text() 2
         # directory = self.SSX_Directory.text() 3
@@ -1108,10 +1110,14 @@ class Eiger2X16M(Detector):
         #strip(): the old CLI caget returned 'DataCollection\n', pyepics is clean
         if str(md3phase).strip() != 'DataCollection':
             self.logger.critical(f'SSX Collect Fail: MD3 not in DataCollection mode')
+            self.sendQ.put('htos_set_string_completed system_status normal {SSX FAILED: MD3 not in DataCollection} white #d00000')
             pass
         else:
             #trigger collect
             toDcsscommand = ('updatevalue','ssx_state','collecting','string','normal')
+            self.sendQ.put(toDcsscommand)
+            #check_SSX_done moves it on to Wating For Download Image and then Ready
+            toDcsscommand = f'htos_set_string_completed system_status normal {{SSX Collecting {Filename}}} black #d0d000'
             self.sendQ.put(toDcsscommand)
             self.ca.caput(SSXtriggerPV,1)
             # finish data collect if detector back to idle
