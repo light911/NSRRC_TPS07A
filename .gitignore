@@ -18,6 +18,3 @@ CVLS_dhs/.claude/
 #attenuator position backups, written by Flux07A/offset_att_pos.py on every
 #run (att<N>_backup.json plus a timestamped copy). machine state, not source.
 Flux07A/att*_backup*.json
-
-#incident records name users and samples, keep them local (public repo)
-docs/
