@@ -33,10 +33,10 @@ class ladpcleint():
         # self.ldap.search_s("o=My Organisation, c=AU", ldap.SCOPE_SUBTREE, "objectclass=*")
         userdata = self.ldap.search_s(basedn, searchScope,searchFilter,searchAttribute)
         # print(userdata)
-        # [('uid=andy,ou=People,dc=px,dc=nsrrc,dc=org,dc=tw', {'uid': [b'andy'], 'cn': [b'andy'], 'sn': [b'andy'], 'mail': [b'andy@px.nsrrc.org.tw'], 'objectClass': [b'person', b'organizationalPerson', b'inetOrgPerson', b'posixAccount', b'top', b'shadowAccount'], 'loginShell': [b'/bin/bash'], 'uidNumber': [b'10002'], 'gidNumber': [b'501'], 'homeDirectory': [b'/data/andy'], 'gecos': [b'andy'], 'shadowLastChange': [b'18781'], 'userPassword': [b'{crypt}$6$iFW5esdt$BZnOVOr5k2HuTIgXKFgIzRPXwNHI/g4vja5i9M7ROTXzkKnW3ZWSc9I8sK8L/SvDde6PSXvLig9PYeLn86pid0']})]
-        # [('uid=andy,ou=People,dc=px,dc=nsrrc,dc=org,dc=tw', {'uidNumber': [b'10002'], 'gidNumber': [b'501'], 'userPassword': [b'{crypt}$6$iFW5esdt$BZnOVOr5k2HuTIgXKFgIzRPXwNHI/g4vja5i9M7ROTXzkKnW3ZWSc9I8sK8L/SvDde6PSXvLig9PYeLn86pid0']})]
+        # [('uid=<user>,ou=People,dc=px,dc=nsrrc,dc=org,dc=tw', {'uidNumber': [b'<uid>'], 'gidNumber': [b'<gid>'], 'userPassword': [b'{crypt}$6$<salt>$<hash>']})]
         if len(userdata) > 1:
-            self.logger.warning(f'return more than one data! data = {userdata}')
+            #log only the DNs, the entries carry the password hash
+            self.logger.warning(f'return more than one data! dn = {[dn for dn,_ in userdata]}')
             uidNumber = int(userdata[0][1]['uidNumber'][0])
             gidNumber = int(userdata[0][1]['gidNumber'][0])
             passwd = userdata[0][1]['userPassword'][0].decode("utf-8")
